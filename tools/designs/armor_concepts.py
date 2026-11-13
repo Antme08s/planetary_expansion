@@ -335,12 +335,13 @@ def sea_diver(s):
     s.mat('brass', 'base'); s.mat('bolts', 'base', 'bolts'); s.mat('bar', 'base', 'bar'); s.mat('window', 'base', 'window')
     s.mat('lamp', 'base', 'lamp'); s.mat('tank', 'base', 'tank', 'navy'); s.mat('fin', 'navy', 'fin', 'base')
     s.mat('gauge', 'base', 'gauge'); s.mat('weight', 'dark', 'bolts'); s.mat('prop', 'dark')
-    # casco: marco atornillado alrededor del visor que ya tiene (el cristal es el del propio casco) y rejilla
+    # casco: marco atornillado alrededor del visor que ya tiene (el cristal es el del propio casco)
     s.add('helmet', 'head', (-5, -7, -5), (10, 1, 1), 'bar')                        # marco: arriba
     s.add('helmet', 'head', (-5, -3, -5), (10, 1, 1), 'bar')                        # marco: abajo
     s.pair('helmet', 'head', (-5, -6, -5), (1, 3, 3), 'bar')                        # marco: lados (cubren la esquina del visor)
-    s.pair('helmet', 'head', (-2, -6, -4.7), (1, 3, 1), 'brass', inflate=-0.25)     # rejilla
+    # 1.0.1: sin la rejilla (dos barras delante del visor)
     s.remove('helmet', 'head', (62, 74))                                            # las orejeras viejas pasan a ser ventanillas
+    s.remove('helmet', 'head', (5, 73))                                             # 1.0.1: fuera las dos válvulas grises de delante
     s.pair('helmet', 'head', (-5, -7, -2), (1, 4, 4), 'window')                     # ventanillas laterales
     s.add('helmet', 'head', (-1, -10, -3), (2, 2, 3), 'lamp')                       # foco
     s.add('helmet', 'head', (-5, -1, -5), (10, 1, 10), 'bolts')                     # collar atornillado

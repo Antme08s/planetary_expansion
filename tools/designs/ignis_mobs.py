@@ -60,6 +60,27 @@ def coil(S, s, shell, whorl):
     return out
 
 
+def shell_surface(shell, whorl):
+    """Devuelve f(x, z) = altura (sin escalar) de la cara de arriba de la concha en espiral, buscando de arriba abajo
+    el primer punto que cae dentro de alguna de sus cajas."""
+    boxes = coil(lambda v: v, 1.0, shell, whorl)
+    mats = [(T.rot_matrix(b.rot), np.array(b.origin, float), np.array(b.frm), np.array(b.to)) for b in boxes]
+
+    def inside(p):
+        for R, o, lo, hi in mats:
+            q = R.T @ (p - o) + o
+            if np.all(q >= lo - 1e-6) and np.all(q <= hi + 1e-6):
+                return True
+        return False
+
+    def f(x, z):
+        y = 22.0
+        while y > 0 and not inside(np.array([x, y, z])):
+            y -= 0.05
+        return y
+    return f
+
+
 def snail(titan=False):
     """Caracol de magma (~1 bloque de largo) o caracol titán (~2,6 veces más grande, raro).
 
@@ -125,15 +146,22 @@ def snail(titan=False):
         gold = dict(name="gold", base=(250, 202, 70), noise=0.06, pattern="plates")
         gilded = dict(name="gilded", base=(52, 40, 40), pattern="speckle", density=0.35, noise=0.06, cracks=(250, 200, 70))
         rnd = random.Random(11)
-        for (x, y, z) in [(-1.6, 16.2, 1), (1.9, 16.2, 3.5), (0, 15, 6.8), (-2.2, 14.6, -2.5), (2.3, 14.8, -2), (0.4, 16.4, -0.2)]:
+        # 1.0.1: cada racimo se apoya en la superficie real de la concha (antes flotaban por encima)
+        surf = shell_surface(shell, whorl)
+        for (x, z) in [(-1.6, 0.8), (1.9, 3.2), (0.2, 4.3), (-2.2, -2.0), (2.3, -1.6), (0.4, -0.4)]:
+            y = surf(x, z)
+            g = (surf(x, z + 0.7) - surf(x, z - 0.7)) / 1.4      # pendiente de la concha a lo largo de z
+            tilt = -math.degrees(math.atan(g))                    # inclina el racimo para que salga perpendicular
+            B.append(box("shell", [x - 1.4, y - 0.9, z - 1.4], [x + 1.4, y + 0.35, z + 1.4], gilded,
+                         rot=(tilt, 0, 0), origin=[x, y, z]))
             for k in range(3):
                 h = rnd.uniform(1.6, 3.2)
                 w = rnd.uniform(0.7, 1.1)
                 ox, oz = rnd.uniform(-0.8, 0.8), rnd.uniform(-0.8, 0.8)
-                B.append(box("shell", [x + ox - w / 2, y, z + oz - w / 2], [x + ox + w / 2, y + h, z + oz + w / 2],
-                             gold, rot=(rnd.uniform(-25, 25), rnd.uniform(0, 45), rnd.uniform(-25, 25)),
-                             origin=[x + ox, y, z + oz]))
-            B.append(box("shell", [x - 1.4, y - 0.6, z - 1.4], [x + 1.4, y + 0.6, z + 1.4], gilded))
+                yb = y - 0.6   # la base del cristal queda hundida en la piedra dorada
+                B.append(box("shell", [x + ox - w / 2, yb, z + oz - w / 2], [x + ox + w / 2, yb + h, z + oz + w / 2],
+                             gold, rot=(tilt + rnd.uniform(-20, 20), rnd.uniform(0, 45), rnd.uniform(-20, 20)),
+                             origin=[x + ox, yb, z + oz]))
     pivots = {"body": S([0, 3, 0]), "tail": S([0, 1.5, 9]), "head": S([0, 6, -8.5]), "shell": S([0, 4, 1])}
     name = "magma_titan" if titan else "magma_snail"
     return name, B + side + T.mirror_x(side), (256 if titan else 64), pivots
