@@ -254,20 +254,27 @@ def glow_stew():
 def stone_family(rng, base_stone):
     t = {}
     t["cerulean_stone"] = base_stone
-    # roca (cobblestone): piedras redondeadas de varios tonos, con luz arriba a la izquierda y juntas oscuras
-    img = Image.new("RGBA", (T, T), rgba((64, 70, 84)))
+    # roca (cobblestone): celdas de Voronoi envueltas (cada píxel es de la piedra más cercana, contando las copias
+    # de los bordes), juntas oscuras donde dos piedras se tocan y cada piedra con su tono y su luz arriba a la izquierda
+    seeds = [(rng.uniform(0, T), rng.uniform(0, T)) for _ in range(9)]
+    tones = [rng.choice([(110, 116, 130), (98, 104, 118), (124, 130, 144), (90, 96, 110)]) for _ in seeds]
+    img = Image.new("RGBA", (T, T))
     px = img.load()
-    for _ in range(12):
-        cx, cy, r = rng.uniform(0, T), rng.uniform(0, T), rng.uniform(2.3, 3.6)
-        c = rng.choice([(110, 116, 130), (98, 104, 118), (124, 130, 144), (88, 94, 108)])
-        for dy in range(-4, 5):
-            for dx in range(-4, 5):
-                d2 = dx * dx + dy * dy
-                if d2 <= r * r:
-                    k = 1.18 if dx + dy <= -3 else 1.08 if dx + dy < -1 else 0.82 if dx + dy > 2 else 1.0
-                    if d2 > (r - 1) * (r - 1) and dx + dy > 0:
-                        k = 0.74                            # borde en sombra
-                    px[math.floor(cx + dx) % T, math.floor(cy + dy) % T] = rgba(shade(c, k + rng.uniform(-0.03, 0.03)))
+    for y in range(T):
+        for x in range(T):
+            ds = []
+            for n, (sx, sy) in enumerate(seeds):
+                dx = (x + 0.5 - sx + T / 2) % T - T / 2
+                dy = (y + 0.5 - sy + T / 2) % T - T / 2
+                ds.append((dx * dx + dy * dy, n, dx, dy))
+            ds.sort()
+            d0, n, dx, dy = ds[0]
+            if math.sqrt(ds[1][0]) - math.sqrt(d0) < 0.9:
+                c = (62, 68, 82)                                 # junta
+            else:
+                k = 1.16 if dx + dy < -2.5 else 1.06 if dx + dy < -1 else 0.84 if dx + dy > 2 else 1.0
+                c = shade(tones[n], k + rng.uniform(-0.03, 0.03))
+            px[x, y] = rgba(c)
     t["cerulean_cobblestone"] = img
     # ladrillos: cada ladrillo con su tono, textura, canto de luz arriba y sombra abajo
     img = Image.new("RGBA", (T, T))
@@ -372,29 +379,67 @@ def ore(rng, stone_img, colors, shape):
     return img
 
 
+CRYSTAL = [(230, 252, 255), (130, 218, 255), (76, 172, 236), (42, 112, 192), (24, 66, 138)]
+
+
 def crystal_ore(rng, stone_img):
-    """Mineral exclusivo (opcional): cristales cerúleos que brillan, saliendo de la piedra."""
+    """Cristal cerúleo como mineral de verdad: tres vetas de cristales tallados (rombos que se solapan, cada uno con
+    su faceta de luz arriba a la izquierda, su faceta en sombra abajo a la derecha y una arista brillante) metidas en
+    un hueco de la piedra con el borde en sombra, más una chispa suelta. Las vetas que se salen por un borde entran
+    por el contrario, así el bloque se repite sin costuras."""
     img = stone_img.copy()
-    d = ImageDraw.Draw(img)
-    for (x0, y0, h, w) in ((3, 14, 7, 2), (8, 15, 11, 2), (13, 13, 6, 1)):
-        d.polygon([(x0 - w, y0), (x0 - w, y0 - h + 2), (x0, y0 - h), (x0 + w, y0 - h + 2), (x0 + w, y0)], fill=rgba((70, 180, 240)))
-        d.line([(x0 - w, y0), (x0 - w, y0 - h + 2)], fill=rgba((170, 235, 255)))
-        d.line([(x0, y0 - h), (x0, y0)], fill=rgba((120, 215, 255)))
-        d.line([(x0 + w, y0), (x0 + w, y0 - h + 2)], fill=rgba((40, 120, 200)))
-    for (x, y) in ((5, 3), (11, 2), (1, 5)):
-        d.point((x, y), fill=rgba((150, 230, 255)))
+    px = img.load()
+    hl, light, mid, dark, deep = CRYSTAL
+    inside = {}
+    spots = [(4, 4), (11, 3), (8, 10), (13, 12), (3, 12)]
+    rng.shuffle(spots)
+    for (cx, cy) in spots[:3]:
+        gems = [(cx, cy, rng.choice((2, 3)))]
+        for _ in range(rng.randint(1, 2)):                       # rombos pegados al primero
+            gems.append((cx + rng.choice((-2, -1, 1, 2)), cy + rng.choice((-2, -1, 1, 2)), rng.choice((1, 2))))
+        for (gx, gy, r) in gems:
+            for dy in range(-r, r + 1):
+                for dx in range(-r, r + 1):
+                    if abs(dx) + abs(dy) > r:
+                        continue
+                    if dx == 0 and dy < 0 or dy == 0 and dx < 0:
+                        c = hl if abs(dx) + abs(dy) < r else light   # aristas que miran a la luz
+                    elif dx <= 0 and dy <= 0:
+                        c = light
+                    elif dx >= 0 and dy >= 0:
+                        c = dark if abs(dx) + abs(dy) < r else deep
+                    else:
+                        c = mid
+                    inside[((gx + dx) % T, (gy + dy) % T)] = c
+    for (x, y) in list(inside):                                  # hueco: borde en sombra alrededor del cristal
+        for (ex, ey, k) in ((1, 0, 0.55), (0, 1, 0.55), (1, 1, 0.5), (-1, 0, 0.75), (0, -1, 0.75)):
+            q = ((x + ex) % T, (y + ey) % T)
+            if q not in inside:
+                px[q] = rgba(shade(stone_img.getpixel(q)[:3], k))
+    for (x, y), c in inside.items():
+        px[x, y] = rgba(c)
+    for _ in range(2):                                           # chispas sueltas en la roca
+        x, y = rng.randrange(T), rng.randrange(T)
+        if (x, y) not in inside and ((x + 1) % T, y) not in inside:
+            px[x, y] = rgba(light)
+            px[(x + 1) % T, y] = rgba(dark)
     return img
 
 
 def crystal_item():
+    """Cristal cerúleo (objeto): punta doble con cuatro facetas y arista brillante, con la misma paleta que el mineral."""
+    hl, light, mid, dark, deep = CRYSTAL
     img = canvas()
     d = ImageDraw.Draw(img)
-    d.polygon([(8, 1), (13, 6), (10, 15), (6, 15), (3, 6)], fill=rgba((80, 200, 255)))
-    d.polygon([(8, 1), (13, 6), (8, 7)], fill=rgba((170, 235, 255)))
-    d.polygon([(3, 6), (8, 7), (6, 15)], fill=rgba((50, 150, 220)))
-    d.line([(8, 7), (8, 14)], fill=rgba((210, 250, 255)))
-    return outline(img, (16, 50, 90))
-
+    d.polygon([(8, 1), (12, 5), (12, 10), (8, 15), (4, 10), (4, 5)], fill=rgba(mid))
+    d.polygon([(8, 1), (4, 5), (4, 10), (8, 8)], fill=rgba(light))
+    d.polygon([(8, 1), (12, 5), (8, 8)], fill=rgba(mid))
+    d.polygon([(12, 5), (12, 10), (8, 15), (8, 8)], fill=rgba(dark))
+    d.polygon([(4, 10), (8, 15), (8, 8)], fill=rgba(mid))
+    d.line([(8, 2), (8, 8)], fill=rgba(hl))
+    d.line([(5, 6), (7, 4)], fill=rgba(hl))
+    d.point((10, 12), fill=rgba(deep))
+    return outline(img, (14, 40, 80))
 
 def make_textures():
     rng = random.Random(77)
@@ -418,7 +463,8 @@ def make_textures():
     for name, (cols, shape) in ORES.items():
         t[f"cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode())), t["cerulean_stone"], cols, shape)
         t[f"deep_cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode())), t["deep_cerulean_stone"], cols, shape)
-    t["cerulean_crystal_ore"] = crystal_ore(rng, t["cerulean_stone"])
+    t["cerulean_crystal_ore"] = crystal_ore(random.Random(31), t["cerulean_stone"])
+    t["deep_cerulean_crystal_ore"] = crystal_ore(random.Random(31), t["deep_cerulean_stone"])
     t["cerulean_crystal"] = crystal_item()
     base.update(t)
     return base
@@ -477,7 +523,7 @@ def food_sheet(tex, out):
 def ore_sheet(tex, out):
     F, Fm, f = AT.fonts()
     fam = [("cerulean_stone", "Piedra"), ("cerulean_cobblestone", "Roca"), ("cerulean_stone_bricks", "Ladrillos"),
-           ("polished_cerulean_stone", "Piedra pulida"), ("deep_cerulean_stone", "Piedra profunda (opcional)")]
+           ("polished_cerulean_stone", "Piedra pulida"), ("deep_cerulean_stone", "Piedra profunda")]
     names = {"coal": "Carbón", "iron": "Hierro", "copper": "Cobre", "gold": "Oro", "redstone": "Redstone",
              "lapis": "Lapislázuli", "diamond": "Diamante", "emerald": "Esmeralda", "zinc": "Zinc (Create)"}
     cw = 150
@@ -495,7 +541,8 @@ def ore_sheet(tex, out):
     d.text((16, y0), "Familia de piedra", fill=(25, 35, 45, 255), font=Fm)
     for i, (k, n) in enumerate(fam):
         cell(i * cw, y0 + 10, k, n)
-    cell(6 * cw, y0 + 10, "cerulean_crystal_ore", "Cristal cerúleo (opc.)")
+    cell(5 * cw, y0 + 10, "cerulean_crystal_ore", "Cristal cerúleo")
+    cell(6 * cw, y0 + 10, "deep_cerulean_crystal_ore", "Cristal (profundo)")
     sheet.alpha_composite(tex["cerulean_crystal"].resize((64, 64), Image.NEAREST), (7 * cw + 40, y0 + 70))
     d.text((7 * cw + 8, y0 + 150), "Cristal (objeto)", fill=(25, 35, 45, 255), font=f)
     y0 += 210
@@ -503,7 +550,7 @@ def ore_sheet(tex, out):
     for i, (k, n) in enumerate(names.items()):
         cell(i * cw, y0 + 10, f"cerulean_{k}_ore", n)
     y0 += 210
-    d.text((16, y0), "Capa profunda (opcional)", fill=(25, 35, 45, 255), font=Fm)
+    d.text((16, y0), "Capa profunda", fill=(25, 35, 45, 255), font=Fm)
     for i, (k, n) in enumerate(names.items()):
         cell(i * cw, y0 + 10, f"deep_cerulean_{k}_ore", n)
     y0 += 210
@@ -525,6 +572,27 @@ def ore_sheet(tex, out):
     sheet.save(out)
 
 
+def stone_tiling_sheet(tex, out):
+    """Continuidad: cada bloque de piedra y mineral repetido 3×3."""
+    F, Fm, f = AT.fonts()
+    keys = ["cerulean_stone", "cerulean_cobblestone", "cerulean_stone_bricks", "polished_cerulean_stone", "deep_cerulean_stone",
+            "cerulean_crystal_ore", "deep_cerulean_crystal_ore"] + \
+           [f"cerulean_{k}_ore" for k in ORES] + [f"deep_cerulean_{k}_ore" for k in ORES]
+    cw, ch, cols = 3 * 48 + 16, 3 * 48 + 34, 8
+    rows = math.ceil(len(keys) / cols)
+    sheet = Image.new("RGBA", (cols * cw, 56 + rows * ch), (60, 70, 80, 255))
+    d = ImageDraw.Draw(sheet)
+    d.text((16, 14), "Cerúlea — continuidad de piedra y minerales (3×3 repetidas)", fill=(240, 240, 240, 255), font=F)
+    for i, key in enumerate(keys):
+        x0, y0 = (i % cols) * cw + 8, 56 + (i // cols) * ch
+        t = tex[key].resize((48, 48), Image.NEAREST)
+        for a in range(3):
+            for b in range(3):
+                sheet.alpha_composite(t, (x0 + a * 48, y0 + 18 + b * 48))
+        d.text((x0, y0 + 2), key.replace("cerulean_", "").replace("_ore", ""), fill=(230, 230, 230, 255), font=f)
+    sheet.save(out)
+
+
 def main(out_dir):
     os.makedirs(os.path.join(out_dir, "textures"), exist_ok=True)
     tex = make_textures()
@@ -532,6 +600,7 @@ def main(out_dir):
         v.save(os.path.join(out_dir, "textures", k + ".png"))
     food_sheet(tex, os.path.join(out_dir, "cerulea_comestibles.png"))
     ore_sheet(tex, os.path.join(out_dir, "cerulea_piedra_minerales.png"))
+    stone_tiling_sheet(tex, os.path.join(out_dir, "cerulea_continuidad_piedra.png"))
     print("ok", out_dir)
 
 
