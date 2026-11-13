@@ -22,7 +22,7 @@ import shutil
 import sys
 
 NS = "planetary_expansion"
-MOD_VERSION = "0.7.67"
+MOD_VERSION = "0.7.68"
 
 VANILLA = sys.argv[1]
 OUT = sys.argv[2]
@@ -2650,6 +2650,8 @@ def build_ignis_creatures():
 
 
 def build_meta():
+    # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
+    write_bytes("logo.png", open(os.path.join(DESIGNS, "logo.png"), "rb").read())
     write("META-INF/neoforge.mods.toml", f'''modLoader="javafml"
 loaderVersion="[4,)"
 license="GPL-3.0-or-later"
@@ -2662,10 +2664,14 @@ modId="{NS}"
 version="{MOD_VERSION}"
 displayName="Cosmonautics: Planetary Expansion"
 authors="Antme08"
+logoFile="logo.png"
+logoBlur=false
+displayURL="https://github.com/Antme08s/planetary_expansion"
 description=\'\'\'
-Landable planets for Create: Cosmonautics: Mars, the Ice World, Ignis, Thalassa and Venus,
-each with its own dimension, terrain and weather (dust storms, blizzards, acid rain).
-Also adds planet suits (Impact, Glacial and Hazard armor) and the Gravity Generator.
+Landable planets for Create: Cosmonautics: Mars, Venus, Thalassa, Ignis and the Ice World,
+each with its own dimension, terrain, weather, creatures and dangers.
+Planet suits with upgrade templates (Impact, Glacial, Hazard, Sea Diver and Thermal), survival kits,
+and ship machines: Warp Drive with Navigation Console, Gravity Generator and Inertial Dampener.
 \'\'\'
 
 [[dependencies.{NS}]]
