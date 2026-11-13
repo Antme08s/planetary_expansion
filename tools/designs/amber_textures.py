@@ -30,7 +30,7 @@ def shade(c, k):
 
 
 def noise_tile(rng, base, var=0.08, dots=(), n_dots=0):
-    """Ruido de píxel suave con motas de otros colores."""
+    """Ruido de píxel suave con motas de otros colores (se usa poco; lo detallado va con pnoise + ramp)."""
     img = Image.new("RGBA", (T, T))
     px = img.load()
     for y in range(T):
@@ -42,131 +42,253 @@ def noise_tile(rng, base, var=0.08, dots=(), n_dots=0):
     return img
 
 
-# ------------------------------------------------------------------ bloques
+# ------------------------------------------------------------------ herramientas de detalle (1.0.3, segunda pasada)
 
-def grass_top(rng, base, light, dark, blue):
-    img = noise_tile(rng, base, 0.06)
+def _smooth(t):
+    return t * t * (3 - 2 * t)
+
+
+def pnoise(rng, octaves=((8, 0.5), (4, 0.3), (2, 0.2))):
+    """Ruido de valor periódico (se repite cada 16 px, sin costuras), normalizado a 0..1."""
+    out = np.zeros((T, T))
+    for period, w in octaves:
+        n = max(1, T // period)
+        g = np.array([[rng.random() for _ in range(n)] for _ in range(n)])
+        for y in range(T):
+            fy = y / period
+            iy, ty = int(fy) % n, _smooth(fy - int(fy))
+            jy = (iy + 1) % n
+            for x in range(T):
+                fx = x / period
+                ix, tx = int(fx) % n, _smooth(fx - int(fx))
+                jx = (ix + 1) % n
+                v = (g[iy, ix] * (1 - tx) * (1 - ty) + g[iy, jx] * tx * (1 - ty)
+                     + g[jy, ix] * (1 - tx) * ty + g[jy, jx] * tx * ty)
+                out[y, x] += w * v
+    out -= out.min()
+    return out / max(1e-9, out.max())
+
+
+def ramp(a, b, n):
+    """n colores de a (oscuro) a b (claro)."""
+    return [tuple(int(a[i] + (b[i] - a[i]) * k / (n - 1)) for i in range(3)) for k in range(n)]
+
+
+def posterize(field, palette, rng=None, jitter=0.08):
+    """Convierte un campo 0..1 en píxeles de la paleta (pocos tonos, como el pixel art), con algo de tramado."""
+    img = Image.new("RGBA", (T, T))
     px = img.load()
-    for _ in range(46):
-        x, y = rng.randrange(T), rng.randrange(T)
-        px[x, y] = rgba(light if rng.random() < 0.55 else dark)
-    for _ in range(5):
-        x, y = rng.randrange(T), rng.randrange(T)
-        px[x, y] = rgba(blue)
+    n = len(palette)
+    for y in range(T):
+        for x in range(T):
+            v = field[y, x] + (rng.uniform(-jitter, jitter) if rng else 0)
+            px[x, y] = rgba(palette[max(0, min(n - 1, int(v * n)))])
     return img
 
 
+def edges(img, k_dark=0.82):
+    """Oscurece un poco los píxeles cuyo vecino de arriba-izquierda es más claro: da relieve a las manchas."""
+    px = img.load()
+    src = img.copy().load()
+    for y in range(T):
+        for x in range(T):
+            a, b = src[x, y], src[(x - 1) % T, (y - 1) % T]
+            if sum(b[:3]) > sum(a[:3]) + 30:
+                px[x, y] = rgba(shade(a, k_dark))
+    return img
+
+
+def pebble(px, x, y, light, mid, dark):
+    for (dx, dy, c) in ((0, 0, light), (1, 0, mid), (0, 1, mid), (1, 1, dark)):
+        px[(x + dx) % T, (y + dy) % T] = rgba(c)
+
+
+# ------------------------------------------------------------------ bloques
+
 def soil(rng):
-    base = (74, 64, 82)
-    return noise_tile(rng, base, 0.07, dots=[(56, 48, 66), (96, 86, 104), (62, 80, 96)], n_dots=34)
+    img = posterize(pnoise(rng), ramp((48, 40, 58), (104, 92, 116), 5), rng)
+    img = edges(img)
+    px = img.load()
+    for _ in range(5):                                      # piedrecitas
+        pebble(px, rng.randrange(T), rng.randrange(T), (128, 120, 140), (98, 92, 112), (52, 46, 62))
+    for _ in range(3):                                      # raicillas claras
+        x, y = rng.randrange(T), rng.randrange(T)
+        for k in range(rng.randint(2, 4)):
+            px[(x + k) % T, (y + (k // 2)) % T] = rgba((132, 150, 140))
+    return img
+
+
+def grass_top(rng, base, light, dark, blue):
+    pal = [shade(dark, 0.88), dark, base, light, shade(light, 1.1)]
+    img = posterize(pnoise(rng, ((8, 0.4), (4, 0.35), (2, 0.25))), pal, rng, 0.12)
+    px = img.load()
+    for _ in range(16):                                     # briznas cortas vistas desde arriba
+        x, y = rng.randrange(T), rng.randrange(T)
+        px[x, y] = rgba(shade(light, 1.12))
+        px[x, (y + 1) % T] = rgba(dark)
+    for _ in range(3):                                      # florecitas azules con su sombra
+        x, y = rng.randrange(T), rng.randrange(T)
+        px[x, y] = rgba(blue)
+        px[(x + 1) % T, (y + 1) % T] = rgba(shade(dark, 0.8))
+    return img
 
 
 def grass_side(rng, top, soil_img, light, dark):
     img = soil_img.copy()
     px = img.load()
+    prof = pnoise(rng, ((4, 0.7), (2, 0.3)))[0]
     for x in range(T):
-        depth = 3 + (1 if rng.random() < 0.5 else 0) + (1 if rng.random() < 0.25 else 0)
+        depth = 3 + int(prof[x] * 3)
+        if rng.random() < 0.18:
+            depth += 2                                       # gotas que bajan más
         for y in range(depth):
-            c = top if rng.random() < 0.7 else (light if rng.random() < 0.5 else dark)
-            px[x, y] = rgba(shade(c, 1 + rng.uniform(-0.06, 0.06)))
+            c = light if y == 0 else top if y < depth - 1 else dark
+            if y > 0 and y < depth - 1 and rng.random() < 0.25:
+                c = light if rng.random() < 0.5 else dark
+            px[x, y] = rgba(shade(c, 1 + rng.uniform(-0.05, 0.05)))
+        px[x, depth] = rgba(shade(px[x, depth][:3], 0.75))   # sombra bajo el pasto
     return img
 
 
 def stone(rng):
-    img = noise_tile(rng, (104, 110, 122), 0.05, dots=[(84, 90, 102), (124, 130, 142)], n_dots=60)
-    d = ImageDraw.Draw(img)
-    for _ in range(3):                                  # grietas finas
+    pal = ramp((80, 86, 100), (140, 146, 158), 5)
+    img = edges(posterize(pnoise(rng, ((8, 0.45), (4, 0.35), (2, 0.2))), pal, rng, 0.1))
+    px = img.load()
+    for _ in range(2):                                       # grietas finas
         x, y = rng.randrange(T), rng.randrange(T)
-        for _ in range(rng.randint(3, 6)):
-            d.point((x, y), fill=rgba((76, 82, 94)))
+        for _ in range(rng.randint(4, 7)):
+            px[x % T, y % T] = rgba((66, 72, 86))
+            px[(x + 1) % T, y % T] = rgba((150, 156, 168))   # borde iluminado de la grieta
             x += rng.choice((-1, 0, 1))
-            y += rng.choice((0, 1))
+            y += 1
     return img
 
 
 def pale_sand(rng):
-    return noise_tile(rng, (198, 204, 198), 0.04, dots=[(176, 184, 182), (214, 220, 214), (150, 170, 176)], n_dots=40)
+    pal = ramp((170, 178, 176), (222, 228, 222), 5)
+    img = posterize(pnoise(rng, ((4, 0.5), (2, 0.5))), pal, rng, 0.18)
+    px = img.load()
+    for _ in range(4):                                       # conchitas y granos oscuros
+        x, y = rng.randrange(T), rng.randrange(T)
+        px[x, y] = rgba((240, 244, 240))
+        px[(x + 1) % T, y] = rgba((150, 170, 180))
+    for _ in range(6):
+        px[rng.randrange(T), rng.randrange(T)] = rgba((140, 150, 152))
+    return img
 
 
 def mud(rng):
-    return noise_tile(rng, (58, 72, 70), 0.07, dots=[(44, 56, 56), (74, 92, 88)], n_dots=40)
+    pal = ramp((34, 44, 44), (78, 98, 94), 5)
+    img = edges(posterize(pnoise(rng), pal, rng, 0.1))
+    px = img.load()
+    for _ in range(5):                                       # brillos de humedad
+        x, y = rng.randrange(T), rng.randrange(T)
+        px[x, y] = rgba((120, 150, 144))
+        px[(x + 1) % T, y] = rgba((96, 122, 118))
+    return img
 
 
 def bark(rng, base, dark, light, streak=True):
-    img = noise_tile(rng, base, 0.04)
+    """Corteza con surcos verticales continuos (ondulan un poco y se repiten de arriba abajo), cada surco con su
+    borde de luz a la izquierda, y un nudo."""
+    pal = [shade(base, 0.86), base, shade(base, 1.08)]
+    img = posterize(pnoise(rng, ((8, 0.3), (2, 0.7))), pal, rng, 0.1)
     px = img.load()
-    for x in range(T):
-        if streak and rng.random() < 0.35:              # vetas verticales
-            c = dark if rng.random() < 0.7 else light
-            y0 = rng.randrange(T)
-            for y in range(y0, y0 + rng.randint(4, 12)):
-                px[x, y % T] = rgba(shade(c, 1 + rng.uniform(-0.05, 0.05)))
+    cols = sorted(rng.sample(range(T), 5))
+    for x0 in cols:
+        ph = rng.uniform(0, 6.28)
+        for y in range(T):
+            x = (x0 + int(round(0.8 * math.sin(2 * math.pi * y / T + ph)))) % T
+            px[x, y] = rgba(dark)
+            px[(x - 1) % T, y] = rgba(light if y % 5 else base)
+    kx, ky = rng.randrange(3, 12), rng.randrange(3, 12)            # nudo
+    for (dx, dy) in ((0, -1), (-1, 0), (1, 0), (0, 1)):
+        px[kx + dx, ky + dy] = rgba(dark)
+    px[kx, ky] = rgba(shade(dark, 0.7))
     return img
 
 
 def silver_bark(rng):
-    img = bark(rng, (196, 206, 214), (150, 162, 176), (226, 232, 238))
+    pal = ramp((168, 178, 192), (232, 238, 244), 4)
+    img = posterize(pnoise(rng, ((8, 0.4), (4, 0.4), (2, 0.2))), pal, rng, 0.08)
     px = img.load()
-    for _ in range(4):                                  # "ojos" horizontales como en la corteza de abedul, en gris azulado
-        x, y = rng.randrange(T - 3), rng.randrange(T)
-        for k in range(rng.randint(2, 4)):
-            px[x + k, y] = rgba((110, 124, 146))
+    for _ in range(6):                                        # "ojos" horizontales de corteza, con brillo encima
+        x, y = rng.randrange(T), rng.randrange(1, T)
+        L = rng.randint(2, 5)
+        for k in range(L):
+            px[(x + k) % T, y] = rgba((96, 110, 134) if 0 < k < L - 1 else (130, 142, 162))
+            px[(x + k) % T, y - 1] = rgba((242, 246, 250))
+    for x0 in rng.sample(range(T), 2):                         # dos vetas suaves
+        for y in range(T):
+            if rng.random() < 0.7:
+                px[x0, y] = rgba(shade(px[x0, y][:3], 0.9))
     return img
 
 
 def log_top(rng, outer, ring_a, ring_b):
+    """Anillos redondos (un poco irregulares), borde de corteza y una grieta del centro hacia fuera."""
     img = Image.new("RGBA", (T, T))
     px = img.load()
+    wob = pnoise(rng, ((4, 0.6), (2, 0.4)))
     for y in range(T):
         for x in range(T):
-            d = max(abs(x - 7.5), abs(y - 7.5))
-            if d > 6.5:
+            d = math.hypot(x - 7.5, y - 7.5) + (wob[y, x] - 0.5) * 1.2
+            if x in (0, T - 1) or y in (0, T - 1):
+                c = shade(outer, 0.85)
+            elif x in (1, T - 2) or y in (1, T - 2):
                 c = outer
             else:
-                c = ring_a if int(d) % 2 == 0 else ring_b
-            px[x, y] = rgba(shade(c, 1 + rng.uniform(-0.05, 0.05)))
+                c = ring_a if int(d) % 3 == 0 else ring_b if int(d) % 3 == 1 else shade(ring_b, 1.06)
+            px[x, y] = rgba(c)
+    px[7, 7] = px[8, 8] = rgba(shade(ring_a, 0.8))
+    x, y = 8, 8
+    for _ in range(5):                                       # grieta
+        x += 1
+        y += rng.choice((0, 1))
+        if 1 < x < T - 2 and 1 < y < T - 2:
+            px[x, y] = rgba(shade(ring_a, 0.7))
     return img
 
 
 def leaves(rng, base, light, dark, holes=0.03, glow=None, glow_n=0):
-    """Hojas en racimos, como las de Minecraft: fondo en sombra y encima racimos redondos con su lado de luz (arriba a
-    la izquierda) y su sombra (abajo a la derecha). Los racimos que se salen por un borde entran por el contrario, así
-    el bloque se repite sin costuras. Algunos huecos pequeños en la sombra."""
+    """Hojas en racimos con cinco tonos: fondo en sombra profunda, racimos redondos con su lado de luz (arriba a la
+    izquierda), un brillo y una sombra abajo a la derecha; dentro, hojitas sueltas marcadas. Se repiten sin costuras."""
+    deep = shade(dark, 0.78)
     img = Image.new("RGBA", (T, T))
     px = img.load()
     for y in range(T):
         for x in range(T):
-            px[x, y] = rgba(shade(dark, 1 + rng.uniform(-0.05, 0.05)))
-    for _ in range(14):
-        cx, cy, r = rng.uniform(0, T), rng.uniform(0, T), rng.uniform(1.6, 2.8)
+            px[x, y] = rgba(deep if rng.random() < 0.6 else dark)
+    for _ in range(16):
+        cx, cy, r = rng.uniform(0, T), rng.uniform(0, T), rng.uniform(1.7, 2.9)
         for dy in range(-3, 4):
             for dx in range(-3, 4):
-                d2 = dx * dx + dy * dy
-                if d2 > r * r:
+                if dx * dx + dy * dy > r * r:
                     continue
                 x, y = math.floor(cx + dx) % T, math.floor(cy + dy) % T
-                if dx + dy <= -2:
-                    c = light
-                elif dx + dy >= 2:
-                    c = shade(base, 0.86)
-                else:
-                    c = base
-                px[x, y] = rgba(shade(c, 1 + rng.uniform(-0.04, 0.04)))
+                k = dx + dy
+                c = shade(light, 1.12) if k <= -3 else light if k <= -1 else shade(base, 0.82) if k >= 2 else base
+                px[x, y] = rgba(c)
+        # hojita marcada dentro del racimo (una raya clara de 2 px)
+        x, y = math.floor(cx) % T, math.floor(cy) % T
+        px[x, y] = rgba(shade(light, 1.05))
+        px[(x + 1) % T, (y - 1) % T] = rgba(shade(light, 1.05))
     for _ in range(int(holes * T * T)):
         x, y = rng.randrange(T), rng.randrange(T)
-        if px[x, y][:3] == rgba(dark)[:3] or rng.random() < 0.3:
+        if px[x, y][:3] == rgba(deep)[:3]:
             px[x, y] = (0, 0, 0, 0)
     for _ in range(glow_n):
         x, y = rng.randrange(T), rng.randrange(T)
         px[x, y] = rgba(glow)
+        px[(x + 1) % T, y] = rgba(shade(glow, 0.8))
     return img
 
 
 # ------------------------------------------------------------------ plantas (sprites en cruz)
 
-def blades(rng, cols, n, hmin, hmax, height=T, tip=None):
-    """Briznas continuas: cada una sale del borde de abajo y sube sin cortes, curvándose poco a poco hacia un lado;
-    abajo es más oscura y gruesa (2 px) y se aclara y afina hacia la punta."""
+def blades(rng, cols, n, hmin, hmax, height=T, tip=None, heads=0.0):
+    """Briznas continuas de dos tonos (borde de luz a la izquierda), que salen del borde de abajo y se curvan poco a
+    poco; algunas con espiga en la punta."""
     img = Image.new("RGBA", (T, height), (0, 0, 0, 0))
     px = img.load()
     xs = sorted(rng.sample(range(1, T - 1), min(n, T - 2)))
@@ -174,89 +296,134 @@ def blades(rng, cols, n, hmin, hmax, height=T, tip=None):
         h = rng.randint(hmin, hmax)
         bend = rng.uniform(-3.0, 3.0)
         c = rng.choice(cols)
+        head = rng.random() < heads
         for k in range(h):
             f = k / max(1, h - 1)
             x = int(round(x0 + bend * f * f))
             y = height - 1 - k
             if not (0 <= x < T and 0 <= y < height):
                 break
-            col = shade(c, 0.72 + 0.4 * f)
-            if tip and k >= h - 2:
-                col = tip
+            col = shade(c, 0.66 + 0.42 * f)
             px[x, y] = rgba(col)
-            if f < 0.35 and 0 <= x + 1 < T:                  # base más gruesa
-                px[x + 1, y] = rgba(shade(c, 0.66 + 0.4 * f))
+            if f < 0.45 and x + 1 < T:                       # base más gruesa, con sombra a la derecha
+                px[x + 1, y] = rgba(shade(c, 0.58 + 0.3 * f))
+            if 0.3 < f < 0.9 and k % 3 == 0 and x - 1 >= 0 and px[x - 1, y][3] == 0:
+                px[x - 1, y] = rgba(shade(c, 0.95 + 0.3 * f))  # brillo
+        if head and tip:
+            for k in range(3):
+                yy = height - h - k
+                xx = int(round(x0 + bend))
+                if 0 <= xx < T and 0 <= yy < height:
+                    px[xx, yy] = rgba(tip if k < 2 else shade(tip, 1.1))
+                    if xx + 1 < T and k == 1:
+                        px[xx + 1, yy] = rgba(shade(tip, 0.85))
     return img
 
 
 def tall_grass_pair(rng):
     """El pasto alto se dibuja entero en 16×32 y luego se parte: así las briznas siguen sin cortes de un bloque al otro."""
-    cols = [(70, 200, 170), (58, 176, 152), (92, 214, 186)]
-    full = blades(rng, cols, 9, 18, 31, height=2 * T, tip=(150, 236, 216))
+    cols = [(70, 200, 170), (58, 176, 152), (92, 214, 186), (64, 188, 176)]
+    full = blades(rng, cols, 10, 18, 29, height=2 * T, tip=(160, 240, 222), heads=0.5)
     return full.crop((0, T, T, 2 * T)), full.crop((0, 0, T, T))
 
 
 def short_grass(rng):
-    return blades(rng, [(110, 206, 160), (90, 186, 146), (130, 220, 176)], 8, 5, 11)
+    return blades(rng, [(110, 206, 160), (90, 186, 146), (130, 220, 176)], 9, 5, 11, tip=(170, 236, 200), heads=0.2)
 
 
 def flower(rng, petal, center, stem=(60, 150, 120), glow=False):
+    """Flor de cinco pétalos con sombra, centro con brillo, tallo con dos hojas."""
     img = Image.new("RGBA", (T, T), (0, 0, 0, 0))
+    px = img.load()
     d = ImageDraw.Draw(img)
-    d.line([(7, 15), (7, 7)], fill=rgba(stem))
-    d.line([(7, 12), (5, 10)], fill=rgba(stem))                 # hoja
-    d.line([(8, 11), (10, 9)], fill=rgba(stem))
-    for dx, dy in ((0, -2), (-2, 0), (2, 0), (0, 2), (-1, -1), (1, -1), (-1, 1), (1, 1)):
-        d.point((7 + dx, 5 + dy), fill=rgba(petal if abs(dx) + abs(dy) == 2 else shade(petal, 1.15)))
-    d.point((7, 5), fill=rgba(center))
+    d.line([(7, 15), (7, 8)], fill=rgba(stem))
+    d.line([(8, 15), (8, 10)], fill=rgba(shade(stem, 0.8)))
+    for (x, y, c) in ((5, 12, stem), (4, 11, shade(stem, 1.2)), (6, 13, shade(stem, 0.8)),
+                      (10, 11, stem), (11, 10, shade(stem, 1.2)), (9, 12, shade(stem, 0.8))):
+        px[x, y] = rgba(c)
+    dark, light = shade(petal, 0.72), shade(petal, 1.22)
+    for (cx, cy) in ((7.5, 2.5), (4.5, 4.5), (10.5, 4.5), (5.5, 7.5), (9.5, 7.5)):  # pétalos
+        for (dx, dy, c) in ((0, 0, petal), (1, 0, petal), (0, 1, petal), (1, 1, dark), (-1, 0, light) if cx < 7 else (2, 0, dark)):
+            x, y = int(cx + dx - 0.5), int(cy + dy - 0.5)
+            if 0 <= x < T and 0 <= y < T:
+                px[x, y] = rgba(c)
+    px[7, 5], px[8, 5], px[7, 6], px[8, 6] = rgba(center), rgba(shade(center, 0.85)), rgba(shade(center, 0.85)), rgba(shade(center, 0.7))
     if glow:
-        d.point((7, 3), fill=rgba(shade(petal, 1.25)))
+        for (x, y) in ((7, 0), (3, 3), (12, 3)):
+            px[x, y] = rgba(shade(petal, 1.3))
     return img
 
 
 def glow_mushroom(rng):
+    """Hongo luminoso: sombrero con manchas y borde, láminas debajo, pie con sombra; y uno pequeño al lado."""
     img = Image.new("RGBA", (T, T), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([7, 9, 8, 15], fill=rgba((200, 222, 222)))
-    d.ellipse([3, 4, 12, 10], fill=rgba((90, 230, 215)))
-    d.rectangle([3, 8, 12, 9], fill=rgba((60, 180, 175)))
-    for x, y in ((5, 6), (9, 5), (10, 7), (6, 8)):
-        d.point((x, y), fill=rgba((200, 255, 248)))
-    d.rectangle([12, 12, 13, 15], fill=rgba((200, 222, 222)))  # hongo pequeño
-    d.rectangle([11, 10, 14, 12], fill=rgba((90, 230, 215)))
+    px = img.load()
+    cap, cap_l, cap_d = (90, 230, 215), (180, 255, 245), (50, 170, 165)
+    for y in range(3, 10):
+        for x in range(2, 13):
+            dx, dy = (x - 7.0) / 5.4, (y - 8.5) / 5.0
+            if dx * dx + dy * dy <= 1 and y <= 8:
+                k = dx + dy
+                px[x, y] = rgba(cap_l if k < -0.9 else cap_d if k > 0.15 else cap)
+    for x in range(3, 12):                                      # láminas
+        px[x, 9] = rgba((40, 120, 120) if x % 2 else (60, 150, 148))
+    for (x, y) in ((5, 5), (8, 4), (10, 6), (6, 7)):            # manchas
+        px[x, y] = rgba((230, 255, 252))
+    for y in range(10, 16):                                     # pie
+        px[7, y] = rgba((214, 232, 230))
+        px[8, y] = rgba((170, 196, 196))
+    for (x, y, c) in ((12, 11, cap), (13, 11, cap_l), (14, 11, cap_d), (12, 12, cap_d), (13, 12, cap_d), (14, 12, cap_d),
+                      (13, 13, (214, 232, 230)), (13, 14, (214, 232, 230)), (13, 15, (170, 196, 196))):
+        px[x, y] = rgba(c)
     return img
 
 
 def vine(rng):
-    """Tallos continuos que ondulan con periodo 16 (la liana de un bloque empalma con la del de abajo) y hojitas a
-    los lados alternadas."""
+    """Tallos continuos que ondulan con periodo 16 (empalman con el bloque de abajo) y hojitas de dos tonos
+    alternadas a los lados."""
     img = Image.new("RGBA", (T, T), (0, 0, 0, 0))
     px = img.load()
     for x0, ph in ((2, 0.0), (7, 2.1), (12, 4.2)):
         for y in range(T):
             x = x0 + int(round(1.2 * math.sin(2 * math.pi * y / T + ph)))
             px[x, y] = rgba(shade((50, 150, 132), 1 + 0.08 * math.sin(y)))
-            if (y + int(ph * 3)) % 4 == 0:                    # hoja a la izquierda o a la derecha
+            if (y + int(ph * 3)) % 4 == 0:
                 side = -1 if (y // 4) % 2 else 1
-                for k in (1, 2):
+                for k, c in ((1, (84, 196, 170)), (2, (120, 222, 194))):
                     xx = x + side * k
                     if 0 <= xx < T:
-                        px[xx, y] = rgba((84, 196, 170) if k == 1 else (110, 214, 186))
+                        px[xx, y] = rgba(c)
                 if 0 <= x + side < T and y + 1 < T:
-                    px[x + side, y + 1] = rgba((70, 180, 156))
+                    px[x + side, y + 1] = rgba((58, 160, 138))
+                if 0 <= x + 2 * side < T and y + 1 < T:
+                    px[x + 2 * side, y + 1] = rgba((70, 180, 156))
     return img
 
 
 def lily(rng):
+    """Nenúfar: hoja redonda con corte, nervios que salen del centro, borde oscuro y una flor blanca y azul."""
     img = Image.new("RGBA", (T, T), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.ellipse([1, 2, 14, 14], fill=rgba((60, 110, 200)))
-    d.polygon([(8, 8), (14, 5), (14, 9)], fill=(0, 0, 0, 0))   # corte de la hoja
-    for _ in range(14):
-        x, y = rng.randrange(3, 13), rng.randrange(4, 13)
-        if img.getpixel((x, y))[3]:
-            d.point((x, y), fill=rgba((84, 140, 222) if rng.random() < 0.6 else (44, 86, 170)))
-    d.point((6, 7), fill=rgba((200, 240, 255)))                # florecita blanca
+    px = img.load()
+    for y in range(T):
+        for x in range(T):
+            dx, dy = (x - 7.5) / 6.8, (y - 8.0) / 6.4
+            r = dx * dx + dy * dy
+            ang = math.atan2(y - 8.0, x - 7.5)
+            if r <= 1 and not (-0.35 < ang < 0.25 and r > 0.05):
+                c = (60, 110, 200)
+                if r > 0.78:
+                    c = (40, 80, 160)
+                elif dx + dy < -0.5:
+                    c = (84, 140, 222)
+                px[x, y] = rgba(c)
+    for a in (1.2, 2.3, 3.4, 4.5, 5.6):                          # nervios
+        for k in range(2, 6):
+            x, y = int(round(7.5 + math.cos(a) * k)), int(round(8 + math.sin(a) * k))
+            if px[x, y][3]:
+                px[x, y] = rgba((96, 154, 230))
+    for (x, y, c) in ((5, 5, (240, 245, 255)), (6, 5, (200, 215, 245)), (5, 6, (200, 215, 245)), (4, 5, (240, 245, 255)),
+                      (5, 4, (240, 245, 255)), (6, 6, (120, 160, 240))):
+        px[x, y] = rgba(c)
     return img
 
 

@@ -57,50 +57,60 @@ def ball(img, cx, cy, r, base, light, dark):
 # ------------------------------------------------------------------ plantas comestibles
 
 def berry_bush(rng, berries):
+    """Arbusto redondo hecho con racimos de hojas (como las texturas de hojas, pero recortado en forma de mata), con
+    ramitas violetas abajo y, si está maduro, bayas de 2×2 con brillo."""
+    lv = AT.leaves(random.Random(rng.randint(0, 9999)), (46, 140, 120), (70, 172, 144), (28, 100, 88), holes=0.0)
     img = canvas()
-    px = img.load()
-    leaf = [(46, 140, 120), (62, 160, 136), (34, 112, 98)]
-    for y in range(4, T):
-        half = int(6.5 * math.sin(math.pi * (y - 3) / 13)) + 1
-        for x in range(8 - half, 8 + half):
-            if rng.random() < 0.82:
-                px[x, y] = rgba(rng.choice(leaf))
-    for x in (6, 9):                                           # ramitas
-        for y in range(12, T):
-            px[x, y] = rgba((70, 60, 92))
+    src, px = lv.load(), img.load()
+    for y in range(3, T - 1):
+        half = 6.8 * math.sin(math.pi * (y - 2) / 14) + 0.6
+        for x in range(T):
+            if abs(x - 7.5) <= half and (abs(x - 7.5) < half - 1 or rng.random() < 0.6):
+                px[x, y] = src[x, y]
+    for (x, y) in ((6, 15), (6, 14), (7, 13), (9, 15), (9, 14), (8, 13)):
+        px[x, y] = rgba((76, 64, 100) if x < 8 else (58, 48, 80))
     if berries:
-        for (x, y) in ((4, 7), (10, 6), (7, 9), (12, 10), (5, 12), (9, 12), (11, 13)):
-            px[x, y] = rgba((70, 110, 230))
-            px[x + 1, y] = rgba((40, 70, 180))
-            px[x, y - 1] = rgba((150, 190, 255))
+        for (x, y) in ((3, 7), (10, 5), (7, 8), (12, 9), (4, 11), (9, 11), (6, 4)):
+            px[x, y] = rgba((150, 190, 255))
+            px[x + 1, y] = rgba((80, 120, 235))
+            px[x, y + 1] = rgba((70, 105, 220))
+            px[x + 1, y + 1] = rgba((36, 60, 160))
     return img
 
 
 def blue_berries():
     img = canvas()
-    for (cx, cy) in ((6, 9), (10, 8), (8, 11.5)):
-        ball(img, cx, cy, 2.6, (70, 110, 230), (150, 190, 255), (40, 70, 180))
     d = ImageDraw.Draw(img)
     d.line([(8, 6), (9, 3), (11, 2)], fill=rgba((60, 150, 120)))
+    d.line([(12, 2), (13, 3)], fill=rgba((90, 190, 150)))
+    px = img.load()
+    for (cx, cy) in ((5.5, 9), (10.5, 8), (8, 12)):
+        ball(img, cx, cy, 2.8, (70, 110, 230), (150, 190, 255), (40, 70, 180))
+        px[int(cx) - 1, int(cy) - 1] = rgba((220, 235, 255))       # brillo
+        px[int(cx), int(cy) - 2] = rgba((40, 60, 140))              # cáliz
     return outline(img, (20, 30, 70))
 
 
 def violet_fruit():
-    """Fruta del árbol violeta: una gota grande de piel turquesa con pecas azules y un rabito violeta."""
+    """Fruta del árbol violeta: gota turquesa con cuatro tonos, brillo, pecas azules y rabito con hoja."""
     img = canvas()
     px = img.load()
     for y in range(T):
         for x in range(T):
-            dx, dy = (x - 7.5) / 5.2, (y - 9.0) / (6.0 if y > 9 else 4.4)
-            if dx * dx + dy * dy <= 1:
-                k = dx + dy
-                c = (150, 236, 214) if k < -0.7 else (40, 150, 140) if k > 0.6 else (84, 200, 180)
+            dx, dy = (x - 7.5) / 5.4, (y - 9.0) / (6.0 if y > 9 else 4.6)
+            r = dx * dx + dy * dy
+            if r <= 1:
+                k = dx * 0.8 + dy
+                c = (176, 246, 226) if k < -0.95 else (120, 222, 200) if k < -0.35 else (40, 150, 140) if k > 0.75 else \
+                    (60, 176, 160) if k > 0.25 else (84, 200, 180)
                 px[x, y] = rgba(c)
-    for (x, y) in ((6, 9), (9, 11), (5, 12), (10, 8), (8, 13)):
+    for (x, y) in ((7, 10), (10, 12), (5, 12), (9, 8), (8, 14), (11, 10)):
         px[x, y] = rgba((52, 110, 190))
+    px[5, 6], px[6, 6], px[5, 7] = rgba((235, 255, 250)), rgba((200, 250, 240)), rgba((200, 250, 240))
     d = ImageDraw.Draw(img)
     d.line([(8, 4), (9, 1)], fill=rgba((92, 80, 118)))
-    d.line([(9, 2), (12, 2)], fill=rgba((62, 170, 140)))
+    for (x, y, c) in ((10, 1, (90, 200, 160)), (11, 1, (62, 170, 140)), (12, 2, (62, 170, 140)), (11, 2, (40, 130, 110))):
+        px[x, y] = rgba(c)
     return outline(img, (16, 48, 50))
 
 
@@ -114,126 +124,199 @@ def hanging_fruit():
 
 
 def root_crop(rng, stage):
-    """Raíz cerúlea: cuatro etapas; en la última asoma el tubérculo morado azulado."""
+    """Raíz cerúlea: matas de hojas en abanico (con nervio claro) que crecen en cuatro etapas; en la última asoman
+    los tubérculos morados de la tierra."""
     img = canvas()
-    d = ImageDraw.Draw(img)
+    px = img.load()
     hgt = [4, 7, 10, 12][stage]
-    leaf = (70, 190, 150) if stage < 3 else (90, 210, 170)
-    for x0 in (4, 8, 12):
-        for k in range(hgt):
-            y = T - 1 - k
-            x = x0 + (1 if k > hgt * 0.6 else 0) * (1 if x0 > 8 else -1 if x0 < 8 else 0)
-            d.point((x, y), fill=rgba(shade(leaf, 0.75 + 0.35 * k / hgt)))
-        if stage >= 1:
-            d.point((x0 - 1, T - hgt + 1), fill=rgba(leaf))
-            d.point((x0 + 1, T - hgt + 2), fill=rgba(leaf))
+    for x0, lean in ((3, -1), (8, 0), (13, 1)):
+        for leaf in (-1, 0, 1):
+            h = hgt - abs(leaf) * 2
+            for k in range(max(1, h)):
+                f = k / max(1, h - 1)
+                x = int(round(x0 + leaf * f * 2 + lean * f))
+                y = T - 1 - k
+                if 0 <= x < T:
+                    px[x, y] = rgba(shade((70, 190, 150), 0.7 + 0.45 * f))
+                    if stage >= 2 and 0.3 < f < 0.9 and 0 <= x + leaf < T and leaf != 0:
+                        px[x + leaf, y] = rgba(shade((50, 160, 128), 0.8 + 0.3 * f))
+            if stage >= 1 and 0 <= x0 + leaf * 2 < T:
+                px[x0 + leaf * 2, T - h] = rgba((150, 236, 200))
     if stage == 3:
-        for x0 in (4, 12):
-            d.ellipse([x0 - 2, 12, x0 + 2, 15], fill=rgba((96, 70, 160)))
-            d.point((x0 - 1, 13), fill=rgba((150, 130, 210)))
+        for x0 in (3, 13):
+            for (dx, dy, c) in ((-1, 0, (120, 96, 186)), (0, 0, (96, 70, 160)), (1, 0, (96, 70, 160)), (-1, 1, (96, 70, 160)),
+                                (0, 1, (70, 50, 128)), (1, 1, (60, 44, 110)), (0, -1, (150, 130, 210))):
+                x, y = x0 + dx, 13 + dy
+                if 0 <= x < T:
+                    px[x, y] = rgba(c)
     return img
 
 
 def root_item(cooked=False):
+    """Raíz cerúlea (cruda: morada con anillos y raicillas; asada: dorada con grietas tostadas)."""
     img = canvas()
     px = img.load()
-    base, light, dark = ((96, 70, 160), (150, 130, 210), (60, 44, 110)) if not cooked else ((150, 110, 90), (214, 176, 130), (100, 70, 60))
+    if cooked:
+        tones = [(236, 196, 140), (208, 160, 110), (170, 120, 86), (126, 86, 64)]
+    else:
+        tones = [(170, 150, 226), (124, 98, 190), (96, 70, 160), (64, 46, 116)]
     for y in range(T):
         for x in range(T):
-            # tubérculo inclinado
             u, v = (x - 8) * 0.8 + (y - 8) * 0.6, -(x - 8) * 0.6 + (y - 8) * 0.8
-            if (u / 6.5) ** 2 + (v / 3.6) ** 2 <= 1:
-                k = (u / 6.5) * 0.3 + v / 3.6
-                px[x, y] = rgba(light if k < -0.5 else dark if k > 0.45 else base)
-    for (x, y) in ((6, 7), (10, 9), (8, 10)):
-        px[x, y] = rgba(dark if not cooked else (90, 60, 50))
-    if not cooked:
+            if (u / 6.6) ** 2 + (v / 3.7) ** 2 <= 1:
+                k = (u / 6.6) * 0.25 + v / 3.7
+                c = tones[0] if k < -0.6 else tones[1] if k < -0.1 else tones[2] if k < 0.5 else tones[3]
+                if not cooked and int(u + 20) % 4 == 0:
+                    c = shade(c, 0.85)                           # anillos
+                px[x, y] = rgba(c)
+    if cooked:
+        for (x, y) in ((6, 7), (7, 8), (9, 9), (10, 10), (8, 11)):
+            px[x, y] = rgba((96, 60, 40))
+        px[5, 6] = rgba((250, 226, 180))
+    else:
         d = ImageDraw.Draw(img)
         d.line([(3, 4), (2, 1)], fill=rgba((70, 190, 150)))
-        d.line([(4, 4), (5, 1)], fill=rgba((90, 210, 170)))
-    return outline(img, (30, 20, 50))
+        d.line([(4, 4), (5, 1)], fill=rgba((110, 220, 180)))
+        d.point((13, 13), fill=rgba((150, 130, 200)))
+        d.point((14, 14), fill=rgba((150, 130, 200)))
+    return outline(img, (30, 20, 50) if not cooked else (60, 36, 24))
 
 
 def reed(rng, top):
-    """Junco del pantano (2 bloques): tallos rectos verde azulado; arriba, vainas alargadas azules."""
+    """Junco del pantano (2 bloques): tallos de dos tonos con nudos cada 5 px y hojas largas que salen de los nudos;
+    arriba, mazorcas azules (como las espadañas) con su luz, su sombra y una puntita."""
     img = canvas()
-    d = ImageDraw.Draw(img)
-    for x in (3, 7, 11, 13):
-        d.line([(x, 0 if not top else 4 + (x % 3)), (x, T - 1)], fill=rgba(shade((60, 150, 132), 0.9 + 0.05 * (x % 3))))
-        d.point((x + 1, T - 1 - (x % 5)), fill=rgba((84, 176, 154)))
+    px = img.load()
+    for x0 in (3, 8, 12):
+        y_top = 0 if not top else 5 + (x0 % 3)
+        for y in range(y_top, T):
+            node = (y + x0) % 5 == 0
+            px[x0, y] = rgba((50, 120, 108) if node else (76, 168, 146))
+            px[x0 + 1, y] = rgba((40, 100, 90) if node else (58, 140, 124))
+            if node and y < T - 2:                                # hoja que sale del nudo
+                side = 1 if (x0 + y) % 2 else -1
+                for k in range(1, 4):
+                    xx, yy = x0 + (2 if side > 0 else -1) + side * (k - 1), y - k + 1
+                    if 0 <= xx < T and 0 <= yy < T:
+                        px[xx, yy] = rgba((96, 190, 164) if k < 3 else (130, 214, 186))
     if top:
-        for x in (3, 7, 11):
-            d.rectangle([x - 1, 1 + (x % 3), x + 1, 6 + (x % 3)], fill=rgba((60, 100, 190)))
-            d.point((x, 2 + (x % 3)), fill=rgba((130, 170, 240)))
+        for x0 in (3, 8, 12):
+            yt = 5 + (x0 % 3)
+            for y in range(yt - 6, yt):
+                for dx, c in ((-1, (90, 130, 220)), (0, (60, 100, 196)), (1, (60, 100, 196)), (2, (36, 66, 150))):
+                    xx = x0 + dx
+                    if 0 <= xx < T and 0 <= y < T and not (dx in (-1, 2) and y in (yt - 6, yt - 1)):
+                        px[xx, y] = rgba(c)
+            for y in range(max(0, yt - 9), yt - 6):
+                px[x0, y] = rgba((90, 168, 150))                  # puntita
     return img
 
 
 def reed_pod():
+    """Vainas de junco: tres mazorcas azules en su tallo, con luz, sombra y puntita."""
     img = canvas()
+    px = img.load()
     d = ImageDraw.Draw(img)
-    d.line([(3, 13), (12, 3)], fill=rgba((60, 150, 132)), width=1)
-    for (x, y) in ((5, 10), (8, 7), (11, 4)):
-        d.ellipse([x - 2, y - 3, x + 2, y + 2], fill=rgba((60, 100, 190)))
-        d.point((x - 1, y - 2), fill=rgba((140, 180, 245)))
+    d.line([(2, 14), (13, 2)], fill=rgba((76, 168, 146)))
+    for (x, y) in ((5, 11), (8, 8), (11, 5)):
+        for (dx, dy, c) in ((-1, -2, (130, 170, 240)), (0, -2, (90, 130, 220)), (-1, -1, (90, 130, 220)), (0, -1, (60, 100, 196)),
+                            (1, -1, (60, 100, 196)), (-1, 0, (60, 100, 196)), (0, 0, (60, 100, 196)), (1, 0, (36, 66, 150)),
+                            (0, 1, (36, 66, 150)), (1, -2, (60, 100, 196))):
+            px[x + dx, y + dy] = rgba(c)
+        px[x + 1, y - 3] = rgba((120, 200, 176))
     return outline(img, (20, 34, 80))
 
 
 def glow_stew():
+    """Tazón de madera con vetas y sopa luminosa con trocitos de hongo."""
     img = canvas()
-    d = ImageDraw.Draw(img)
-    d.ellipse([1, 6, 14, 15], fill=rgba((120, 92, 70)))         # tazón
-    d.ellipse([1, 6, 14, 10], fill=rgba((96, 72, 56)))
-    d.ellipse([2, 6, 13, 9], fill=rgba((80, 220, 210)))          # sopa
-    for (x, y) in ((5, 7), (9, 7), (11, 8)):
-        d.point((x, y), fill=rgba((210, 255, 250)))
-    d.rectangle([2, 12, 13, 13], fill=rgba((140, 108, 82)))
+    px = img.load()
+    for y in range(6, 16):
+        for x in range(1, 15):
+            dx, dy = (x - 7.5) / 6.6, (y - 8.0) / 7.0
+            if dx * dx + dy * dy <= 1 and y >= 8:
+                k = dx
+                c = (150, 116, 88) if k < -0.5 else (110, 82, 62) if k > 0.4 else (130, 98, 74)
+                if (x + y) % 5 == 0:
+                    c = shade(c, 0.86)                           # vetas
+                px[x, y] = rgba(c)
+    for x in range(2, 14):                                       # borde
+        px[x, 7] = rgba((168, 132, 100))
+    for x in range(3, 13):
+        px[x, 8] = rgba((80, 220, 210) if x % 3 else (60, 190, 184))
+        px[x, 7] = rgba((120, 240, 230)) if 4 <= x <= 11 else px[x, 7]
+    for (x, y, c) in ((5, 6, (200, 255, 250)), (6, 6, (120, 240, 230)), (9, 6, (200, 255, 250)), (10, 6, (120, 240, 230)),
+                      (7, 7, (230, 255, 255))):
+        px[x, y] = rgba(c)
     return outline(img, (40, 30, 24))
 
-
-# ------------------------------------------------------------------ piedra y minerales
 
 def stone_family(rng, base_stone):
     t = {}
     t["cerulean_stone"] = base_stone
-    # roca (cobblestone): piedras redondeadas con juntas oscuras
-    img = Image.new("RGBA", (T, T), rgba((80, 86, 98)))
+    # roca (cobblestone): piedras redondeadas de varios tonos, con luz arriba a la izquierda y juntas oscuras
+    img = Image.new("RGBA", (T, T), rgba((64, 70, 84)))
     px = img.load()
-    for _ in range(11):
-        cx, cy, r = rng.uniform(0, T), rng.uniform(0, T), rng.uniform(2.2, 3.6)
-        c = rng.choice([(110, 116, 128), (98, 104, 116), (124, 130, 142)])
+    for _ in range(12):
+        cx, cy, r = rng.uniform(0, T), rng.uniform(0, T), rng.uniform(2.3, 3.6)
+        c = rng.choice([(110, 116, 130), (98, 104, 118), (124, 130, 144), (88, 94, 108)])
         for dy in range(-4, 5):
             for dx in range(-4, 5):
-                if dx * dx + dy * dy <= r * r:
-                    k = 1.12 if dx + dy < -1 else 0.86 if dx + dy > 2 else 1.0
-                    px[math.floor(cx + dx) % T, math.floor(cy + dy) % T] = rgba(shade(c, k))
+                d2 = dx * dx + dy * dy
+                if d2 <= r * r:
+                    k = 1.18 if dx + dy <= -3 else 1.08 if dx + dy < -1 else 0.82 if dx + dy > 2 else 1.0
+                    if d2 > (r - 1) * (r - 1) and dx + dy > 0:
+                        k = 0.74                            # borde en sombra
+                    px[math.floor(cx + dx) % T, math.floor(cy + dy) % T] = rgba(shade(c, k + rng.uniform(-0.03, 0.03)))
     t["cerulean_cobblestone"] = img
-    # ladrillos
+    # ladrillos: cada ladrillo con su tono, textura, canto de luz arriba y sombra abajo
     img = Image.new("RGBA", (T, T))
     px = img.load()
+    tex = AT.pnoise(rng, ((4, 0.5), (2, 0.5)))
+    tone = {}
     for y in range(T):
         for x in range(T):
             row = y // 4
             off = 4 if row % 2 else 0
-            mortar = y % 4 == 3 or (x + off) % 8 == 7
-            c = (78, 84, 96) if mortar else shade((116, 122, 136), 1 + rng.uniform(-0.05, 0.05) - (0.06 if y % 4 == 2 else 0))
+            bx = ((x + off) // 8, row)
+            if bx not in tone:
+                tone[bx] = rng.uniform(0.92, 1.08)
+            if y % 4 == 3 or (x + off) % 8 == 7:
+                c = (70, 76, 90)
+            else:
+                c = shade((118, 124, 138), tone[bx] * (0.92 + 0.16 * tex[y, x]))
+                if y % 4 == 0:
+                    c = shade(c, 1.12)
+                elif y % 4 == 2:
+                    c = shade(c, 0.9)
+                if (x + off) % 8 == 0:
+                    c = shade(c, 1.06)
             px[x, y] = rgba(c)
     t["cerulean_stone_bricks"] = img
-    # pulida
-    img = AT.noise_tile(rng, (122, 128, 140), 0.025)
+    # pulida: lisa con bisel y un dibujo de losa en el centro
+    f = AT.pnoise(rng, ((8, 0.5), (4, 0.5)))
+    img = AT.posterize(f * 0.4 + 0.3, AT.ramp((108, 114, 128), (150, 156, 168), 5), rng, 0.04)
     d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, T - 1, T - 1], outline=rgba((96, 102, 114)))
-    d.line([(1, 1), (T - 2, 1)], fill=rgba((140, 146, 158)))
+    d.line([(0, 0), (T - 1, 0)], fill=rgba((168, 174, 186)))
+    d.line([(0, 0), (0, T - 1)], fill=rgba((158, 164, 176)))
+    d.line([(0, T - 1), (T - 1, T - 1)], fill=rgba((80, 86, 100)))
+    d.line([(T - 1, 0), (T - 1, T - 1)], fill=rgba((88, 94, 108)))
+    d.rectangle([4, 4, 11, 11], outline=rgba((112, 118, 132)))
+    d.line([(5, 5), (10, 5)], fill=rgba((150, 156, 168)))
     t["polished_cerulean_stone"] = img
     return t
 
 
 def deep_stone(rng):
-    img = AT.noise_tile(rng, (62, 66, 84), 0.05, dots=[(48, 52, 68), (76, 80, 100)], n_dots=60)
+    """Piedra profunda: más oscura y azulada, con estratos horizontales que ondulan (como la pizarra profunda)."""
+    f = AT.pnoise(rng, ((8, 0.35), (4, 0.35), (2, 0.3)))
+    for y in range(T):
+        f[y, :] = 0.55 * f[y, :] + 0.45 * (0.5 + 0.5 * np.sin(y * math.pi / 2 + 0.6 * np.sin(np.arange(T) * math.pi / 8)))
+    img = AT.edges(AT.posterize(f, AT.ramp((38, 40, 56), (92, 96, 118), 5), rng, 0.08))
     px = img.load()
-    for y in range(0, T, 4):                                  # vetas horizontales, como la pizarra
-        for x in range(T):
-            if rng.random() < 0.6:
-                px[x, y] = rgba((52, 56, 72))
+    for _ in range(3):
+        x, y = rng.randrange(T), rng.randrange(T)
+        px[x, y] = rgba((118, 122, 146))
     return img
 
 
@@ -284,6 +367,8 @@ def ore(rng, stone_img, colors, shape):
             bottom_right = (dx + 1, dy) not in cs and (dx, dy + 1) not in cs
             c = light if top_left else dark if bottom_right else base
             px[(cx + dx) % T, (cy + dy) % T] = rgba(c)
+        if shape != "dots" and rng.random() < 0.6:            # destello
+            px[cx % T, cy % T] = rgba(shade(light, 1.15))
     return img
 
 
