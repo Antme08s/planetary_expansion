@@ -205,6 +205,22 @@ def hanging_fruit_block(fruit):
     return img
 
 
+def fill_holes(img):
+    """1.0.3: hojas sin huecos (los pocos píxeles transparentes se veían como puntos sueltos). Cada hueco toma el color
+    de un vecino opaco; el resto de la textura no cambia."""
+    img = img.copy()
+    px = img.load()
+    for y in range(T):
+        for x in range(T):
+            if px[x, y][3] == 0:
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1)):
+                    c = px[(x + dx) % T, (y + dy) % T]
+                    if c[3]:
+                        px[x, y] = c
+                        break
+    return img
+
+
 def main():
     blk, itm = os.path.join(OUT, "block"), os.path.join(OUT, "item")
     os.makedirs(blk, exist_ok=True)
@@ -251,6 +267,8 @@ def main():
     I.update({"blueberries": t["blue_berries"], "duskfruit": t["violet_fruit"], "cerulean_root": t["cerulean_root"],
          "baked_cerulean_root": t["baked_cerulean_root"], "reed_pod": t["reed_pod"], "glowcap_stew": t["glowcap_stew"],
          "cerulean_crystal": t["cerulean_crystal"]})
+    for k in [k for k in B if k.endswith("_leaves") or k == "cerulean_bush"]:
+        B[k] = fill_holes(B[k])
     for k, v in B.items():
         v.save(os.path.join(blk, k + ".png"))
     for k, v in I.items():

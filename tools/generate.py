@@ -3192,7 +3192,10 @@ def build_cerulea():
     reeds = patch("reeds", st("mire_reed", {"half": "lower"}), 48, count=3, extra_pred=NEAR_WATER)
     reeds_few = patch("reeds_few", st("mire_reed", {"half": "lower"}), 24, chance=2, extra_pred=NEAR_WATER)
     lilies = patch("lilies", st("azure_lily_pad"), 24, count=3, water=True)
-    bushes = patch("bushes", st("cerulean_bush", {"persistent": "true", "distance": "7", "waterlogged": "false"}), 8, chance=3)
+    # 1.0.3: el arbusto es un bloque de hojas (sobrevive en el aire); sin esto el y_spread lo dejaba flotando
+    ON_GROUND = {"type": "minecraft:matching_block_tag", "offset": [0, -1, 0], "tag": "minecraft:dirt"}
+    bushes = patch("bushes", st("cerulean_bush", {"persistent": "true", "distance": "7", "waterlogged": "false"}), 8, chance=3,
+                   extra_pred=ON_GROUND)
 
     # árboles
     def tree_cf(name, leaves_id):
@@ -3221,7 +3224,9 @@ def build_cerulea():
         placed(name, cf, [{"type": "minecraft:count", "count": {"type": "minecraft:weighted_list", "distribution": [
             {"data": count, "weight": 9}, {"data": count + 1, "weight": 1}]}},
             {"type": "minecraft:in_square"}, {"type": "minecraft:surface_water_depth_filter", "max_water_depth": 0},
-            {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"}, {"type": "minecraft:biome"}])
+            {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"},
+            # 1.0.3: el heightmap OCEAN_FLOOR cuenta las hojas; sin este filtro salían árboles encima de otros árboles
+            {"type": "minecraft:block_predicate_filter", "predicate": ON_GROUND}, {"type": "minecraft:biome"}])
         return rl(f"{P}/{name}")
     t_grove = trees("grove_trees", [(duskwood_green, 0.55), (duskwood_blue, 0.0)], 9)
     t_meadow = trees("meadow_trees", [(duskwood_green, 0.5), (duskwood_blue, 0.0)], 0)
@@ -3230,7 +3235,10 @@ def build_cerulea():
                     "default": {"feature": mirewood, "placement": []}}})
     placed("swamp_trees", cf, [{"type": "minecraft:count", "count": 2}, {"type": "minecraft:in_square"},
                                {"type": "minecraft:surface_water_depth_filter", "max_water_depth": 2},
-                               {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"}, {"type": "minecraft:biome"}])
+                               {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"},
+                               {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:any_of", "predicates": [
+                                   ON_GROUND, {"type": "minecraft:matching_block_tag", "offset": [0, -1, 0], "tag": "minecraft:sand"}]}},
+                               {"type": "minecraft:biome"}])
     t_swamp = rl(f"{P}/swamp_trees")
 
     # minerales

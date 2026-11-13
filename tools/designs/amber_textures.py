@@ -332,25 +332,43 @@ def short_grass(rng):
 
 
 def flower(rng, petal, center, stem=(60, 150, 120), glow=False):
-    """Flor de cinco pétalos con sombra, centro con brillo, tallo con dos hojas."""
+    """Flor de cinco pétalos unidos al centro (forma polar, sin píxeles sueltos: con mods que dan volumen a los sprites
+    los pétalos no se ven separados), con nervio, sombra entre pétalos, tallo y dos hojas pegadas al tallo."""
     img = Image.new("RGBA", (T, T), (0, 0, 0, 0))
     px = img.load()
-    d = ImageDraw.Draw(img)
-    d.line([(7, 15), (7, 8)], fill=rgba(stem))
-    d.line([(8, 15), (8, 10)], fill=rgba(shade(stem, 0.8)))
-    for (x, y, c) in ((5, 12, stem), (4, 11, shade(stem, 1.2)), (6, 13, shade(stem, 0.8)),
-                      (10, 11, stem), (11, 10, shade(stem, 1.2)), (9, 12, shade(stem, 0.8))):
+    # tallo y hojas, todo unido
+    for y in range(8, 16):
+        px[7, y] = rgba(stem)
+        px[8, y] = rgba(shade(stem, 0.78))
+    for (x, y, c) in ((6, 12, stem), (5, 12, shade(stem, 1.15)), (4, 11, shade(stem, 1.2)), (5, 11, stem), (6, 13, shade(stem, 0.8)),
+                      (9, 11, shade(stem, 0.8)), (10, 11, stem), (10, 10, shade(stem, 1.15)), (11, 10, shade(stem, 1.2)), (9, 12, shade(stem, 0.7))):
         px[x, y] = rgba(c)
-    dark, light = shade(petal, 0.72), shade(petal, 1.22)
-    for (cx, cy) in ((7.5, 2.5), (4.5, 4.5), (10.5, 4.5), (5.5, 7.5), (9.5, 7.5)):  # pétalos
-        for (dx, dy, c) in ((0, 0, petal), (1, 0, petal), (0, 1, petal), (1, 1, dark), (-1, 0, light) if cx < 7 else (2, 0, dark)):
-            x, y = int(cx + dx - 0.5), int(cy + dy - 0.5)
-            if 0 <= x < T and 0 <= y < T:
-                px[x, y] = rgba(c)
-    px[7, 5], px[8, 5], px[7, 6], px[8, 6] = rgba(center), rgba(shade(center, 0.85)), rgba(shade(center, 0.85)), rgba(shade(center, 0.7))
-    if glow:
-        for (x, y) in ((7, 0), (3, 3), (12, 3)):
-            px[x, y] = rgba(shade(petal, 1.3))
+    # cabeza: cinco pétalos que salen del centro (forma polar), sin huecos entre pétalo y centro
+    cx, cy = 7.5, 4.6
+    dark, light, vein = shade(petal, 0.7), shade(petal, 1.2), shade(petal, 0.84)
+    tip = shade(petal, 1.32)
+    for y in range(0, 10):
+        for x in range(1, 15):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            r = math.hypot(dx, dy)
+            th = math.atan2(dy, dx) + math.pi / 2          # un pétalo hacia arriba
+            lobe = abs(math.cos(2.5 * th)) ** 0.7
+            rmax = 2.0 + 2.9 * lobe
+            if r > rmax:
+                continue
+            if r < 1.45:
+                k = dx + dy
+                px[x, y] = rgba(shade(center, 1.08) if k < -0.6 else shade(center, 0.72) if k > 0.6 else center)
+                continue
+            k = (dx + dy) / max(r, 1e-6)
+            c = light if k < -0.45 else dark if k > 0.55 else petal
+            if lobe > 0.93 and r < rmax - 0.9:
+                c = vein                                       # nervio del pétalo
+            if r > rmax - 0.8 and lobe > 0.6 and k < 0.3:
+                c = tip if glow else light
+            if lobe < 0.45:
+                c = dark                                       # sombra entre pétalos
+            px[x, y] = rgba(c)
     return img
 
 
