@@ -133,11 +133,14 @@ public final class HologramLabels {
         float fullAt = baseMarker * 3.5f;
 
         List<Body> bodies = new ArrayList<>();
+        // 1.0.3: los astros de otro sistema solar no se marcan "fuera de escala" (salían todos amontonados)
+        String here = dev.antme08.planetaryexpansion.warp.StarSystems.systemOf(universe, posFrame.getName());
         for (CubePlanet planet : universe.getPlanets()) {
             Vector3D us = planet.posInMyFrame(date, posInFrame, posFrame); // nuestra posición vista desde el planeta
             double distance = us.getNorm();
             if (!(distance > 0) || Double.isNaN(distance)) continue;
             boolean far = !(distance < scaleTest);
+            if (far && !dev.antme08.planetaryexpansion.warp.StarSystems.systemOf(planet).equals(here)) continue;
             String id = planet.frame().getName();
             Vector3f pos;
             float drawnRadius;
