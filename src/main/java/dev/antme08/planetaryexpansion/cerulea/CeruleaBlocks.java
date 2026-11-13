@@ -13,17 +13,23 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PlaceOnWaterBlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ColoredFallingBlock;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.DoublePlantBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -137,6 +143,38 @@ public final class CeruleaBlocks {
             p -> new CeruleaPlants.Sapling(new TreeGrower("planetary_expansion_duskwood", Optional.empty(), Optional.of(tree("duskwood_tree")), Optional.empty()), p), sapling());
     public static final DeferredBlock<CeruleaPlants.Sapling> MIREWOOD_SAPLING = block("mirewood_sapling",
             p -> new CeruleaPlants.Sapling(new TreeGrower("planetary_expansion_mirewood", Optional.empty(), Optional.of(tree("mirewood_tree")), Optional.empty()), p), sapling());
+
+    // ------------------------------------------------------------------ escaleras, losas, puertas y trampillas (1.0.3)
+    /** El constructor de StairBlock es protegido. */
+    public static class Stairs extends StairBlock {
+        public Stairs(net.minecraft.world.level.block.state.BlockState base, BlockBehaviour.Properties p) { super(base, p); }
+    }
+
+    private static void stairsAndSlab(String prefix, DeferredBlock<? extends Block> base, Block props) {
+        block(prefix + "_stairs", p -> new Stairs(base.get().defaultBlockState(), p), BlockBehaviour.Properties.ofFullCopy(props));
+        block(prefix + "_slab", SlabBlock::new, BlockBehaviour.Properties.ofFullCopy(props));
+    }
+
+    private static void doors(String wood, BlockSetType type, Block props) {
+        DeferredBlock<DoorBlock> door = BLOCKS.register(wood + "_door",
+                () -> new DoorBlock(type, BlockBehaviour.Properties.ofFullCopy(props).noOcclusion()));
+        TAB.add(ITEMS.register(wood + "_door", () -> new DoubleHighBlockItem(door.get(), new Item.Properties())));
+        block(wood + "_trapdoor", p -> new TrapDoorBlock(type, p), BlockBehaviour.Properties.ofFullCopy(props).noOcclusion());
+    }
+
+    static {
+        stairsAndSlab("cerulean_stone", STONE, Blocks.STONE);
+        stairsAndSlab("cerulean_cobblestone", COBBLESTONE, Blocks.COBBLESTONE);
+        stairsAndSlab("cerulean_stone_brick", STONE_BRICKS, Blocks.STONE_BRICKS);
+        stairsAndSlab("polished_cerulean_stone", POLISHED_STONE, Blocks.POLISHED_ANDESITE);
+        stairsAndSlab("deep_cerulean_stone", DEEP_STONE, Blocks.DEEPSLATE);
+        stairsAndSlab("silverwood", SILVERWOOD_PLANKS, Blocks.BIRCH_PLANKS);
+        stairsAndSlab("duskwood", DUSKWOOD_PLANKS, Blocks.DARK_OAK_PLANKS);
+        stairsAndSlab("mirewood", MIREWOOD_PLANKS, Blocks.MANGROVE_PLANKS);
+        doors("silverwood", BlockSetType.BIRCH, Blocks.BIRCH_DOOR);
+        doors("duskwood", BlockSetType.DARK_OAK, Blocks.DARK_OAK_DOOR);
+        doors("mirewood", BlockSetType.MANGROVE, Blocks.MANGROVE_DOOR);
+    }
 
     // ------------------------------------------------------------------ plantas
     private static BlockBehaviour.Properties plant(MapColor c) {

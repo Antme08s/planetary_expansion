@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:silverwood_planks"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:silverwood_stairs",
+    "count": 4
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_trapdoor",
+    "planetary_expansion:duskwood_trapdoor",
+    "planetary_expansion:mirewood_trapdoor"
+  ]
+}

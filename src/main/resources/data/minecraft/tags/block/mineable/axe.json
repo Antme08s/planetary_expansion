@@ -6,6 +6,18 @@
     "planetary_expansion:mirewood_log",
     "planetary_expansion:silverwood_planks",
     "planetary_expansion:duskwood_planks",
-    "planetary_expansion:mirewood_planks"
+    "planetary_expansion:mirewood_planks",
+    "planetary_expansion:silverwood_stairs",
+    "planetary_expansion:duskwood_stairs",
+    "planetary_expansion:mirewood_stairs",
+    "planetary_expansion:silverwood_slab",
+    "planetary_expansion:duskwood_slab",
+    "planetary_expansion:mirewood_slab",
+    "planetary_expansion:silverwood_door",
+    "planetary_expansion:duskwood_door",
+    "planetary_expansion:mirewood_door",
+    "planetary_expansion:silverwood_trapdoor",
+    "planetary_expansion:duskwood_trapdoor",
+    "planetary_expansion:mirewood_trapdoor"
   ]
 }

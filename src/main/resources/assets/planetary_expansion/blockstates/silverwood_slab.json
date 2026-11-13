@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "planetary_expansion:block/silverwood_slab"
+    },
+    "type=top": {
+      "model": "planetary_expansion:block/silverwood_slab_top"
+    },
+    "type=double": {
+      "model": "planetary_expansion:block/silverwood_planks"
+    }
+  }
+}

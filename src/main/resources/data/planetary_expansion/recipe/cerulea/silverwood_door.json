@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "group": "wooden_door",
+  "pattern": [
+    "##",
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:silverwood_planks"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:silverwood_door",
+    "count": 3
+  }
+}

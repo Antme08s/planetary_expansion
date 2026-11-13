@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/door_bottom_left_open",
+  "textures": {
+    "bottom": "planetary_expansion:block/duskwood_door_bottom",
+    "top": "planetary_expansion:block/duskwood_door_top"
+  },
+  "render_type": "minecraft:cutout"
+}

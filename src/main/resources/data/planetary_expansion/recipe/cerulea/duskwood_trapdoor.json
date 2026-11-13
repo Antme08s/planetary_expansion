@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "group": "wooden_trapdoor",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:duskwood_planks"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:duskwood_trapdoor",
+    "count": 2
+  }
+}

@@ -2864,6 +2864,119 @@ def build_cerulea():
                                                          {"condition": "minecraft:random_chance", "chance": 0.02}]))
         loot(n, pools)
 
+    # --------------------------------------------------------------- escaleras, losas, puertas y trampillas
+    FACING_Y = {"east": 0, "south": 90, "west": 180, "north": 270}
+    shapes = {"straight": "", "inner_left": "_inner", "inner_right": "_inner", "outer_left": "_outer", "outer_right": "_outer"}
+    MATS = [("cerulean_stone", "cerulean_stone", "Cerulean Stone", "de piedra cerúlea", "stone"),
+            ("cerulean_cobblestone", "cerulean_cobblestone", "Cerulean Cobblestone", "de roca cerúlea", "stone"),
+            ("cerulean_stone_brick", "cerulean_stone_bricks", "Cerulean Stone Brick", "de ladrillos de piedra cerúlea", "stone"),
+            ("polished_cerulean_stone", "polished_cerulean_stone", "Polished Cerulean Stone", "de piedra cerúlea pulida", "stone"),
+            ("deep_cerulean_stone", "deep_cerulean_stone", "Deep Cerulean Stone", "de piedra cerúlea profunda", "stone"),
+            ("silverwood", "silverwood_planks", "Silverwood", "de árbol plateado", "wood"),
+            ("duskwood", "duskwood_planks", "Duskwood", "de árbol violeta", "wood"),
+            ("mirewood", "mirewood_planks", "Mirewood", "de árbol del pantano", "wood")]
+    stair_ids, slab_ids, wood_stairs, wood_slabs = [], [], [], []
+    for prefix, base, en, es, kind in MATS:
+        st_, sl_ = f"{prefix}_stairs", f"{prefix}_slab"
+        tx = {"bottom": base, "top": base, "side": base}
+        model(st_, "minecraft:block/stairs", tx)
+        model(st_ + "_inner", "minecraft:block/inner_stairs", tx)
+        model(st_ + "_outer", "minecraft:block/outer_stairs", tx)
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half in ("bottom", "top"):
+                for shape, suffix in shapes.items():
+                    y = y0
+                    if shape in ("inner_left", "outer_left") and half == "bottom":
+                        y += 270
+                    if shape in ("inner_right", "outer_right") and half == "top":
+                        y += 90
+                    v = {"model": rl(f"block/{st_}{suffix}")}
+                    if half == "top":
+                        v["x"] = 180
+                    if y % 360:
+                        v["y"] = y % 360
+                    if "x" in v or "y" in v:
+                        v["uvlock"] = True
+                    var[f"facing={facing},half={half},shape={shape}"] = v
+        bstate(st_, var)
+        item_block(st_)
+        name_("block", st_, f"{en} Stairs", f"Escaleras {es}")
+        drop_self(st_)
+        model(sl_, "minecraft:block/slab", tx)
+        model(sl_ + "_top", "minecraft:block/slab_top", tx)
+        bstate(sl_, {"type=bottom": {"model": rl(f"block/{sl_}")}, "type=top": {"model": rl(f"block/{sl_}_top")},
+                     "type=double": {"model": rl(f"block/{base}")}})
+        item_block(sl_)
+        name_("block", sl_, f"{en} Slab", f"Losa {es}")
+        loot(sl_, [pool({"type": "minecraft:item", "name": B(sl_), "functions": [
+            {"function": "minecraft:set_count", "count": 2.0, "add": False,
+             "conditions": [{"condition": "minecraft:block_state_property", "block": B(sl_), "properties": {"type": "double"}}]},
+            {"function": "minecraft:explosion_decay"}]})])
+        data(f"recipe/cerulea/{st_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["#  ", "## ", "###"],
+                                       "key": {"#": {"item": B(base)}}, "result": {"id": B(st_), "count": 4}})
+        data(f"recipe/cerulea/{sl_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["###"],
+                                       "key": {"#": {"item": B(base)}}, "result": {"id": B(sl_), "count": 6}})
+        if kind == "stone":
+            for out, cnt in ((st_, 1), (sl_, 2)):
+                data(f"recipe/cerulea/{out}_from_{base}_stonecutting", {"type": "minecraft:stonecutting",
+                     "ingredient": {"item": B(base)}, "result": {"id": B(out), "count": cnt}})
+        stair_ids.append(B(st_))
+        slab_ids.append(B(sl_))
+        if kind == "wood":
+            wood_stairs.append(B(st_))
+            wood_slabs.append(B(sl_))
+    door_ids, trap_ids = [], []
+    for w, (en, es) in WOODS.items():
+        dn, tn = f"{w}_door", f"{w}_trapdoor"
+        for part in ("bottom_left", "bottom_left_open", "bottom_right", "bottom_right_open",
+                     "top_left", "top_left_open", "top_right", "top_right_open"):
+            model(f"{dn}_{part}", f"minecraft:block/door_{part}", {"bottom": f"{dn}_bottom", "top": f"{dn}_top"}, "minecraft:cutout")
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half, hp in (("lower", "bottom"), ("upper", "top")):
+                for hinge in ("left", "right"):
+                    for opened in (False, True):
+                        y = y0 + ((90 if hinge == "left" else 270) if opened else 0)
+                        v = {"model": rl(f"block/{dn}_{hp}_{hinge}{'_open' if opened else ''}")}
+                        if y % 360:
+                            v["y"] = y % 360
+                        var[f"facing={facing},half={half},hinge={hinge},open={'true' if opened else 'false'}"] = v
+        bstate(dn, var)
+        item_sprite(dn, f"item/{dn}")
+        name_("block", dn, f"{en} Door", f"Puerta de árbol {es}")
+        loot(dn, [pool({"type": "minecraft:item", "name": B(dn), "conditions": [
+            {"condition": "minecraft:block_state_property", "block": B(dn), "properties": {"half": "lower"}}]}, SURVIVES)])
+        for part in ("bottom", "top", "open"):
+            model(f"{tn}_{part}", f"minecraft:block/template_orientable_trapdoor_{part}", {"texture": tn}, "minecraft:cutout")
+        TY = {"north": 0, "east": 90, "south": 180, "west": 270}
+        var = {}
+        for facing, y0 in TY.items():
+            for half in ("bottom", "top"):
+                for opened in (False, True):
+                    if opened:
+                        v = {"model": rl(f"block/{tn}_open")}
+                        y = (y0 + 180) % 360 if half == "top" else y0
+                        if half == "top":
+                            v["x"] = 180
+                    else:
+                        v = {"model": rl(f"block/{tn}_{half}")}
+                        y = y0
+                    if y:
+                        v["y"] = y
+                    var[f"facing={facing},half={half},open={'true' if opened else 'false'}"] = v
+        bstate(tn, var)
+        item_block(tn, f"{tn}_bottom")
+        name_("block", tn, f"{en} Trapdoor", f"Trampilla de árbol {es}")
+        drop_self(tn)
+        planks_id = B(f"{w}_planks")
+        data(f"recipe/cerulea/{dn}", {"type": "minecraft:crafting_shaped", "category": "redstone", "group": "wooden_door",
+                                      "pattern": ["##", "##", "##"], "key": {"#": {"item": planks_id}}, "result": {"id": B(dn), "count": 3}})
+        data(f"recipe/cerulea/{tn}", {"type": "minecraft:crafting_shaped", "category": "redstone", "group": "wooden_trapdoor",
+                                      "pattern": ["###", "###"], "key": {"#": {"item": planks_id}}, "result": {"id": B(tn), "count": 2}})
+        door_ids.append(B(dn))
+        trap_ids.append(B(tn))
+
     # --------------------------------------------------------------- plantas
     def cross(n, en, es, tex=None, drops=None, shears=False):
         model(n, "minecraft:block/cross", {"cross": tex or n}, "minecraft:cutout")
@@ -2990,6 +3103,17 @@ def build_cerulea():
     tag("block", "minecraft:leaves", leaf_ids)
     tag("block", "minecraft:saplings", saplings)
     tag("block", "minecraft:climbable", [B("mire_vine")])
+    for kind_ in ("block", "item"):
+        tag(kind_, "minecraft:stairs", stair_ids)
+        tag(kind_, "minecraft:slabs", slab_ids)
+        tag(kind_, "minecraft:wooden_stairs", wood_stairs)
+        tag(kind_, "minecraft:wooden_slabs", wood_slabs)
+        tag(kind_, "minecraft:doors", door_ids)
+        tag(kind_, "minecraft:wooden_doors", door_ids)
+        tag(kind_, "minecraft:trapdoors", trap_ids)
+        tag(kind_, "minecraft:wooden_trapdoors", trap_ids)
+    tag("block", "minecraft:mineable/pickaxe", [x for x in stair_ids + slab_ids if x not in wood_stairs + wood_slabs])
+    tag("block", "minecraft:mineable/axe", wood_stairs + wood_slabs + door_ids + trap_ids)
     tag("block", "minecraft:crops", [B("cerulean_roots")])
     tag("block", "minecraft:small_flowers", [B("azure_flower"), B("glowbloom")])
     tag("block", "minecraft:replaceable_by_trees", [B("cerulean_grass"), B("tall_cerulean_grass"), B("azure_flower"), B("glowbloom")])

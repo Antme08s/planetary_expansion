@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "planetary_expansion:block/mirewood_slab"
+    },
+    "type=top": {
+      "model": "planetary_expansion:block/mirewood_slab_top"
+    },
+    "type=double": {
+      "model": "planetary_expansion:block/mirewood_planks"
+    }
+  }
+}

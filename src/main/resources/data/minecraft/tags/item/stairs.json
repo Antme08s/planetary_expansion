@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:cerulean_stone_stairs",
+    "planetary_expansion:cerulean_cobblestone_stairs",
+    "planetary_expansion:cerulean_stone_brick_stairs",
+    "planetary_expansion:polished_cerulean_stone_stairs",
+    "planetary_expansion:deep_cerulean_stone_stairs",
+    "planetary_expansion:silverwood_stairs",
+    "planetary_expansion:duskwood_stairs",
+    "planetary_expansion:mirewood_stairs"
+  ]
+}

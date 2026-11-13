@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:cerulean_stone_slab",
+    "planetary_expansion:cerulean_cobblestone_slab",
+    "planetary_expansion:cerulean_stone_brick_slab",
+    "planetary_expansion:polished_cerulean_stone_slab",
+    "planetary_expansion:deep_cerulean_stone_slab",
+    "planetary_expansion:silverwood_slab",
+    "planetary_expansion:duskwood_slab",
+    "planetary_expansion:mirewood_slab"
+  ]
+}

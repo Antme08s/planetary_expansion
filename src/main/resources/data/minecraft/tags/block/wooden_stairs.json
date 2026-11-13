@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_stairs",
+    "planetary_expansion:duskwood_stairs",
+    "planetary_expansion:mirewood_stairs"
+  ]
+}

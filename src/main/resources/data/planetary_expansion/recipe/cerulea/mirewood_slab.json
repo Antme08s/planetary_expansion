@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:mirewood_planks"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:mirewood_slab",
+    "count": 6
+  }
+}

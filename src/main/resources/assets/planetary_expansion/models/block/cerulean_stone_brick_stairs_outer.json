@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "planetary_expansion:block/cerulean_stone_bricks",
+    "top": "planetary_expansion:block/cerulean_stone_bricks",
+    "side": "planetary_expansion:block/cerulean_stone_bricks"
+  }
+}

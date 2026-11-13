@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "planetary_expansion:block/silverwood_planks",
+    "top": "planetary_expansion:block/silverwood_planks",
+    "side": "planetary_expansion:block/silverwood_planks"
+  }
+}

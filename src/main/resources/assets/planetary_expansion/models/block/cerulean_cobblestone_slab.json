@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "planetary_expansion:block/cerulean_cobblestone",
+    "top": "planetary_expansion:block/cerulean_cobblestone",
+    "side": "planetary_expansion:block/cerulean_cobblestone"
+  }
+}
