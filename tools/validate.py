@@ -95,6 +95,8 @@ for fn in os.listdir(os.path.join(ours, "dimension")):
         errors.append(f"dim {fn}: noise_settings inexistente")
     order = {}
     src = d["generator"]["biome_source"]
+    if "preset" in src:   # 1.0.3: biomas de Minecraft (planeta de prueba de Ámbar)
+        continue
     pts = src["biomes"] if "biomes" in src else [{"biome": src["biome"]}]
     for pt in pts:
         bid = pt["biome"]

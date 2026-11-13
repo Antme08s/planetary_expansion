@@ -1,5 +1,7 @@
 package dev.antme08.planetaryexpansion.warp.client;
 
+import dev.antme08.planetaryexpansion.warp.StarSystems;
+
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.antme08.planetaryexpansion.PlanetaryExpansion;
 import dev.antme08.planetaryexpansion.warp.NavStatusPayload;
@@ -55,12 +57,17 @@ public class NavMapScreen extends Screen {
     private static final int PANEL_W = 196;
     private static final Map<String, Integer> COLORS = Map.of(
             "sol", 0xFFFFD75E, "overworld", 0xFF4F8FE0, "moon", 0xFFCACAD2, "mars", 0xFFF07338, "gas_giant", 0xFFE6B880,
-            "ice_world", 0xFFB3EBFF, "ignis", 0xFFFF4D1A, "thalassa", 0xFF8CD1FF, "venus", 0xFFF2CC66);
+            "ice_world", 0xFFB3EBFF, "ignis", 0xFFFF4D1A, "thalassa", 0xFF8CD1FF, "venus", 0xFFF2CC66, "amber_test", 0xFF5FBF6A);
 
     private final BlockPos console;
     private double zoom = -1;     // píxeles por metro
     private double camX, camZ;    // centro de la vista (metros, heliocéntrico)
-    private String follow = "sol";
+    private String follow = null;
+    /** 1.0.3: sistema solar que se está viendo (nombre de su estrella); null = el de donde estamos. */
+    private String system = null;
+    /** Estrella del sistema dibujado en el último layout. */
+    private String currentStar = "sol";
+    private Button systemButton;
     private boolean dragging;
     private double dragDist;
     private String hovered;
@@ -76,7 +83,7 @@ public class NavMapScreen extends Screen {
     private final int[] stars;
 
     private record Body(String id, CubePlanet planet, String parent, double x, double z, double sx, double sy, double rPx,
-                        double radius, double mu, int color) {}
+                        double radius, double mu, int color, boolean star) {}
 
     private record Marker(double sx, double sy, String body, double hx, double hz) {}
 
@@ -92,10 +99,13 @@ public class NavMapScreen extends Screen {
     protected void init() {
         int y = height - 46;
         addRenderableWidget(Button.builder(Component.translatable(K + "center_sun"), b -> {
-            follow = "sol";
+            follow = currentStar;
             zoom = -1;
         }).bounds(8, y, 70, 18).build());
         addRenderableWidget(Button.builder(Component.translatable(K + "center_me"), b -> centerOnMe()).bounds(82, y, 70, 18).build());
+        // 1.0.3: cambiar de sistema solar (solo se ve si hay más de una estrella)
+        systemButton = addRenderableWidget(Button.builder(Component.empty(), b -> nextSystem()).bounds(156, y, 120, 18).build());
+        systemButton.visible = false;
         requestStatus();
     }
 
@@ -156,16 +166,24 @@ public class NavMapScreen extends Screen {
         UniverseDefinition u = DeepSpaceHandler.getUniverse();
         AbsoluteDate date = date(partial);
         if (u == null || date == null) return false;
-        Frame sol = u.getFrameByName("sol").orElse(null);
+        List<String> starList = StarSystems.stars(u);
+        String starName = system != null && starList.contains(system) ? system : autoSystem(u);
+        currentStar = starName;
+        if (systemButton != null) {
+            systemButton.visible = starList.size() > 1;
+            systemButton.setMessage(Component.translatable(K + "system", name(starName)));
+        }
+        Frame sol = u.getFrameByName(starName).orElse(null);
         CubePlanet sun = null;
-        for (CubePlanet p : u.getPlanets()) if (p.frame().getName().equals("sol")) sun = p;
+        for (CubePlanet p : u.getPlanets()) if (p.frame().getName().equals(starName)) sun = p;
         if (sol == null && sun != null) sol = sun.frame().getOrekitFrame();
         if (sol == null) return false;
 
         Map<String, Double> mus = new HashMap<>();
         for (PointGravitySource s : u.getGravitySources()) mus.put(s.frame().getName(), s.mu());
         Map<String, double[]> helio = new HashMap<>();
-        List<CubePlanet> planets = new ArrayList<>(u.getPlanets());
+        List<CubePlanet> planets = new ArrayList<>();
+        for (CubePlanet p : u.getPlanets()) if (StarSystems.systemOf(p).equals(starName)) planets.add(p);
         for (CubePlanet p : planets) {
             Vector3D v = p.getPosition(date, sol);
             helio.put(p.frame().getName(), new double[]{v.getX(), v.getZ()});
@@ -190,9 +208,10 @@ public class NavMapScreen extends Screen {
             String parent = parentOf(p);
             double[] h = helio.get(id);
             double sx, sy;
-            double rPx = Math.max(id.equals("sol") ? 7 : id.equals("gas_giant") ? 5 : 3.5, p.radius() * zoom);
+            boolean star = StarSystems.isStar(p);
+            double rPx = Math.max(star ? 7 : id.equals("gas_giant") ? 5 : 3.5, p.radius() * zoom);
             Body pb = parent == null ? null : byId.get(parent);
-            if (pb != null && !parent.equals("sol")) {
+            if (pb != null && !pb.star()) {
                 double rx = h[0] - pb.x(), rz = h[1] - pb.z();
                 double d = Math.hypot(rx, rz) * zoom;
                 int idx = moonIndex.merge(parent, 1, Integer::sum);
@@ -205,7 +224,7 @@ public class NavMapScreen extends Screen {
                 sy = toSy(h[1]);
             }
             Body b = new Body(id, p, parent, h[0], h[1], sx, sy, rPx, p.radius(), mus.getOrDefault(id, 0.0),
-                    COLORS.getOrDefault(id, 0xFFDDDDDD));
+                    COLORS.getOrDefault(id, star ? 0xFFFFA040 : 0xFFDDDDDD), star);
             bodies.add(b);
             byId.put(id, b);
         }
@@ -214,6 +233,7 @@ public class NavMapScreen extends Screen {
             if (DeepSpaceHandler.hasReceivedPosition() && sun != null && isDeepSpace()) {
                 DeepSpacePosition pos = DeepSpaceHandler.getReceivedPosition();
                 Frame frame = pos.getFrame();
+                if (!StarSystems.systemOf(u, frame.getName()).equals(starName)) throw new IllegalStateException("otro sistema");
                 Vector3D us = pos.getPosition(date);
                 Vector3D h = sun.posInMyFrame(date, us, frame);
                 Body near = byId.get(frame.getName());
@@ -223,7 +243,7 @@ public class NavMapScreen extends Screen {
                     ox = near.sx();
                     oy = near.sy();
                 }
-                if (near != null && !near.id().equals("sol")) {
+                if (near != null && !near.star()) {
                     double rx = h.getX() - near.x(), rz = h.getZ() - near.z();
                     double d = Math.hypot(rx, rz) * zoom;
                     double min = near.rPx() + 7;
@@ -271,8 +291,42 @@ public class NavMapScreen extends Screen {
     }
 
     private static boolean isMoon(CubePlanet p) {
-        String parent = parentOf(p);
-        return parent != null && !parent.equals("sol");
+        try {
+            var parent = p.frame().getParent();
+            return parent != null && parent.getParent() != null && !StarSystems.isStar(p) && !StarSystems.isStar(parent);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** Sistema en el que estamos: el de la nave en el espacio, el del planeta que orbitamos o el de la dimensión. */
+    private String autoSystem(UniverseDefinition u) {
+        try {
+            if (DeepSpaceHandler.hasReceivedPosition() && isDeepSpace())
+                return StarSystems.systemOf(u, DeepSpaceHandler.getReceivedPosition().getFrame().getName());
+        } catch (Throwable ignored) {
+        }
+        NavStatusPayload st = WarpClient.lastStatus;
+        if (st != null && !st.orbit().isEmpty()) return StarSystems.systemOf(u, st.orbit());
+        try {
+            if (minecraft != null && minecraft.level != null) {
+                CubePlanet p = u.getPlanetByDimension(minecraft.level.dimension());
+                if (p != null) return StarSystems.systemOf(p);
+            }
+        } catch (Throwable ignored) {
+        }
+        return "sol";
+    }
+
+    private void nextSystem() {
+        List<String> list = StarSystems.stars(DeepSpaceHandler.getUniverse());
+        if (list.size() < 2) return;
+        int i = list.indexOf(currentStar);
+        system = list.get((i + 1) % list.size());
+        follow = system;
+        zoom = -1;
+        pinned = null;
+        popup = null;
     }
 
     private static double distTo(Map<String, double[]> helio, CubePlanet p) {
@@ -403,12 +457,12 @@ public class NavMapScreen extends Screen {
         // astros
         for (Body b : bodies) {
             if (b.sx() + b.rPx() < 0 || b.sx() - b.rPx() > mapW() || b.sy() + b.rPx() < 0 || b.sy() - b.rPx() > height) continue;
-            if (b.id().equals("sol")) {
+            if (b.star()) {
                 for (int k = 4; k >= 1; k--) disc(g, b.sx(), b.sy(), b.rPx() * (1 + 0.45 * k), 0x14000000 | (b.color() & 0xFFFFFF));
                 disc(g, b.sx(), b.sy(), b.rPx(), b.color());
                 disc(g, b.sx(), b.sy(), b.rPx() * 0.6, 0xFFFFF6D0);
             } else {
-                Body sun = body("sol");
+                Body sun = body(currentStar);
                 double lx = sun == null ? 0 : sun.sx() - b.sx(), ly = sun == null ? 0 : sun.sy() - b.sy();
                 double ln = Math.hypot(lx, ly);
                 disc(g, b.sx(), b.sy(), b.rPx(), shade(b.color(), 0.45f));
@@ -447,7 +501,7 @@ public class NavMapScreen extends Screen {
         for (Body b : bodies) {
             if (b.sx() < -50 || b.sx() > mapW() + 50 || b.sy() < -50 || b.sy() > height + 50) continue;
             String n = name(b.id());
-            boolean moon = b.parent() != null && !b.parent().equals("sol");
+            boolean moon = !b.star() && b.parent() != null && !b.parent().equals(currentStar);
             float s = moon ? 0.6f : 0.8f;
             int w = (int) (font.width(n) * s);
             int x = (int) (b.sx() - w / 2.0), y = (int) (b.sy() + b.rPx() + 3);
@@ -496,7 +550,7 @@ public class NavMapScreen extends Screen {
             }
             y += 4;
         }
-        if (!b.id().equals("sol") && b.radius() > 0 && b.mu() > 0) {
+        if (!b.star() && b.radius() > 0 && b.mu() > 0) {
             y = field(g, x, y, "gravity", String.format(Locale.ROOT, "%.1f m/s²", b.mu() / (b.radius() * b.radius())));
         }
         y = field(g, x, y, "radius", String.format(Locale.ROOT, "%,.0f km", b.radius() / 1000.0).replace(',', ' '));
@@ -575,7 +629,8 @@ public class NavMapScreen extends Screen {
 
     /** Motivo por el que no se puede viajar (o null si se puede). */
     private Component travelBlocked(String id) {
-        if (id.equals("sol")) return Component.translatable(K + "blocked_sun");
+        Body target = body(id);
+        if (target != null && target.star()) return Component.translatable(K + "blocked_sun");
         NavStatusPayload st = WarpClient.lastStatus;
         if (st == null || !st.console().equals(console)) return Component.translatable(K + "status_wait");
         if (id.equals(st.orbit()) || (isDeepSpace() && id.equals(currentBody()))) return Component.translatable(K + "blocked_here");

@@ -326,6 +326,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         if (universe == null || name == null || name.isEmpty() || name.equals("sol")) return null;
         CubePlanet planet = null;
         for (CubePlanet p : universe.getPlanets()) if (p.frame().getName().equals(name)) planet = p;
+        if (StarSystems.isStar(planet)) return null;   // 1.0.3: ninguna estrella (antes solo "sol")
         PointGravitySource source = null;
         for (PointGravitySource s : universe.getGravitySources()) if (s.frame().getName().equals(name)) source = s;
         if (planet == null || source == null || !(source.mu() > 0)) return null;

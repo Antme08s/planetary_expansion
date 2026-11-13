@@ -1,0 +1,204 @@
+{
+  "name": "amber_test",
+  "parent": "amber",
+  "priority": 1000,
+  "acceleration_at_surface": 9.8,
+  "radius": 3000000.0,
+  "position": {
+    "type": "circular_orbit_period",
+    "orbit_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    },
+    "period_seconds": 604800.0
+  },
+  "rotation": {
+    "type": "period",
+    "period_seconds": 1200.0,
+    "rotation_axis": {
+      "x": 0.0,
+      "y": -1.0,
+      "z": 0.0
+    }
+  },
+  "planet_extras": {
+    "light_source_name": "amber",
+    "has_clouds": true
+  },
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:amber_test",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "5000": [],
+      "21000": [
+        "low_density",
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "dimension_day_time_controller_name": "amber",
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 4000.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 7000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.12,
+    "intensity": 0.8,
+    "densityFalloff": 5.0,
+    "scatteringStrength": 0.06,
+    "wavelengths": [
+      700.0,
+      560.0,
+      440.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 30,
+    "fallback_green": 120,
+    "fallback_blue": 40,
+    "colors": [
+      {
+        "blue": 245,
+        "green": 240,
+        "matching_tags": [
+          "c:is_snowy"
+        ],
+        "priority": 10,
+        "red": 240
+      },
+      {
+        "blue": 40,
+        "green": 90,
+        "matching_tags": [
+          "minecraft:is_badlands"
+        ],
+        "priority": 10,
+        "red": 195
+      },
+      {
+        "blue": 25,
+        "green": 85,
+        "matching_tags": [
+          "minecraft:is_jungle"
+        ],
+        "priority": 1,
+        "red": 15
+      },
+      {
+        "blue": 135,
+        "flags": [
+          "ocean"
+        ],
+        "green": 45,
+        "matching_tags": [
+          "minecraft:is_ocean",
+          "minecraft:is_deep_ocean"
+        ],
+        "red": 15
+      },
+      {
+        "blue": 215,
+        "green": 95,
+        "matching_tags": [
+          "minecraft:is_river"
+        ],
+        "red": 25
+      },
+      {
+        "blue": 155,
+        "green": 205,
+        "matching_tags": [
+          "minecraft:is_beach"
+        ],
+        "red": 225
+      },
+      {
+        "blue": 115,
+        "green": 195,
+        "matching_tags": [
+          "c:is_desert"
+        ],
+        "red": 215
+      },
+      {
+        "blue": 55,
+        "green": 145,
+        "matching_tags": [
+          "c:is_plains"
+        ],
+        "red": 45
+      },
+      {
+        "blue": 35,
+        "green": 105,
+        "matching_tags": [
+          "minecraft:is_forest"
+        ],
+        "red": 25
+      },
+      {
+        "blue": 55,
+        "green": 75,
+        "matching_tags": [
+          "minecraft:is_taiga"
+        ],
+        "red": 30
+      },
+      {
+        "blue": 70,
+        "green": 140,
+        "matching_tags": [
+          "minecraft:is_savanna"
+        ],
+        "red": 160
+      },
+      {
+        "blue": 40,
+        "green": 70,
+        "matching_tags": [
+          "c:is_swamp"
+        ],
+        "red": 50
+      },
+      {
+        "blue": 80,
+        "green": 100,
+        "matching_tags": [
+          "c:is_windswept"
+        ],
+        "red": 80
+      },
+      {
+        "blue": 100,
+        "green": 90,
+        "matching_tags": [
+          "c:is_mushroom"
+        ],
+        "red": 100
+      },
+      {
+        "blue": 135,
+        "green": 135,
+        "matching_tags": [
+          "minecraft:is_mountain",
+          "c:is_stony_shores"
+        ],
+        "red": 135
+      }
+    ]
+  }
+}

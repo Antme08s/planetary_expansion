@@ -1,0 +1,31 @@
+{
+  "name": "amber",
+  "parent": "root",
+  "priority": 1000,
+  "mu": 4.835197139471565e+18,
+  "radius": 220000000.0,
+  "position": {
+    "type": "fixed",
+    "position": {
+      "x": 1500000000000.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "rotation": {
+    "type": "period",
+    "period_seconds": 30000.0,
+    "rotation_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    }
+  },
+  "planet_extras": {
+    "is_star": true
+  },
+  "planet_texture": {
+    "type": "resloc",
+    "texture": "planetary_expansion:textures/planet/amber.png"
+  }
+}

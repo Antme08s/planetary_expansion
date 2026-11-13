@@ -22,7 +22,7 @@ import shutil
 import sys
 
 NS = "planetary_expansion"
-MOD_VERSION = "1.0.2"
+MOD_VERSION = "1.0.3"
 
 VANILLA = sys.argv[1]
 OUT = sys.argv[2]
@@ -2027,9 +2027,10 @@ def build_warp():
             ("panel_hint", "Hover over a planet to see its information. Left-click pins it here; right-click opens the travel menu.",
              "Pon el ratón sobre un planeta para ver su información. Con clic izquierdo se queda fija aquí; con clic derecho se abre el menú de viaje."),
             ("no_data", "No navigation data yet", "Aún no hay datos de navegación"),
-            ("center_sun", "Sun", "Sol"), ("center_me", "My position", "Mi posición"),
+            ("center_sun", "Star", "Estrella"), ("center_me", "My position", "Mi posición"),
+            ("system", "System: %s", "Sistema: %s"),
             ("travel", "Travel (orbit)", "Viajar (orbitar)"), ("read", "Read description", "Leer descripción"),
-            ("blocked_sun", "The warp drive can't orbit the Sun", "El motor de distorsión no puede orbitar el Sol"),
+            ("blocked_sun", "The warp drive can't orbit a star", "El motor de distorsión no puede orbitar una estrella"),
             ("blocked_here", "You are already here", "Ya estás aquí"),
             ("you_here", "You are here", "Estás aquí"), ("orbiting_here", "You are orbiting here", "Estás en su órbita"),
             ("status_wait", "Contacting the warp drive...", "Contactando con el motor de distorsión..."),
@@ -2649,6 +2650,101 @@ def build_ignis_creatures():
 
 
 
+# ==========================================================================
+# SEGUNDO SISTEMA SOLAR (1.0.3, prueba mínima): la estrella Ámbar (enana naranja) y un planeta de prueba
+# ==========================================================================
+# Ámbar cuelga de la raíz del universo, como el Sol, en una posición fija lejísimos (el mundo helado, lo más lejano
+# del sistema solar, está a ~1,6e10 m). Con dos estrellas de posición fija, a la nave la controla la más cercana.
+AMBER_POS = 1.5e12
+AMBER_MU = 0.7 * 6.907424484959378e18      # 70 % de la masa del Sol
+OVERWORLD_COLORS = [  # los mismos colores que usa Cosmonautics para la Tierra (biomas de Minecraft)
+    {"blue": 245, "green": 240, "matching_tags": ["c:is_snowy"], "priority": 10, "red": 240},
+    {"blue": 40, "green": 90, "matching_tags": ["minecraft:is_badlands"], "priority": 10, "red": 195},
+    {"blue": 25, "green": 85, "matching_tags": ["minecraft:is_jungle"], "priority": 1, "red": 15},
+    {"blue": 135, "flags": ["ocean"], "green": 45, "matching_tags": ["minecraft:is_ocean", "minecraft:is_deep_ocean"], "red": 15},
+    {"blue": 215, "green": 95, "matching_tags": ["minecraft:is_river"], "red": 25},
+    {"blue": 155, "green": 205, "matching_tags": ["minecraft:is_beach"], "red": 225},
+    {"blue": 115, "green": 195, "matching_tags": ["c:is_desert"], "red": 215},
+    {"blue": 55, "green": 145, "matching_tags": ["c:is_plains"], "red": 45},
+    {"blue": 35, "green": 105, "matching_tags": ["minecraft:is_forest"], "red": 25},
+    {"blue": 55, "green": 75, "matching_tags": ["minecraft:is_taiga"], "red": 30},
+    {"blue": 70, "green": 140, "matching_tags": ["minecraft:is_savanna"], "red": 160},
+    {"blue": 40, "green": 70, "matching_tags": ["c:is_swamp"], "red": 50},
+    {"blue": 80, "green": 100, "matching_tags": ["c:is_windswept"], "red": 80},
+    {"blue": 100, "green": 90, "matching_tags": ["c:is_mushroom"], "red": 100},
+    {"blue": 135, "green": 135, "matching_tags": ["minecraft:is_mountain", "c:is_stony_shores"], "red": 135},
+]
+
+
+def build_amber_system():
+    write_bytes(f"assets/{NS}/textures/planet/amber.png", open(os.path.join(DESIGNS, "amber_star.png"), "rb").read())
+    data("universe_planets/amber", {
+        "name": "amber",
+        "parent": "root",
+        "priority": 1000,
+        "mu": AMBER_MU,
+        "radius": 2.2e8,
+        "position": {"type": "fixed", "position": {"x": AMBER_POS, "y": 0.0, "z": 0.0}},
+        "rotation": {"type": "period", "period_seconds": 30000.0, "rotation_axis": {"x": 0.0, "y": 1.0, "z": 0.0}},
+        "planet_extras": {"is_star": True},
+        "planet_texture": {"type": "resloc", "texture": f"{NS}:textures/planet/amber.png"},
+    })
+
+    # Planeta de prueba: generación de la Tierra (ruido y biomas de Minecraft) con aire, gravedad y día propios.
+    # Solo sirve para comprobar el sistema (gravedad, luz, cielo, salto); el planeta de verdad se diseñará después.
+    P = "amber_test"
+    data(f"dimension/{P}", {
+        "type": rl(P),
+        "generator": {"type": "minecraft:noise", "settings": "minecraft:overworld",
+                      "biome_source": {"type": "minecraft:multi_noise", "preset": "minecraft:overworld"}},
+    })
+    dimension_type(P, effects="minecraft:overworld")
+    dimension_physics(P, universal_drag=0.01)
+    data(f"universe_planets/{P}", {
+        "name": P,
+        "parent": "amber",
+        "priority": 1000,
+        "acceleration_at_surface": 9.8,
+        "radius": 3000000.0,
+        # año de 604 800 s, como la Tierra; con la masa de Ámbar queda a ~3,5e9 m de su estrella
+        "position": {"type": "circular_orbit_period",
+                     "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "period_seconds": 604800.0},
+        "rotation": {"type": "period", "period_seconds": 1200.0, "rotation_axis": {"x": 0.0, "y": -1.0, "z": 0.0}},
+        "planet_extras": {"light_source_name": "amber", "has_clouds": True},
+        "dimension_data": {
+            "linked_dimension": rl(P),
+            "allowed_transfer": "all",
+            "dimension_transfer_height": 20000,
+            "atmosphere_composition": {"5000": [], "21000": ["low_density", "drowning"]},
+            "render_universe_in_dimension": True,
+            "dimension_day_time_controller_name": "amber",
+            "apply_gravity_correction_to_entities_in_dimension": True,
+            "entity_drag_multiplier": drag_curve(4000, 7000),
+        },
+        "planet_atmosphere": {"enabled": True, "radius": 1.12, "intensity": 0.8, "densityFalloff": 5.0,
+                              "scatteringStrength": 0.06, "wavelengths": [700.0, 560.0, 440.0]},
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 30, "fallback_green": 120, "fallback_blue": 40,
+                           "colors": OVERWORLD_COLORS},
+    })
+    for body, en, es in [("amber", "Amber", "Ámbar"), (P, "Test World", "Planeta de prueba")]:
+        LANG_EN[f"hologram.{NS}.body.{body}"] = en
+        LANG_ES[f"hologram.{NS}.body.{body}"] = es
+    n = f"nav.{NS}."
+    for body, fields in {
+        "amber": {"type": ("Star (orange dwarf)", "Estrella (enana naranja)"),
+                  "desc": ("A smaller, cooler star than the Sun, far beyond its system. Its light is warm and orange.",
+                           "Una estrella más pequeña y fría que el Sol, muy lejos de su sistema. Su luz es cálida y naranja.")},
+        P: {"type": ("Test planet", "Planeta de prueba"),
+            "desc": ("Temporary world to test the second solar system.", "Mundo temporal para probar el segundo sistema solar."),
+            "air": ("Breathable", "Respirable"), "temp": ("Mild", "Templada"), "hazards": ("None", "Ninguno"),
+            "armor": ("Not needed", "No hace falta")},
+    }.items():
+        for field, (en, es) in fields.items():
+            LANG_EN[f"{n}body.{body}.{field}"] = en
+            LANG_ES[f"{n}body.{body}.{field}"] = es
+
+
 def build_meta():
     # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
     write_bytes("logo.png", open(os.path.join(DESIGNS, "logo.png"), "rb").read())
@@ -2767,6 +2863,7 @@ if __name__ == "__main__":
     build_structures()
     build_thalassa_creatures()
     build_ignis_creatures()
+    build_amber_system()
     build_meta()
     n = sum(len(f) for _, _, f in os.walk(OUT))
     print(f"Generados {n} archivos en {OUT}")

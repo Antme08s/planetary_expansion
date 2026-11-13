@@ -1,5 +1,7 @@
 package dev.antme08.planetaryexpansion.warp.client;
 
+import dev.antme08.planetaryexpansion.warp.StarSystems;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -126,11 +128,14 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
         UniverseDefinition u = DeepSpaceHandler.getUniverse();
         AbsoluteDate date = date(pt);
         if (u == null || date == null) return false;
-        Frame sol = u.getFrameByName("sol").orElse(null);
+        // 1.0.3: solo el sistema solar en el que está la consola
+        String starName = systemHere(u);
+        Frame sol = u.getFrameByName(starName).orElse(null);
         if (sol == null) return false;
 
         Map<String, double[]> helio = new HashMap<>();
-        List<CubePlanet> planets = new ArrayList<>(u.getPlanets());
+        List<CubePlanet> planets = new ArrayList<>();
+        for (CubePlanet p : u.getPlanets()) if (StarSystems.systemOf(p).equals(starName)) planets.add(p);
         for (CubePlanet p : planets) {
             Vector3D v = p.getPosition(date, sol);
             helio.put(p.frame().getName(), new double[]{v.getX(), v.getZ()});
@@ -138,13 +143,13 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
         double maxD = 1;
         for (CubePlanet p : planets) {
             String parent = parentOf(p);
-            if ("sol".equals(parent)) {
+            if (starName.equals(parent)) {
                 double[] h = helio.get(p.frame().getName());
                 maxD = Math.max(maxD, Math.hypot(h[0], h[1]));
             }
         }
         // primero los que giran alrededor del Sol, luego las lunas (ordenadas por distancia a su planeta)
-        planets.sort(Comparator.comparingInt((CubePlanet p) -> parentOf(p) == null ? 0 : "sol".equals(parentOf(p)) ? 1 : 2)
+        planets.sort(Comparator.comparingInt((CubePlanet p) -> StarSystems.isStar(p) ? 0 : starName.equals(parentOf(p)) ? 1 : 2)
                 .thenComparingDouble(p -> {
                     double[] h = helio.get(p.frame().getName());
                     double[] q = parentOf(p) == null ? null : helio.get(parentOf(p));
@@ -159,9 +164,9 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
             double[] h = helio.get(id);
             float size = SIZE.getOrDefault(id, 0.62f);
             Shown s;
-            if (parent == null) {
-                s = new Shown(p, id, 0, 0, size, 0, 0, 0);
-            } else if (parent.equals("sol") || !shown.containsKey(parent)) {
+            if (parent == null || StarSystems.isStar(p)) {
+                s = new Shown(p, id, 0, 0, SIZE.getOrDefault(id, 1.1f), 0, 0, 0);
+            } else if (parent.equals(starName) || !shown.containsKey(parent)) {
                 double d = Math.hypot(h[0], h[1]);
                 float r = (float) (Math.sqrt(d / maxD) * MAX_R);
                 double a = Math.atan2(h[1], h[0]);
@@ -206,11 +211,11 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
             }
             if (missing) {
                 request(s.planet(), now);
-                PartialModel cube = WarpClient.CONSOLE_BODIES.get(FALLBACK.getOrDefault(s.id(), "earth"));
+                PartialModel cube = WarpClient.CONSOLE_BODIES.get(FALLBACK.getOrDefault(s.id(), StarSystems.isStar(s.planet()) ? "sun" : "earth"));
                 if (cube != null) {
                     ms.mulPose(Axis.YP.rotationDegrees(t * 2f));
                     float k = s.size() / 0.7f; // los cubitos miden 1,4 px (2,2 el Sol)
-                    if (s.id().equals("sol")) k = s.size() / 1.1f;
+                    if (StarSystems.isStar(s.planet())) k = s.size() / 1.1f;
                     ms.scale(k, k, k);
                     CachedBuffers.partial(cube, state).light(LightTexture.FULL_BRIGHT).color(255, 255, 255, (int) (220 * flicker))
                             .renderInto(ms, buffers.getBuffer(RenderType.translucent()));
@@ -219,6 +224,22 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
             ms.popPose();
         }
         return true;
+    }
+
+    /** Sistema solar en el que está la consola (el de la nave en el espacio profundo o el del planeta). */
+    private static String systemHere(UniverseDefinition u) {
+        try {
+            var level = net.minecraft.client.Minecraft.getInstance().level;
+            if (level != null && level.dimension().location().toString().equals("rocketnautics:deep_space")
+                    && DeepSpaceHandler.hasReceivedPosition())
+                return StarSystems.systemOf(u, DeepSpaceHandler.getReceivedPosition().getFrame().getName());
+            if (level != null) {
+                CubePlanet p = u.getPlanetByDimension(level.dimension());
+                if (p != null) return StarSystems.systemOf(p);
+            }
+        } catch (Throwable ignored) {
+        }
+        return "sol";
     }
 
     /** Pide a Cosmonautics la textura del planeta (como hace su mesa de hologramas), como mucho cada 10 s. */
