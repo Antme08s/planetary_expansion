@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "createpropulsion:tempered_wing",
+      "required": false
+    },
+    {
+      "id": "create_flight_control:copycat_integrated_sail_iii",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:spectre_sail",
+      "required": false
+    }
+  ]
+}

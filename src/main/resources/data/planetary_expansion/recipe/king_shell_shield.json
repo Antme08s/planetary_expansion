@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SIS",
+    "SSS",
+    " S "
+  ],
+  "key": {
+    "S": {
+      "item": "planetary_expansion:king_shell"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:king_shell_shield",
+    "count": 1
+  }
+}

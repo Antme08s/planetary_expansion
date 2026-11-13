@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:gravity_generator_top",
+    "planetary_expansion:gravity_generator",
+    "planetary_expansion:inertial_dampener_core",
+    "planetary_expansion:inertial_dampener_casing",
+    "planetary_expansion:inertial_dampener_drive",
+    "planetary_expansion:inertial_dampener_coolant_port",
+    "planetary_expansion:inertial_dampener_redstone_port",
+    "planetary_expansion:warp_drive",
+    "planetary_expansion:warp_drive_part",
+    "planetary_expansion:warp_drive_input",
+    "planetary_expansion:nav_console",
+    "planetary_expansion:nav_console_part"
+  ]
+}

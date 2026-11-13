@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:blue_ice"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.frozen_ocean.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.frozen_ocean.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "thalassa": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:thalassa"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "thalassa"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

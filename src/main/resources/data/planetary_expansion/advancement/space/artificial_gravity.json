@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:gravity_generator"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.artificial_gravity.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.artificial_gravity.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "on": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "on"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

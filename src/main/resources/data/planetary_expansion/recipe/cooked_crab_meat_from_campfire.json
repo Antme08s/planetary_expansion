@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "ingredient": {
+    "item": "planetary_expansion:crab_meat"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_crab_meat"
+  },
+  "experience": 0.35,
+  "cookingtime": 600
+}

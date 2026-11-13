@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "entries": [
+    "planetary_expansion:meteorite_fragment_0",
+    "planetary_expansion:cryo_crystal_0",
+    "planetary_expansion:cryo_crystal_1",
+    "planetary_expansion:venusian_sulfur_0",
+    "planetary_expansion:venusian_sulfur_1",
+    "planetary_expansion:venusian_sulfur_2"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DXD",
+    "DMD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "X": {
+      "item": "planetary_expansion:thermal_upgrade_template"
+    },
+    "M": {
+      "item": "planetary_expansion:igneous_shell"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:thermal_upgrade_template",
+    "count": 2
+  }
+}

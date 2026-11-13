@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:inertial_dampener_casing"
+    },
+    {
+      "item": "create:fluid_tank"
+    },
+    {
+      "item": "create:copper_sheet"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:inertial_dampener_coolant_port",
+    "count": 1
+  }
+}

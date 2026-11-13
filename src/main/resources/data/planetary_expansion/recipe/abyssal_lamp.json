@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " B ",
+    "BXB",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "item": "planetary_expansion:glowing_barbel"
+    },
+    "X": {
+      "item": "minecraft:glass"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:abyssal_lamp",
+    "count": 1
+  }
+}

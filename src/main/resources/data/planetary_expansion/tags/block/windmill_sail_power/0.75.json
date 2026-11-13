@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "burnt:burnt_sail",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_symmetric_sail",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_sail",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_symmetric_sail",
+      "required": false
+    }
+  ]
+}

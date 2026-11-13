@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "ingredient": {
+    "item": "planetary_expansion:king_crab_leg"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_king_crab_leg"
+  },
+  "experience": 0.5,
+  "cookingtime": 600
+}

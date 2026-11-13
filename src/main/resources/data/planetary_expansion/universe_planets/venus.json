@@ -1,0 +1,112 @@
+{
+  "name": "venus",
+  "parent": "sol",
+  "priority": 1000,
+  "acceleration_at_surface": 8.9,
+  "radius": 2850000.0,
+  "position": {
+    "type": "circular_orbit_period",
+    "orbit_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    },
+    "position_direction": {
+      "x": -1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "period_seconds": 372000.0
+  },
+  "rotation": {
+    "type": "period",
+    "period_seconds": 1200.0,
+    "rotation_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    }
+  },
+  "planet_extras": {
+    "light_source_name": "sol",
+    "has_clouds": true
+  },
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:venus",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "21000": [
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "dimension_day_time_controller_name": "sol",
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 6000.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 10000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.18,
+    "intensity": 1.2,
+    "densityFalloff": 4.0,
+    "scatteringStrength": 0.08,
+    "wavelengths": [
+      480.0,
+      510.0,
+      700.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 214,
+    "fallback_green": 180,
+    "fallback_blue": 110,
+    "colors": [
+      {
+        "red": 110,
+        "green": 65,
+        "blue": 38,
+        "matching_biomes": [
+          "planetary_expansion:venus_shield_volcanoes"
+        ],
+        "priority": 5
+      },
+      {
+        "red": 232,
+        "green": 208,
+        "blue": 156,
+        "matching_biomes": [
+          "planetary_expansion:venus_tesserae"
+        ]
+      },
+      {
+        "red": 140,
+        "green": 100,
+        "blue": 62,
+        "matching_biomes": [
+          "planetary_expansion:venus_dark_plains"
+        ]
+      },
+      {
+        "red": 215,
+        "green": 175,
+        "blue": 105,
+        "matching_biomes": [
+          "planetary_expansion:venus_basalt_plains"
+        ]
+      }
+    ]
+  }
+}

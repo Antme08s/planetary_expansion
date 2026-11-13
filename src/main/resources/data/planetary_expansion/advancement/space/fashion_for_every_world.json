@@ -1,0 +1,175 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:glacial_chestplate"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.fashion_for_every_world.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.fashion_for_every_world.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "impact": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:impact_helmet"
+                },
+                "chest": {
+                  "items": "planetary_expansion:impact_chestplate"
+                },
+                "legs": {
+                  "items": "planetary_expansion:impact_leggings"
+                },
+                "feet": {
+                  "items": "planetary_expansion:impact_boots"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "glacial": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:glacial_helmet"
+                },
+                "chest": {
+                  "items": "planetary_expansion:glacial_chestplate"
+                },
+                "legs": {
+                  "items": "planetary_expansion:glacial_leggings"
+                },
+                "feet": {
+                  "items": "planetary_expansion:glacial_boots"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "hazard": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:hazard_helmet"
+                },
+                "chest": {
+                  "items": "planetary_expansion:hazard_chestplate"
+                },
+                "legs": {
+                  "items": "planetary_expansion:hazard_leggings"
+                },
+                "feet": {
+                  "items": "planetary_expansion:hazard_boots"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "sea_diver": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:sea_diver_helmet"
+                },
+                "chest": {
+                  "items": "planetary_expansion:sea_diver_chestplate"
+                },
+                "legs": {
+                  "items": "planetary_expansion:sea_diver_leggings"
+                },
+                "feet": {
+                  "items": "planetary_expansion:sea_diver_boots"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "thermal": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:thermal_helmet"
+                },
+                "chest": {
+                  "items": "planetary_expansion:thermal_chestplate"
+                },
+                "legs": {
+                  "items": "planetary_expansion:thermal_leggings"
+                },
+                "feet": {
+                  "items": "planetary_expansion:thermal_boots"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "impact"
+    ],
+    [
+      "glacial"
+    ],
+    [
+      "hazard"
+    ],
+    [
+      "sea_diver"
+    ],
+    [
+      "thermal"
+    ]
+  ],
+  "parent": "planetary_expansion:space/suit_up",
+  "rewards": {
+    "experience": 250
+  }
+}

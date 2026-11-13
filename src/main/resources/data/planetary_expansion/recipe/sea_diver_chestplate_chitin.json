@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "planetary_expansion:volcanic_chitin"
+  },
+  "base": {
+    "item": "planetary_expansion:sea_diver_chestplate"
+  },
+  "addition": {
+    "item": "planetary_expansion:volcanic_chitin"
+  },
+  "result": {
+    "id": "planetary_expansion:sea_diver_chestplate",
+    "count": 1,
+    "components": {
+      "minecraft:custom_data": {
+        "chitin_reinforced": true
+      },
+      "minecraft:lore": [
+        "{\"translate\": \"lore.planetary_expansion.chitin_reinforced\", \"color\": \"gold\", \"italic\": false}"
+      ]
+    }
+  }
+}

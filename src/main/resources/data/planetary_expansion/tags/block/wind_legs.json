@@ -1,0 +1,28 @@
+{
+  "values": [
+    {
+      "id": "let_it_walk:walker_core",
+      "required": false
+    },
+    {
+      "id": "let_it_walk:leg_hinge",
+      "required": false
+    },
+    {
+      "id": "let_it_walk:leg_swivel",
+      "required": false
+    },
+    {
+      "id": "let_it_walk:leg_foot",
+      "required": false
+    },
+    {
+      "id": "let_it_walk:jet_foot",
+      "required": false
+    },
+    {
+      "id": "let_it_walk:climbing_foot",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "has_precipitation": false,
+  "temperature": 2.0,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 0,
+    "fog_color": 2629145,
+    "water_color": 4159204,
+    "water_fog_color": 329011
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "planetary_expansion:magma_snail",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "planetary_expansion:magma_titan",
+        "weight": 2,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:nether_cave"
+    ]
+  },
+  "features": [
+    [],
+    [
+      "minecraft:lake_lava_surface",
+      "minecraft:lake_lava_underground"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:ignis/rich_gold",
+      "planetary_expansion:ignis/rich_gold_large",
+      "planetary_expansion:ignis/gilded_blackstone",
+      "planetary_expansion:ignis/rich_copper",
+      "planetary_expansion:ignis/ochrum_veins",
+      "planetary_expansion:ignis/veridium_veins"
+    ],
+    [
+      "minecraft:ore_magma"
+    ],
+    [
+      "minecraft:spring_lava"
+    ],
+    [],
+    []
+  ]
+}

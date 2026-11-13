@@ -1,0 +1,95 @@
+{
+  "name": "mars",
+  "priority": 1000,
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:mars",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "21000": [
+        "low_density",
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "dimension_day_time_controller_name": "sol",
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 1500.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 4000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.12,
+    "intensity": 0.6,
+    "densityFalloff": 6.0,
+    "scatteringStrength": 0.05,
+    "wavelengths": [
+      450.0,
+      600.0,
+      700.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 190,
+    "fallback_green": 95,
+    "fallback_blue": 55,
+    "colors": [
+      {
+        "red": 235,
+        "green": 235,
+        "blue": 240,
+        "matching_biomes": [
+          "planetary_expansion:mars_polar_cap"
+        ],
+        "priority": 10
+      },
+      {
+        "red": 150,
+        "green": 70,
+        "blue": 40,
+        "matching_biomes": [
+          "planetary_expansion:mars_canyons"
+        ],
+        "priority": 5
+      },
+      {
+        "red": 120,
+        "green": 75,
+        "blue": 55,
+        "matching_biomes": [
+          "planetary_expansion:mars_basin"
+        ],
+        "flags": [
+          "ocean"
+        ]
+      },
+      {
+        "red": 115,
+        "green": 50,
+        "blue": 32,
+        "matching_biomes": [
+          "planetary_expansion:mars_highlands"
+        ]
+      },
+      {
+        "red": 215,
+        "green": 122,
+        "blue": 70,
+        "matching_biomes": [
+          "planetary_expansion:mars_dunes"
+        ]
+      }
+    ]
+  }
+}

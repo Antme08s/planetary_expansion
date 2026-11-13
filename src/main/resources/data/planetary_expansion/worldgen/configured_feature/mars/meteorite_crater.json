@@ -1,0 +1,19 @@
+{
+  "type": "planetary_expansion:meteorite_crater",
+  "config": {
+    "templates": [
+      "planetary_expansion:mars/meteorite_1",
+      "planetary_expansion:mars/meteorite_1",
+      "planetary_expansion:mars/meteorite_2",
+      "planetary_expansion:mars/meteorite_3"
+    ],
+    "anchor": [
+      4,
+      0,
+      5
+    ],
+    "radius_min": 4.0,
+    "radius_max": 8.0,
+    "depth": 0.55
+  }
+}

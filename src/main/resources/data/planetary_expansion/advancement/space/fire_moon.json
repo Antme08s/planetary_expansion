@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:blackstone"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.fire_moon.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.fire_moon.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ignis": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:ignis"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ignis"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

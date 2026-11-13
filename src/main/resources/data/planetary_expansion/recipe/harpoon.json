@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  F",
+    " I ",
+    "I  "
+  ],
+  "key": {
+    "F": {
+      "item": "planetary_expansion:abyssal_fang"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:harpoon",
+    "count": 1
+  }
+}

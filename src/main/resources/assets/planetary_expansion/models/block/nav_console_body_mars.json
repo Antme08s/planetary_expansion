@@ -1,0 +1,78 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "t": "planetary_expansion:block/nav_console",
+    "particle": "planetary_expansion:block/nav_console"
+  },
+  "elements": [
+    {
+      "from": [
+        -0.7,
+        -0.7,
+        -0.7
+      ],
+      "to": [
+        0.7,
+        0.7,
+        0.7
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            9.0,
+            11.75,
+            9.25,
+            12.0
+          ],
+          "texture": "#t"
+        },
+        "down": {
+          "uv": [
+            9.25,
+            11.75,
+            9.5,
+            12.0
+          ],
+          "texture": "#t"
+        },
+        "north": {
+          "uv": [
+            9.75,
+            11.75,
+            10.0,
+            12.0
+          ],
+          "texture": "#t"
+        },
+        "south": {
+          "uv": [
+            9.5,
+            11.75,
+            9.75,
+            12.0
+          ],
+          "texture": "#t"
+        },
+        "east": {
+          "uv": [
+            10.0,
+            11.75,
+            10.25,
+            12.0
+          ],
+          "texture": "#t"
+        },
+        "west": {
+          "uv": [
+            10.25,
+            11.75,
+            10.5,
+            12.0
+          ],
+          "texture": "#t"
+        }
+      },
+      "shade": false
+    }
+  ]
+}

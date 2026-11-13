@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:impact_helmet",
+    "planetary_expansion:glacial_helmet",
+    "planetary_expansion:hazard_helmet",
+    "planetary_expansion:sea_diver_helmet",
+    "planetary_expansion:basic_helmet",
+    "planetary_expansion:thermal_helmet"
+  ]
+}

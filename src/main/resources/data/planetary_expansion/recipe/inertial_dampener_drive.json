@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:inertial_dampener_casing"
+    },
+    {
+      "item": "create:gearbox"
+    },
+    {
+      "item": "create:precision_mechanism"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:inertial_dampener_drive",
+    "count": 1
+  }
+}

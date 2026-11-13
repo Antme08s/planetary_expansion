@@ -1,0 +1,90 @@
+{
+  "name": "ice_world",
+  "priority": 1000,
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:ice_world",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "5000": [],
+      "21000": [
+        "low_density",
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 4000.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 7000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_extras": {
+    "has_clouds": true,
+    "light_source_name": "sol"
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.25,
+    "intensity": 0.9,
+    "densityFalloff": 4.0,
+    "scatteringStrength": 0.07,
+    "wavelengths": [
+      700.0,
+      560.0,
+      460.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 225,
+    "fallback_green": 235,
+    "fallback_blue": 245,
+    "colors": [
+      {
+        "red": 150,
+        "green": 195,
+        "blue": 230,
+        "matching_biomes": [
+          "planetary_expansion:ice_frozen_sea"
+        ],
+        "flags": [
+          "ocean"
+        ]
+      },
+      {
+        "red": 120,
+        "green": 175,
+        "blue": 235,
+        "matching_biomes": [
+          "planetary_expansion:ice_crystal_peaks"
+        ],
+        "priority": 5
+      },
+      {
+        "red": 140,
+        "green": 185,
+        "blue": 235,
+        "matching_biomes": [
+          "planetary_expansion:ice_spires"
+        ]
+      },
+      {
+        "red": 244,
+        "green": 247,
+        "blue": 251,
+        "matching_biomes": [
+          "planetary_expansion:ice_glacier"
+        ]
+      }
+    ]
+  }
+}

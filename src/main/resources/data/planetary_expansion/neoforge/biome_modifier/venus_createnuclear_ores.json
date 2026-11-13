@@ -1,0 +1,11 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#planetary_expansion:venus_biomes",
+  "features": [
+    "planetary_expansion:venus/cn_uranium",
+    "planetary_expansion:venus/cn_thorium",
+    "planetary_expansion:venus/cn_lead",
+    "planetary_expansion:venus/cn_nitrate"
+  ],
+  "step": "underground_ores"
+}

@@ -1,0 +1,22 @@
+{
+  "dimension": "planetary_expansion:mars",
+  "priority": 1000,
+  "universal_drag": 0.002,
+  "base_gravity": [
+    0.0,
+    -3.7,
+    0.0
+  ],
+  "pressure_function": [
+    {
+      "altitude": 64.0,
+      "value": 0.12,
+      "slope": 0.0
+    },
+    {
+      "altitude": 1500.0,
+      "value": 0.0,
+      "slope": 0.0
+    }
+  ]
+}

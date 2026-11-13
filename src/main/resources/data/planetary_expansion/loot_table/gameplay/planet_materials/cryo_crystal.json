@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "planetary_expansion:cryo_crystal"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance_with_enchanted_bonus",
+          "enchantment": "minecraft:fortune",
+          "unenchanted_chance": 0.1,
+          "enchanted_chance": {
+            "type": "minecraft:linear",
+            "base": 0.15000000000000002,
+            "per_level_above_first": 0.05
+          }
+        }
+      ]
+    }
+  ]
+}

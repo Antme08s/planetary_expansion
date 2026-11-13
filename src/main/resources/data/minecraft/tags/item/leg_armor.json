@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:impact_leggings",
+    "planetary_expansion:glacial_leggings",
+    "planetary_expansion:hazard_leggings",
+    "planetary_expansion:sea_diver_leggings",
+    "planetary_expansion:basic_leggings",
+    "planetary_expansion:thermal_leggings"
+  ]
+}

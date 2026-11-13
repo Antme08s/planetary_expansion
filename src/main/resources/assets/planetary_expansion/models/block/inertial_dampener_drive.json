@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "planetary_expansion:block/inertial_dampener_drive_end",
+    "side": "planetary_expansion:block/inertial_dampener_drive_side",
+    "particle": "planetary_expansion:block/inertial_dampener_casing"
+  }
+}

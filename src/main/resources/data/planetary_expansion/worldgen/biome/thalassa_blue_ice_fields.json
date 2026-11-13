@@ -1,0 +1,72 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 7902920,
+    "fog_color": 12505835,
+    "water_color": 1986730,
+    "water_fog_color": 331565
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "planetary_expansion:king_crab",
+        "weight": 4,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "planetary_expansion:abyssal_stalker",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [
+      {
+        "type": "planetary_expansion:lantern_fish",
+        "weight": 25,
+        "minCount": 4,
+        "maxCount": 8
+      }
+    ],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [
+      "planetary_expansion:thalassa/nitrogen_pocket"
+    ],
+    [
+      "planetary_expansion:thalassa/crystal_geode"
+    ],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:thalassa/ore_iron",
+      "planetary_expansion:thalassa/ore_coal",
+      "planetary_expansion:thalassa/ore_titanium",
+      "planetary_expansion:thalassa/ore_diamond",
+      "planetary_expansion:thalassa/ore_diamond_large"
+    ],
+    [
+      "planetary_expansion:thalassa/cave_columns",
+      "planetary_expansion:thalassa/vent"
+    ],
+    [],
+    [],
+    []
+  ]
+}

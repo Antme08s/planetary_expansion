@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "I I",
+    "THT",
+    "SZS"
+  ],
+  "key": {
+    "H": {
+      "item": "create:fluid_tank"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "create:iron_sheet"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    },
+    "Z": {
+      "item": "rocketnautics:titanium_nozzle"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:basic_chestplate",
+    "count": 1
+  }
+}

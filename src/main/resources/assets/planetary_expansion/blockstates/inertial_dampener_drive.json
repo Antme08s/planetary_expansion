@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "planetary_expansion:block/inertial_dampener_drive"
+    },
+    "axis=x": {
+      "model": "planetary_expansion:block/inertial_dampener_drive",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z": {
+      "model": "planetary_expansion:block/inertial_dampener_drive",
+      "x": 90
+    }
+  }
+}

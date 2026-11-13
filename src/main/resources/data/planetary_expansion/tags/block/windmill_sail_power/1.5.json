@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "createpropulsion:wing",
+      "required": false
+    },
+    {
+      "id": "createpropulsion:copycat_wing",
+      "required": false
+    },
+    {
+      "id": "create_flight_control:copycat_integrated_sail_ii",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:phantom_sail",
+      "required": false
+    }
+  ]
+}

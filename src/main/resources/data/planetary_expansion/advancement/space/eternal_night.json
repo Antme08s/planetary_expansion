@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:packed_ice"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.eternal_night.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.eternal_night.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ice_world": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:ice_world"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ice_world"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

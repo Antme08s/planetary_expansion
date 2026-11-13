@@ -1,0 +1,61 @@
+{
+  "has_precipitation": false,
+  "temperature": 2.0,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 12883530,
+    "fog_color": 11699262,
+    "water_color": 9871420,
+    "water_fog_color": 4605460,
+    "particle": {
+      "options": {
+        "type": "minecraft:dust",
+        "color": [
+          0.85,
+          0.72,
+          0.35
+        ],
+        "scale": 1.0
+      },
+      "probability": 0.002
+    }
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:venus/ore_iron",
+      "planetary_expansion:venus/ore_iron_small",
+      "planetary_expansion:venus/ore_copper",
+      "planetary_expansion:venus/ore_gold",
+      "planetary_expansion:venus/ore_tuff"
+    ],
+    [],
+    [
+      "planetary_expansion:venus/lava_vent"
+    ],
+    [],
+    []
+  ]
+}

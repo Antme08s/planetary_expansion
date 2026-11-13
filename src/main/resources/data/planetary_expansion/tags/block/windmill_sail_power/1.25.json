@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#create_high_seas:sails",
+      "required": false
+    },
+    {
+      "id": "createpropulsion:copycat_wing_12",
+      "required": false
+    }
+  ]
+}

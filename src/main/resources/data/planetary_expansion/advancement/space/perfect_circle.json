@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:clock"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.perfect_circle.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.perfect_circle.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "orbit": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "orbit"
+    ]
+  ],
+  "parent": "planetary_expansion:space/full_stop"
+}

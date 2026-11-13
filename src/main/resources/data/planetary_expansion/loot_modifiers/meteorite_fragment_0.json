@@ -1,0 +1,16 @@
+{
+  "type": "neoforge:add_table",
+  "table": "planetary_expansion:gameplay/planet_materials/meteorite_fragment",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "rocketnautics:blocks/lunar_aged_basalt"
+    },
+    {
+      "condition": "minecraft:location_check",
+      "predicate": {
+        "dimension": "planetary_expansion:mars"
+      }
+    }
+  ]
+}

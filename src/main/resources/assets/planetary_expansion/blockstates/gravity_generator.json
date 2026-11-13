@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "planetary_expansion:block/gravity_generator"
+    },
+    "axis=z": {
+      "model": "planetary_expansion:block/gravity_generator",
+      "y": 90
+    }
+  }
+}

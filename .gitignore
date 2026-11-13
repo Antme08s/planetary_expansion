@@ -1,0 +1,20 @@
+# Salida de la compilación
+build/
+*.jar
+
+# Python
+__pycache__/
+*.pyc
+
+# Datos de Minecraft y de otros mods (no se suben: no son nuestros)
+vanilla/
+jars/
+libraries/
+
+# Shaders (la licencia de Complementary no permite redistribuirlos)
+*.zip
+shaderpacks/
+
+# Sistema
+.DS_Store
+Thumbs.db

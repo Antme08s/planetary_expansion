@@ -1,0 +1,79 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:map"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.grand_tour.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.grand_tour.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "moon": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "rocketnautics:moon"
+      }
+    },
+    "mars": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:mars"
+      }
+    },
+    "venus": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:venus"
+      }
+    },
+    "ice_world": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:ice_world"
+      }
+    },
+    "ignis": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:ignis"
+      }
+    },
+    "thalassa": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:thalassa"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "moon"
+    ],
+    [
+      "mars"
+    ],
+    [
+      "venus"
+    ],
+    [
+      "ice_world"
+    ],
+    [
+      "ignis"
+    ],
+    [
+      "thalassa"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race",
+  "rewards": {
+    "experience": 500
+  }
+}

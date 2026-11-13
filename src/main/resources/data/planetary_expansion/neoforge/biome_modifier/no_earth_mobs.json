@@ -1,0 +1,15 @@
+{
+  "type": "neoforge:remove_spawns",
+  "biomes": "#planetary_expansion:planet_biomes",
+  "entity_types": {
+    "type": "neoforge:not",
+    "value": [
+      "planetary_expansion:lantern_fish",
+      "planetary_expansion:vent_crab",
+      "planetary_expansion:king_crab",
+      "planetary_expansion:abyssal_stalker",
+      "planetary_expansion:magma_snail",
+      "planetary_expansion:magma_titan"
+    ]
+  }
+}

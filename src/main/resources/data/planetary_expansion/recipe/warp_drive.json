@@ -1,0 +1,37 @@
+{
+  "type": "create:mechanical_crafting",
+  "accept_mirrored": false,
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "T": {
+      "item": "create:fluid_tank"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "E": {
+      "item": "minecraft:end_crystal"
+    }
+  },
+  "pattern": [
+    "ANTNA",
+    "NPSPN",
+    "TSEST",
+    "NPSPN",
+    "ANTNA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "planetary_expansion:warp_drive"
+  },
+  "show_notification": true
+}

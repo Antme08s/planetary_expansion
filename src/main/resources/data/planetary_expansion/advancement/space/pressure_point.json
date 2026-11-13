@@ -1,0 +1,51 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:sea_diver_helmet"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.pressure_point.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.pressure_point.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "deep": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "dimension": "planetary_expansion:thalassa",
+                "position": {
+                  "y": {
+                    "max": -30.0
+                  }
+                }
+              },
+              "equipment": {
+                "head": {
+                  "items": "planetary_expansion:sea_diver_helmet"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "deep"
+    ]
+  ],
+  "parent": "planetary_expansion:space/frozen_ocean"
+}

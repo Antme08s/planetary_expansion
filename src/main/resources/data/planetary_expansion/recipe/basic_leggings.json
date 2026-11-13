@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ISI",
+    "T T",
+    "S S"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "create:iron_sheet"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:basic_leggings",
+    "count": 1
+  }
+}

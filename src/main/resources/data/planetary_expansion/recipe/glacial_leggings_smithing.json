@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "planetary_expansion:glacial_upgrade_template"
+  },
+  "base": {
+    "item": "planetary_expansion:basic_leggings"
+  },
+  "addition": {
+    "item": "minecraft:netherite_ingot"
+  },
+  "result": {
+    "id": "planetary_expansion:glacial_leggings",
+    "count": 1
+  }
+}

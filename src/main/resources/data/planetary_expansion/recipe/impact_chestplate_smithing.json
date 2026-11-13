@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "planetary_expansion:impact_upgrade_template"
+  },
+  "base": {
+    "item": "planetary_expansion:basic_chestplate"
+  },
+  "addition": {
+    "item": "minecraft:netherite_ingot"
+  },
+  "result": {
+    "id": "planetary_expansion:impact_chestplate",
+    "count": 1
+  }
+}

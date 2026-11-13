@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:inertial_dampener_core"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.full_stop.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.full_stop.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fired": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "fired"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

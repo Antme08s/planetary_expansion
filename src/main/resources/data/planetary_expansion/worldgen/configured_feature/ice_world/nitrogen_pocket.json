@@ -1,0 +1,10 @@
+{
+  "type": "planetary_expansion:nitrogen_pocket",
+  "config": {
+    "small_min": 2.5,
+    "small_max": 4.5,
+    "big_min": 6.5,
+    "big_max": 11.0,
+    "big_chance": 0.3
+  }
+}

@@ -1,0 +1,539 @@
+package dev.antme08.planetaryexpansion.warp;
+
+import dev.antme08.planetaryexpansion.PlanetaryExpansion;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceInstance;
+import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
+import dev.devce.rocketnautics.content.orbit.universe.DeepSpacePosition;
+import dev.devce.rocketnautics.content.orbit.universe.PointGravitySource;
+import dev.devce.rocketnautics.content.orbit.universe.UniverseDefinition;
+import dev.devce.rocketnautics.shaded.hipparchus.geometry.euclidean.threed.Vector3D;
+import dev.devce.rocketnautics.shaded.orekit.frames.Frame;
+import dev.devce.rocketnautics.shaded.orekit.time.AbsoluteDate;
+import dev.devce.rocketnautics.shaded.orekit.utils.TimeStampedPVCoordinates;
+import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.joml.Vector3d;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Cerebro del motor de distorsión.
+ *
+ * <ul>
+ *   <li>Se carga con la rotación de sus dos entradas de eje (una entrada a 256 RPM: 60 s; las dos: 30 s).</li>
+ *   <li>Necesita nitrógeno líquido (Create Nuclear) en su tanque: cada salto gasta {@value #JUMP_MB} mB y después el
+ *       motor queda caliente; para enfriarlo gasta otros {@value #COOL_MB} mB en un minuto. Sin nitrógeno no se
+ *       enfría.</li>
+ *   <li>Salta solo desde el espacio profundo y montado en una nave: la instancia entera (la nave, sus jugadores y
+ *       todo lo que haya alrededor) pasa a una órbita circular del planeta elegido.</li>
+ * </ul>
+ * El salto dura {@value #END_TICK} ticks: los jugadores ven el efecto (estrellas que se estiran, destello, túnel y el
+ * nombre del planeta) y la órbita cambia a mitad del túnel, en el tick {@value #TELEPORT_TICK}.
+ */
+public class WarpDriveBlockEntity extends BlockEntity {
+    static final ResourceLocation DEEP_SPACE = ResourceLocation.fromNamespaceAndPath("rocketnautics", "deep_space");
+    private static final TagKey<Fluid> NITROGEN = TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath("c", "nitrogen"));
+
+    public static final int TANK_CAPACITY = 32000;
+    public static final int JUMP_MB = 4000;
+    public static final int COOL_MB = 8000;
+    private static final double COOL_TICKS = 1200;
+    private static final double FULL_CHARGE_TICKS_AT_256 = 1200;
+    public static final int TELEPORT_TICK = 80;
+    public static final int END_TICK = 160;
+
+    /** Motores cargados en el servidor (para que la consola encuentre el de su nave). */
+    private static final Set<WarpDriveBlockEntity> LOADED = ConcurrentHashMap.newKeySet();
+
+    // estado (guardado)
+    private double charge;
+    private double heat;
+    private double drainDebt;
+    private int jumpTick = -1;
+    private String target = "";
+    private final FluidTank tank = new FluidTank(TANK_CAPACITY, s -> s.is(NITROGEN)) {
+        @Override
+        protected void onContentsChanged() {
+            setChanged();
+            dirtyTank = true; // el nivel de los tanques se envía cada 5 ticks (al enfriarse cambia cada tick)
+        }
+    };
+
+    // servidor
+    private double lastRpm;
+    private int reapplyStop;
+    private FluidStack refund = FluidStack.EMPTY;
+    private boolean dirtySync, dirtyTank;
+    private double sentCharge = -1, sentHeat = -1;
+
+    // cliente (animación del núcleo)
+    public float coreAngle, prevCoreAngle, coreSpeed, coreGlow;
+    /** Nivel de nitrógeno que se ve en los tanques (0..1), suavizado. */
+    public float shownFill = -1, prevShownFill;
+    private boolean clientJumping;
+
+    public WarpDriveBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    public IFluidHandler tank() {
+        return tank;
+    }
+
+    public double charge() {
+        return charge;
+    }
+
+    public double heat() {
+        return heat;
+    }
+
+    public int nitrogen() {
+        return tank.getFluidAmount();
+    }
+
+    public double rpm() {
+        return lastRpm;
+    }
+
+    public boolean isJumping() {
+        return level != null && level.isClientSide ? clientJumping : jumpTick >= 0;
+    }
+
+    public Direction facing() {
+        BlockState s = getBlockState();
+        return s.hasProperty(WarpAnchorBlock.FACING) ? s.getValue(WarpAnchorBlock.FACING) : Direction.NORTH;
+    }
+
+    // ------------------------------------------------------------------ registro de motores cargados
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) LOADED.add(this);
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        LOADED.remove(this);
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        LOADED.remove(this);
+    }
+
+    /** Motor de la misma nave que la consola (o, fuera de una nave, el más cercano a 48 bloques). */
+    public static WarpDriveBlockEntity find(ServerLevel level, BlockPos console) {
+        ServerSubLevel ship = Warp.shipAt(level, console);
+        WarpDriveBlockEntity best = null;
+        double bestScore = Double.MAX_VALUE;
+        for (WarpDriveBlockEntity d : LOADED) {
+            if (d.isRemoved() || d.level != level) continue;
+            ServerSubLevel other = Warp.shipAt(level, d.worldPosition);
+            boolean same = ship != null
+                    ? other != null && other.getUniqueId().equals(ship.getUniqueId())
+                    : other == null && d.worldPosition.distSqr(console) < 48 * 48;
+            if (!same) continue;
+            double score = d.worldPosition.distSqr(console) - (d.status(level) == WarpStatus.READY ? 1e9 : 0);
+            if (score < bestScore) {
+                bestScore = score;
+                best = d;
+            }
+        }
+        return best;
+    }
+
+    // ------------------------------------------------------------------ tick
+
+    void serverTick() {
+        if (!(level instanceof ServerLevel sl)) return;
+        if (sl.getGameTime() % 40 == 0 && getBlockState().getBlock() instanceof WarpAnchorBlock anchor) {
+            anchor.placeParts(sl, worldPosition, getBlockState()); // repone las partes que falten
+        }
+
+        // carga
+        double rpm = 0;
+        Direction f = facing();
+        for (Footprint.Cell c : new Footprint.Cell[]{Footprint.INPUT_LEFT, Footprint.INPUT_RIGHT}) {
+            if (sl.getBlockEntity(Footprint.pos(worldPosition, f, c)) instanceof WarpDriveInputBlockEntity in && !in.isOverStressed()) {
+                rpm += Math.abs(in.getSpeed());
+            }
+        }
+        if (rpm != lastRpm) {
+            lastRpm = rpm;
+        }
+        if (jumpTick < 0 && charge < 1.0 && rpm > 0) {
+            charge = Math.min(1.0, charge + rpm / 256.0 / FULL_CHARGE_TICKS_AT_256);
+            setChanged();
+        }
+
+        // enfriamiento: solo con nitrógeno
+        if (jumpTick < 0 && heat > 0) {
+            double need = COOL_MB / COOL_TICKS;
+            if (tank.getFluidAmount() >= Math.ceil(drainDebt + need)) {
+                drainDebt += need;
+                int whole = (int) drainDebt;
+                if (whole > 0) {
+                    tank.drain(whole, IFluidHandler.FluidAction.EXECUTE);
+                    drainDebt -= whole;
+                }
+                heat = Math.max(0.0, heat - 1.0 / COOL_TICKS);
+                setChanged();
+            }
+        }
+
+        // salto en curso
+        if (jumpTick >= 0) {
+            jumpTick++;
+            if (jumpTick == TELEPORT_TICK) teleport(sl);
+            if (jumpTick >= END_TICK) {
+                jumpTick = -1;
+                target = "";
+                dirtySync = true;
+            }
+            setChanged();
+        }
+        if (reapplyStop > 0) {
+            reapplyStop--;
+            stopShip(Warp.shipAt(sl, worldPosition));
+        }
+
+        // sincronizar con el cliente (goggles y animación)
+        if (dirtyTank && sl.getGameTime() % 5 == 0) dirtySync = true;
+        if (dirtySync || Math.abs(charge - sentCharge) > 0.01 || Math.abs(heat - sentHeat) > 0.01
+                || (charge >= 1.0) != (sentCharge >= 1.0) || (heat <= 0) != (sentHeat <= 0)) {
+            if (dirtySync || sl.getGameTime() % 10 == 0) {
+                dirtySync = false;
+                dirtyTank = false;
+                sentCharge = charge;
+                sentHeat = heat;
+                sl.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            }
+        }
+    }
+
+    void clientTick() {
+        float targetFill = tank.getFluidAmount() / (float) TANK_CAPACITY;
+        if (shownFill < 0) shownFill = targetFill;
+        prevShownFill = shownFill;
+        shownFill += (targetFill - shownFill) * 0.08f;
+        float targetSpeed = clientJumping ? 40f : heat > 0 ? 1.0f : charge >= 1.0 ? 6f : (float) (1.0 + 3.0 * charge);
+        coreSpeed += (targetSpeed - coreSpeed) * (clientJumping ? 0.08f : 0.04f);
+        float glow = clientJumping ? 1f : heat > 0 ? 0.25f : (float) (0.35 + 0.65 * charge);
+        coreGlow += (glow - coreGlow) * 0.08f;
+        prevCoreAngle = coreAngle;
+        coreAngle += coreSpeed;
+        if (coreAngle > 360f) {
+            coreAngle -= 360f;
+            prevCoreAngle -= 360f;
+        }
+        if (level != null && (clientJumping || (charge >= 1.0 && heat <= 0)) && level.random.nextInt(clientJumping ? 1 : 5) == 0) {
+            // chispas violetas alrededor del núcleo
+            Vector3d c = coreCenter();
+            double a = level.random.nextDouble() * Math.PI * 2, r = 0.6 + level.random.nextDouble() * 0.8;
+            level.addParticle(ParticleTypes.REVERSE_PORTAL, c.x + Math.cos(a) * r, c.y + (level.random.nextDouble() - 0.5), c.z + Math.sin(a) * r, 0, 0, 0);
+        }
+        if (level != null && heat > 0 && level.random.nextInt(4) == 0) {
+            Vector3d c = coreCenter();
+            level.addParticle(ParticleTypes.SNOWFLAKE, c.x + (level.random.nextDouble() - 0.5) * 3, c.y - 0.6, c.z + (level.random.nextDouble() - 0.5) * 3, 0, 0.02, 0);
+        }
+    }
+
+    /** Centro del núcleo flotante (coordenadas del bloque, dentro de la nave si la hay). */
+    public Vector3d coreCenter() {
+        Direction f = facing(), l = Footprint.left(f);
+        double cx = worldPosition.getX() + 0.5 + 1.5 * f.getStepX() + 0.5 * l.getStepX();
+        double cz = worldPosition.getZ() + 0.5 + 1.5 * f.getStepZ() + 0.5 * l.getStepZ();
+        return new Vector3d(cx, worldPosition.getY() + 31.0 / 16.0, cz);
+    }
+
+    // ------------------------------------------------------------------ estado
+
+    public WarpStatus status(ServerLevel level) {
+        if (jumpTick >= 0) return WarpStatus.JUMPING;
+        if (heat > 0) return tank.getFluidAmount() > 0 ? WarpStatus.COOLING : WarpStatus.NO_COOLANT;
+        if (charge < 1.0) return lastRpm > 0 ? WarpStatus.CHARGING : WarpStatus.NO_ROTATION;
+        if (tank.getFluidAmount() < JUMP_MB) return WarpStatus.NEEDS_NITROGEN;
+        if (Warp.shipAt(level, worldPosition) == null) return WarpStatus.NOT_ON_SHIP;
+        if (!level.dimension().location().equals(DEEP_SPACE)) return WarpStatus.NOT_IN_SPACE;
+        return WarpStatus.READY;
+    }
+
+    /** Nombre del cuerpo que la instancia de la nave está orbitando ("" si no se sabe). */
+    public String currentOrbit(ServerLevel level) {
+        DeepSpaceInstance inst = instance(level, Warp.shipAt(level, worldPosition));
+        if (inst == null) return "";
+        try {
+            return inst.getPosition().getFrame().getName();
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    private static DeepSpaceInstance instance(ServerLevel level, ServerSubLevel ship) {
+        if (ship == null || !level.dimension().location().equals(DEEP_SPACE)) return null;
+        DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
+        if (data == null || data.getUniverse() == null) return null;
+        org.joml.Vector3dc p = ship.logicalPose().position();
+        DeepSpaceInstance inst = data.getInstanceForPos((int) Math.floor(p.x()), (int) Math.floor(p.z()));
+        return inst == null || inst.isCorrupted() ? null : inst;
+    }
+
+    // ------------------------------------------------------------------ salto
+
+    /**
+     * Órbita de llegada: circular, en el ecuador, a max(200 km, 0,3 radios) por encima de las esquinas del planeta
+     * (cubo) y, si cabe, dentro de la zona de influencia. La altura que se muestra es sobre el centro de las caras.
+     */
+    public record Arrival(Frame frame, double mu, double planetRadius, double radius) {
+        public double altitudeKm() {
+            return (radius - planetRadius) / 1000.0;
+        }
+    }
+
+    public static Arrival arrival(UniverseDefinition universe, String name) {
+        if (universe == null || name == null || name.isEmpty() || name.equals("sol")) return null;
+        CubePlanet planet = null;
+        for (CubePlanet p : universe.getPlanets()) if (p.frame().getName().equals(name)) planet = p;
+        PointGravitySource source = null;
+        for (PointGravitySource s : universe.getGravitySources()) if (s.frame().getName().equals(name)) source = s;
+        if (planet == null || source == null || !(source.mu() > 0)) return null;
+        Frame frame = universe.getFrameByName(name).orElse(null);
+        if (frame == null) frame = planet.frame().getOrekitFrame();
+        double big = planet.radius();
+        // 0.7.38: los planetas de Cosmonautics son cubos (el radio es medio lado). En 0.7.37 la órbita era un círculo
+        // de radio R + altura y, al pasar por las diagonales, la nave quedaba "dentro" del cubo: Cosmonautics la
+        // bajaba al planeta en el acto y el jugador acababa fuera de la nave. Ahora el círculo libra las esquinas
+        // (medio lado · √2, con margen) más la altura.
+        boolean sphere = false;
+        try {
+            sphere = dev.devce.rocketnautics.api.orbit.DeepSpaceHelper.isSphereShape();
+        } catch (Throwable ignored) {
+        }
+        double corner = sphere ? big : big * Math.sqrt(2.0) * 1.02;
+        double r = corner + Math.max(200_000.0, 0.3 * big);
+        if (source.roi() > 0 && Double.isFinite(source.roi())) r = Math.min(r, 0.9 * source.roi());
+        r = Math.max(r, corner + 60_000.0);
+        return new Arrival(frame, source.mu(), big, r);
+    }
+
+    /** Lo pide un jugador desde la consola. */
+    public void tryJump(ServerPlayer player, String targetName) {
+        if (!(level instanceof ServerLevel sl)) return;
+        WarpStatus st = status(sl);
+        if (st != WarpStatus.READY) {
+            player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_not_ready", st.text()), true);
+            return;
+        }
+        DeepSpaceData data = DeepSpaceData.getInstance(sl.getServer());
+        Arrival arrival = data == null ? null : arrival(data.getUniverse(), targetName);
+        if (arrival == null) {
+            player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_bad_target").withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        if (targetName.equals(currentOrbit(sl))) {
+            player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_already_there").withStyle(ChatFormatting.GOLD), true);
+            return;
+        }
+        DeepSpaceInstance inst = instance(sl, Warp.shipAt(sl, worldPosition));
+        if (inst == null) {
+            player.displayClientMessage(WarpStatus.NOT_IN_SPACE.text(), true);
+            return;
+        }
+        refund = tank.drain(JUMP_MB, IFluidHandler.FluidAction.EXECUTE).copy();
+        jumpTick = 0;
+        target = targetName;
+        dirtySync = true;
+        setChanged();
+        WarpEffectPayload effect = new WarpEffectPayload(WarpEffectPayload.START, targetName, (int) Math.round(arrival.altitudeKm()));
+        for (ServerPlayer p : playersAboard(sl, inst)) PacketDistributor.sendToPlayer(p, effect);
+        PlanetaryExpansion.LOGGER.info("[Distorsión] {} inicia el salto a {} desde {}", player.getScoreboardName(), targetName, worldPosition);
+    }
+
+    private static List<ServerPlayer> playersAboard(ServerLevel level, DeepSpaceInstance inst) {
+        List<ServerPlayer> out = new ArrayList<>();
+        try {
+            inst.collectOnlinePlayers(level.getServer(), out::add);
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.warn("[Distorsión] No se pudieron listar los jugadores de la instancia", t);
+        }
+        return out;
+    }
+
+    private void teleport(ServerLevel sl) {
+        ServerSubLevel ship = Warp.shipAt(sl, worldPosition);
+        DeepSpaceInstance inst = instance(sl, ship);
+        DeepSpaceData data = DeepSpaceData.getInstance(sl.getServer());
+        Arrival arrival = data == null ? null : arrival(data.getUniverse(), target);
+        if (inst == null || arrival == null) {
+            abort(sl, inst);
+            return;
+        }
+        try {
+            DeepSpacePosition pos = inst.getPosition();
+            AbsoluteDate date = pos.getCurrentPVCoords().getDate();
+            double phi = sl.random.nextDouble() * Math.PI * 2;
+            double r = arrival.radius();
+            double v = Math.sqrt(arrival.mu() / r);
+            Vector3D rv = new Vector3D(r * Math.cos(phi), 0, r * Math.sin(phi));
+            Vector3D vv = new Vector3D(-v * Math.sin(phi), 0, v * Math.cos(phi));
+            pos.init(data.getUniverse(), arrival.frame(), new TimeStampedPVCoordinates(date, rv, vv));
+            data.setDirty();
+            inst.forceClientSync();
+            stopShip(ship);
+            reapplyStop = 3;
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.error("[Distorsión] Falló el salto a {}", target, t);
+            abort(sl, inst);
+            return;
+        }
+        charge = 0;
+        heat = 1.0;
+        drainDebt = 0;
+        refund = FluidStack.EMPTY;
+        dirtySync = true;
+        setChanged();
+        for (ServerPlayer p : playersAboard(sl, inst)) {
+            dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "warp_speed", "jumped");
+            dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "interplanetary_commuter", target);
+        }
+        Vector3d c = Warp.toWorld(sl, worldPosition);
+        sl.sendParticles(ParticleTypes.REVERSE_PORTAL, c.x, c.y + 1.5, c.z, 120, 2.0, 1.5, 2.0, 0.4);
+        PlanetaryExpansion.LOGGER.info("[Distorsión] Nave en órbita de {} a {} km", target, String.format("%,.0f", arrival.altitudeKm()));
+    }
+
+    private void abort(ServerLevel sl, DeepSpaceInstance inst) {
+        WarpEffectPayload stop = new WarpEffectPayload(WarpEffectPayload.ABORT, target, 0);
+        if (inst != null) {
+            for (ServerPlayer p : playersAboard(sl, inst)) PacketDistributor.sendToPlayer(p, stop);
+        } else {
+            Vector3d c = Warp.toWorld(sl, worldPosition);
+            for (ServerPlayer p : sl.players()) if (p.distanceToSqr(c.x, c.y, c.z) < 96 * 96) PacketDistributor.sendToPlayer(p, stop);
+        }
+        if (!refund.isEmpty()) tank.fill(refund, IFluidHandler.FluidAction.EXECUTE); // se devuelve el nitrógeno
+        refund = FluidStack.EMPTY;
+        jumpTick = -1;
+        target = "";
+        dirtySync = true;
+        setChanged();
+        PlanetaryExpansion.LOGGER.warn("[Distorsión] Salto cancelado en {}", worldPosition);
+    }
+
+    private static void stopShip(ServerSubLevel ship) {
+        if (ship == null || ship.isRemoved()) return;
+        try {
+            RigidBodyHandle body = RigidBodyHandle.of(ship);
+            if (body == null || !body.isValid()) return;
+            Vector3d lin = body.getLinearVelocity(new Vector3d());
+            Vector3d ang = body.getAngularVelocity(new Vector3d());
+            body.addLinearAndAngularVelocity(lin.negate(), ang.negate());
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // ------------------------------------------------------------------ textos
+
+    private static String pct(double v) {
+        return String.valueOf((int) Math.floor(v * 100));
+    }
+
+    /** Resumen de una línea (clic derecho en el motor). */
+    public Component summary() {
+        String k = "message.planetary_expansion.";
+        return Component.translatable(k + "warp_summary", pct(charge), pct(heat), tank.getFluidAmount(), TANK_CAPACITY)
+                .withStyle(charge >= 1.0 && heat <= 0 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY);
+    }
+
+    /** Líneas para las goggles de Create (en el cliente, con los datos sincronizados). */
+    public void appendStatus(List<Component> tooltip) {
+        String k = "message.planetary_expansion.";
+        tooltip.add(Component.literal("    ").append(Component.translatable("block.planetary_expansion.warp_drive").withStyle(ChatFormatting.WHITE)));
+        tooltip.add(line(Component.translatable(k + "warp_charge", pct(charge)), charge >= 1.0 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY));
+        tooltip.add(line(Component.translatable(k + "warp_heat", pct(heat)), heat > 0 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
+        tooltip.add(line(Component.translatable(k + "warp_nitrogen", tank.getFluidAmount(), TANK_CAPACITY),
+                tank.getFluidAmount() >= JUMP_MB ? ChatFormatting.AQUA : ChatFormatting.RED));
+        if (heat > 0 && tank.isEmpty()) tooltip.add(line(Component.translatable(k + "warp_needs_coolant"), ChatFormatting.RED));
+        if (charge >= 1.0 && heat <= 0 && tank.getFluidAmount() >= JUMP_MB) {
+            tooltip.add(line(Component.translatable(k + "warp_ready"), ChatFormatting.GREEN));
+        }
+    }
+
+    private static Component line(Component c, ChatFormatting style) {
+        return Component.literal("     ").append(c.copy().withStyle(style));
+    }
+
+    // ------------------------------------------------------------------ guardado y sincronización
+
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        writeSync(tag, registries);
+        tag.putDouble("DrainDebt", drainDebt);
+        tag.putInt("JumpTick", jumpTick);
+        tag.putString("Target", target);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        charge = tag.getDouble("Charge");
+        heat = tag.getDouble("Heat");
+        tank.setFluid(FluidStack.EMPTY);
+        if (tag.contains("Tank")) tank.readFromNBT(registries, tag.getCompound("Tank"));
+        clientJumping = tag.getBoolean("Jumping");
+        if (tag.contains("DrainDebt")) drainDebt = tag.getDouble("DrainDebt");
+        if (tag.contains("Target")) target = tag.getString("Target");
+        // un salto a medias al cargar el mundo se termina (el efecto de los jugadores ya no existe)
+        if (tag.contains("JumpTick")) jumpTick = tag.getInt("JumpTick") >= 0 ? Math.max(tag.getInt("JumpTick"), TELEPORT_TICK - 1) : -1;
+    }
+
+    private void writeSync(CompoundTag tag, HolderLookup.Provider registries) {
+        tag.putDouble("Charge", charge);
+        tag.putDouble("Heat", heat);
+        tag.put("Tank", tank.writeToNBT(registries, new CompoundTag()));
+        tag.putBoolean("Jumping", jumpTick >= 0);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = new CompoundTag();
+        writeSync(tag, registries);
+        return tag;
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+}

@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:red_sand"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.red_dust.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.red_dust.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "mars": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:mars"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "mars"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

@@ -1,0 +1,24 @@
+{
+  "values": [
+    "planetary_expansion:ice_crystal_peaks",
+    "planetary_expansion:ice_frozen_sea",
+    "planetary_expansion:ice_glacier",
+    "planetary_expansion:ice_spires",
+    "planetary_expansion:ignis_ash_plains",
+    "planetary_expansion:ignis_lava_sea",
+    "planetary_expansion:ignis_sulfur_fields",
+    "planetary_expansion:ignis_volcanic_peaks",
+    "planetary_expansion:mars_basin",
+    "planetary_expansion:mars_canyons",
+    "planetary_expansion:mars_dunes",
+    "planetary_expansion:mars_highlands",
+    "planetary_expansion:mars_polar_cap",
+    "planetary_expansion:thalassa_blue_ice_fields",
+    "planetary_expansion:thalassa_ice_shell",
+    "planetary_expansion:thalassa_lineae",
+    "planetary_expansion:venus_basalt_plains",
+    "planetary_expansion:venus_dark_plains",
+    "planetary_expansion:venus_shield_volcanoes",
+    "planetary_expansion:venus_tesserae"
+  ]
+}

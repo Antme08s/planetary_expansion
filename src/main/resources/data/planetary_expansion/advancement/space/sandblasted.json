@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:sand"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.sandblasted.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.sandblasted.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "survived"
+    ]
+  ],
+  "parent": "planetary_expansion:space/red_dust"
+}

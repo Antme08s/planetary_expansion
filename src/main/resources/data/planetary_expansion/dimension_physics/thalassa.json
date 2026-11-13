@@ -1,0 +1,22 @@
+{
+  "dimension": "planetary_expansion:thalassa",
+  "priority": 1000,
+  "universal_drag": 0.004,
+  "base_gravity": [
+    0.0,
+    -2.0,
+    0.0
+  ],
+  "pressure_function": [
+    {
+      "altitude": 64.0,
+      "value": 0.2,
+      "slope": 0.0
+    },
+    {
+      "altitude": 600.0,
+      "value": 0.0,
+      "slope": 0.0
+    }
+  ]
+}

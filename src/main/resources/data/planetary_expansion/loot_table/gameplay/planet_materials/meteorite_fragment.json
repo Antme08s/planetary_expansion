@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "planetary_expansion:meteorite_fragment"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance_with_enchanted_bonus",
+          "enchantment": "minecraft:fortune",
+          "unenchanted_chance": 0.6,
+          "enchanted_chance": {
+            "type": "minecraft:linear",
+            "base": 0.7,
+            "per_level_above_first": 0.1
+          }
+        }
+      ]
+    }
+  ]
+}

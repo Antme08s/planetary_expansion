@@ -1,0 +1,22 @@
+{
+  "structures": [
+    {
+      "structure": "planetary_expansion:mars/old_structure_1",
+      "weight": 1
+    },
+    {
+      "structure": "planetary_expansion:mars/old_structure_2",
+      "weight": 1
+    },
+    {
+      "structure": "planetary_expansion:mars/old_structure_3",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 36,
+    "separation": 14,
+    "salt": 26492331
+  }
+}

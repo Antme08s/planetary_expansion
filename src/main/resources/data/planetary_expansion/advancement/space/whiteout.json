@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:snowball"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.whiteout.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.whiteout.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "survived"
+    ]
+  ],
+  "parent": "planetary_expansion:space/eternal_night"
+}

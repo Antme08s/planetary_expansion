@@ -1,0 +1,10 @@
+{
+  "processors": [
+    {
+      "processor_type": "planetary_expansion:terrain_blend",
+      "slab": 3,
+      "blend": "minecraft:red_sand",
+      "foundation": 24
+    }
+  ]
+}

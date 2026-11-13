@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:hazard_helmet"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.acid_test.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.acid_test.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "survived": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "survived"
+    ]
+  ],
+  "parent": "planetary_expansion:space/under_the_clouds"
+}

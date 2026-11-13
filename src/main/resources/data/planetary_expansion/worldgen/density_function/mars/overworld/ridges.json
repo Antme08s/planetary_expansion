@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:flat_cache",
+  "argument": {
+    "type": "minecraft:shifted_noise",
+    "noise": "planetary_expansion:mars/ridge",
+    "shift_x": "planetary_expansion:mars/shift_x",
+    "shift_y": 0.0,
+    "shift_z": "planetary_expansion:mars/shift_z",
+    "xz_scale": 0.25,
+    "y_scale": 0.0
+  }
+}

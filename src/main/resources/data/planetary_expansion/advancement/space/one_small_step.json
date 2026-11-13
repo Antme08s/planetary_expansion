@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "rocketnautics:lunar_regolith"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.one_small_step.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.one_small_step.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "moon": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "rocketnautics:moon"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "moon"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

@@ -1,0 +1,69 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="GPL-3.0-or-later"
+
+[[mixins]]
+config="planetary_expansion.mixins.json"
+
+[[mods]]
+modId="planetary_expansion"
+version="0.7.67"
+displayName="Cosmonautics: Planetary Expansion"
+authors="Antme08"
+description='''
+Landable planets for Create: Cosmonautics: Mars, the Ice World, Ignis, Thalassa and Venus,
+each with its own dimension, terrain and weather (dust storms, blizzards, acid rain).
+Also adds planet suits (Impact, Glacial and Hazard armor) and the Gravity Generator.
+'''
+
+[[dependencies.planetary_expansion]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.planetary_expansion]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.planetary_expansion]]
+modId="create"
+type="required"
+versionRange="[6.0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.planetary_expansion]]
+modId="rocketnautics"
+type="required"
+versionRange="[0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.planetary_expansion]]
+modId="sable"
+type="required"
+versionRange="[2.0.3,)"
+ordering="AFTER"
+side="BOTH"
+
+# Obligatorio desde 0.7.2: minerales de Venus, láminas de plomo y protección contra la radiación de la Hazard Armor
+[[dependencies.planetary_expansion]]
+modId="createnuclear"
+type="required"
+versionRange="[2.0,)"
+ordering="AFTER"
+side="BOTH"
+
+# Obligatorio desde 0.7.24 (petición del usuario): difusores de oxígeno en planetas sin aire y presión del mar
+# para la Sea Diver Armor
+[[dependencies.planetary_expansion]]
+modId="create_submarine"
+type="required"
+versionRange="[3.4,)"
+ordering="AFTER"
+side="BOTH"

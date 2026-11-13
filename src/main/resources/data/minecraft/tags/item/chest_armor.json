@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:impact_chestplate",
+    "planetary_expansion:glacial_chestplate",
+    "planetary_expansion:hazard_chestplate",
+    "planetary_expansion:sea_diver_chestplate",
+    "planetary_expansion:basic_chestplate",
+    "planetary_expansion:thermal_chestplate"
+  ]
+}

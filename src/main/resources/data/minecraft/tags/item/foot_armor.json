@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:impact_boots",
+    "planetary_expansion:glacial_boots",
+    "planetary_expansion:hazard_boots",
+    "planetary_expansion:sea_diver_boots",
+    "planetary_expansion:basic_boots",
+    "planetary_expansion:thermal_boots"
+  ]
+}

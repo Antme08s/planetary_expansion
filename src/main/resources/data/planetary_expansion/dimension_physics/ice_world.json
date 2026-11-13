@@ -1,0 +1,5 @@
+{
+  "dimension": "planetary_expansion:ice_world",
+  "priority": 1000,
+  "universal_drag": 0.01
+}

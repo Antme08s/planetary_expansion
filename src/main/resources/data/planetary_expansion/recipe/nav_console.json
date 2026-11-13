@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PHP",
+    "NBN",
+    "TET"
+  ],
+  "key": {
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "H": {
+      "item": "rocketnautics:hologram_block"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "B": {
+      "item": "create:brass_casing"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:nav_console",
+    "count": 1
+  }
+}

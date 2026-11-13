@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "planetary_expansion:lantern_fish"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_lantern_fish"
+  },
+  "experience": 0.35,
+  "cookingtime": 200
+}

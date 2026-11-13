@@ -1,0 +1,16 @@
+{
+  "type": "neoforge:add_table",
+  "table": "planetary_expansion:gameplay/planet_materials/cryo_crystal",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "minecraft:blocks/blue_ice"
+    },
+    {
+      "condition": "minecraft:location_check",
+      "predicate": {
+        "dimension": "planetary_expansion:ice_world"
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MMM",
+    "MTM",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "planetary_expansion:venusian_sulfur"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:hazard_upgrade_template",
+    "count": 1
+  }
+}

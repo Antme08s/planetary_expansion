@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "create_flight_control:copycat_integrated_sail_i",
+      "required": false
+    },
+    {
+      "id": "createpropulsion:copycat_wing_8",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ITI",
+    "GGG",
+    "S S"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:tinted_glass"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "create:iron_sheet"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:basic_helmet",
+    "count": 1
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ABA",
+    "BTB",
+    "ABA"
+  ],
+  "key": {
+    "A": {
+      "item": "planetary_expansion:king_shell"
+    },
+    "B": {
+      "item": "planetary_expansion:abyssal_fang"
+    },
+    "T": {
+      "item": "rocketnautics:titanium_alloy_sheet"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:sea_diver_upgrade_template",
+    "count": 1
+  }
+}

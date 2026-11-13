@@ -1,0 +1,80 @@
+{
+  "values": [
+    {
+      "id": "offroad:wheel_mount",
+      "required": false
+    },
+    {
+      "id": "offroadstepup:centered_wheel_mount",
+      "required": false
+    },
+    {
+      "id": "offroadstepup:compact_wheel_mount",
+      "required": false
+    },
+    {
+      "id": "offroadstepup:lateral_wheel_mount",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:small_simple_wheel",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:simple_wheel",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:med_simple_wheel",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:large_simple_wheel",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:small_simple_wheel_part",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:simple_wheel_part",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:med_simple_wheel_part",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:large_simple_wheel_part",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:oleo_wheel",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:phys_track",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:med_phys_track",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:large_phys_track",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:suspension_track",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:med_suspension_track",
+      "required": false
+    },
+    {
+      "id": "aero_no_horizon:large_suspension_track",
+      "required": false
+    }
+  ]
+}

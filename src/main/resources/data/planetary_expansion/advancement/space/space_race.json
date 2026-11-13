@@ -1,0 +1,32 @@
+{
+  "display": {
+    "icon": {
+      "id": "rocketnautics:space_helmet"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.space_race.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.space_race.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "planetary_expansion:textures/gui/advancements/backgrounds/space.png"
+  },
+  "criteria": {
+    "left_earth": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "rocketnautics:deep_space",
+        "from": "minecraft:overworld"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "left_earth"
+    ]
+  ]
+}

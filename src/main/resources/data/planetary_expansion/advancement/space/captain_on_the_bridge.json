@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:nav_console"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.captain_on_the_bridge.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.captain_on_the_bridge.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "placed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:block_state_property",
+            "block": "planetary_expansion:nav_console"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "placed"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}
