@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_leaves",
+    "planetary_expansion:duskwood_leaves",
+    "planetary_expansion:blue_duskwood_leaves",
+    "planetary_expansion:mirewood_leaves",
+    "planetary_expansion:cerulean_bush"
+  ]
+}

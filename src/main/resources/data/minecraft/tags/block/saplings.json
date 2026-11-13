@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_sapling",
+    "planetary_expansion:duskwood_sapling",
+    "planetary_expansion:mirewood_sapling"
+  ]
+}

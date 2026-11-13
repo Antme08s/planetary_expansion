@@ -57,7 +57,7 @@ public class NavMapScreen extends Screen {
     private static final int PANEL_W = 196;
     private static final Map<String, Integer> COLORS = Map.of(
             "sol", 0xFFFFD75E, "overworld", 0xFF4F8FE0, "moon", 0xFFCACAD2, "mars", 0xFFF07338, "gas_giant", 0xFFE6B880,
-            "ice_world", 0xFFB3EBFF, "ignis", 0xFFFF4D1A, "thalassa", 0xFF8CD1FF, "venus", 0xFFF2CC66, "amber_test", 0xFF5FBF6A);
+            "ice_world", 0xFFB3EBFF, "ignis", 0xFFFF4D1A, "thalassa", 0xFF8CD1FF, "venus", 0xFFF2CC66, "cerulea", 0xFF4DB08A);
 
     private final BlockPos console;
     private double zoom = -1;     // píxeles por metro

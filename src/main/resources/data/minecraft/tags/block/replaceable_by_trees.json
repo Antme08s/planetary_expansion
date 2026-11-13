@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:cerulean_grass",
+    "planetary_expansion:tall_cerulean_grass",
+    "planetary_expansion:azure_flower",
+    "planetary_expansion:glowbloom"
+  ]
+}

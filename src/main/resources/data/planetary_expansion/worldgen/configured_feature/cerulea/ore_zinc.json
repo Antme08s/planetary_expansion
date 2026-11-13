@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:ore",
+  "config": {
+    "size": 12,
+    "discard_chance_on_air_exposure": 0.0,
+    "targets": [
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "planetary_expansion:cerulean_stone"
+        },
+        "state": {
+          "Name": "planetary_expansion:cerulean_zinc_ore"
+        }
+      },
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "planetary_expansion:deep_cerulean_stone"
+        },
+        "state": {
+          "Name": "planetary_expansion:deep_cerulean_zinc_ore"
+        }
+      }
+    ]
+  }
+}

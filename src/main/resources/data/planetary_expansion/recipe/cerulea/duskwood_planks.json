@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "planks",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:duskwood_log"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:duskwood_planks",
+    "count": 4
+  }
+}

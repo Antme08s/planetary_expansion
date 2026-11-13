@@ -2690,16 +2690,516 @@ def build_amber_system():
         "planet_texture": {"type": "resloc", "texture": f"{NS}:textures/planet/amber.png"},
     })
 
-    # Planeta de prueba: generación de la Tierra (ruido y biomas de Minecraft) con aire, gravedad y día propios.
-    # Solo sirve para comprobar el sistema (gravedad, luz, cielo, salto); el planeta de verdad se diseñará después.
-    P = "amber_test"
-    data(f"dimension/{P}", {
-        "type": rl(P),
-        "generator": {"type": "minecraft:noise", "settings": "minecraft:overworld",
-                      "biome_source": {"type": "minecraft:multi_noise", "preset": "minecraft:overworld"}},
-    })
+    # 1.0.3: el planeta de prueba se sustituyó por Cerúlea (build_cerulea)
+    for body, en, es in [("amber", "Amber", "Ámbar")]:
+        LANG_EN[f"hologram.{NS}.body.{body}"] = en
+        LANG_ES[f"hologram.{NS}.body.{body}"] = es
+    n = f"nav.{NS}."
+    for field, (en, es) in {"type": ("Star (orange dwarf)", "Estrella (enana naranja)"),
+                            "desc": ("A smaller, cooler star than the Sun, far beyond its system. Its light is warm and orange.",
+                                     "Una estrella más pequeña y fría que el Sol, muy lejos de su sistema. Su luz es cálida y naranja.")}.items():
+        LANG_EN[f"{n}body.amber.{field}"] = en
+        LANG_ES[f"{n}body.amber.{field}"] = es
+
+
+# ==========================================================================
+# CERÚLEA (1.0.3): el planeta de Ámbar. Alienígena pero habitable: verdes y azules, especies propias.
+# Texturas: tools/designs/cerulea_assets.py -> tools/designs/cerulea/{block,item}
+# ==========================================================================
+CERULEA_TEX = os.path.join(DESIGNS, "cerulea")
+CERULEA_ORES = ["coal", "iron", "copper", "gold", "redstone", "lapis", "diamond", "emerald", "zinc", "crystal"]
+ORE_NAMES = {"coal": ("Coal", "carbón"), "iron": ("Iron", "hierro"), "copper": ("Copper", "cobre"), "gold": ("Gold", "oro"),
+             "redstone": ("Redstone", "redstone"), "lapis": ("Lapis Lazuli", "lapislázuli"), "diamond": ("Diamond", "diamante"),
+             "emerald": ("Emerald", "esmeralda"), "zinc": ("Zinc", "zinc"), "crystal": ("Cerulean Crystal", "cristal cerúleo")}
+CERULEA_BIOMES = ["cerulea_tall_meadow", "cerulea_short_meadow", "cerulea_giant_forest", "cerulea_grove", "cerulea_swamp",
+                  "cerulea_river", "cerulea_shore", "cerulea_ocean"]
+
+
+def build_cerulea():
+    P = "cerulea"
+    B = lambda n: rl(n)          # noqa: E731
+    tex_block = os.path.join(CERULEA_TEX, "block")
+    for f in sorted(os.listdir(tex_block)):
+        write_bytes(f"assets/{NS}/textures/block/{f}", open(os.path.join(tex_block, f), "rb").read())
+    tex_item = os.path.join(CERULEA_TEX, "item")
+    for f in sorted(os.listdir(tex_item)):
+        write_bytes(f"assets/{NS}/textures/item/{f}", open(os.path.join(tex_item, f), "rb").read())
+
+    def name_(kind, n, en, es):
+        LANG_EN[f"{kind}.{NS}.{n}"] = en
+        LANG_ES[f"{kind}.{NS}.{n}"] = es
+
+    def bstate(n, variants):
+        write(f"assets/{NS}/blockstates/{n}.json", {"variants": variants})
+
+    def model(n, parent, textures, render=None):
+        m = {"parent": parent, "textures": {k: (rl(f"block/{v}") if ":" not in v else v) for k, v in textures.items()}}
+        if render:
+            m["render_type"] = render
+        write(f"assets/{NS}/models/block/{n}.json", m)
+
+    def item_block(n, model_name=None):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": rl(f"block/{model_name or n}")})
+
+    def item_sprite(n, texture):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": "minecraft:item/generated",
+                                                     "textures": {"layer0": rl(texture)}})
+
+    def loot(n, pools):
+        data(f"loot_table/blocks/{n}", {"type": "minecraft:block", "pools": pools,
+                                         "random_sequence": rl(f"blocks/{n}")})
+
+    def pool(entry, conditions=None):
+        p = {"rolls": 1.0, "bonus_rolls": 0.0, "entries": [entry]}
+        if conditions:
+            p["conditions"] = conditions
+        return p
+
+    SURVIVES = [{"condition": "minecraft:survives_explosion"}]
+    SILK = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+    SHEARS = {"condition": "minecraft:match_tool", "predicate": {"items": "minecraft:shears"}}
+    SILK_OR_SHEARS = {"condition": "minecraft:any_of", "terms": [SHEARS, SILK]}
+
+    def drop_self(n):
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, SURVIVES)])
+
+    def silk_else(n, other, fn=None):
+        alt = {"type": "minecraft:item", "name": other}
+        if fn:
+            alt["functions"] = fn
+        loot(n, [pool({"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": B(n), "conditions": [SILK]}, dict(alt, conditions=SURVIVES)]})])
+
+    def cube(n, en, es, texture=None, render=None):
+        model(n, "minecraft:block/cube_all", {"all": texture or n}, render)
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        name_("block", n, en, es)
+
+    # --------------------------------------------------------------- suelo y piedra
+    for n, en, es, soil_drop in (("cerulean_grass_block", "Cerulean Grass Block", "Bloque de pasto cerúleo", True),
+                                 ("cerulean_meadow_grass_block", "Cerulean Meadow Grass", "Pasto de pradera cerúleo", True)):
+        model(n, "minecraft:block/cube_bottom_top", {"top": f"{n}_top", "side": f"{n}_side", "bottom": "cerulean_soil"})
+        bstate(n, {"": [{"model": rl(f"block/{n}")}, {"model": rl(f"block/{n}"), "y": 90},
+                        {"model": rl(f"block/{n}"), "y": 180}, {"model": rl(f"block/{n}"), "y": 270}]})
+        item_block(n)
+        name_("block", n, en, es)
+        silk_else(n, B("cerulean_soil"))
+    for n, en, es in (("cerulean_soil", "Cerulean Soil", "Tierra cerúlea"), ("cerulean_mud", "Cerulean Mud", "Lodo cerúleo"),
+                      ("cerulean_sand", "Pale Sand", "Arena pálida"), ("cerulean_cobblestone", "Cerulean Cobblestone", "Roca cerúlea"),
+                      ("cerulean_stone_bricks", "Cerulean Stone Bricks", "Ladrillos de piedra cerúlea"),
+                      ("polished_cerulean_stone", "Polished Cerulean Stone", "Piedra cerúlea pulida"),
+                      ("deep_cerulean_stone", "Deep Cerulean Stone", "Piedra cerúlea profunda")):
+        cube(n, en, es)
+        drop_self(n)
+    cube("cerulean_stone", "Cerulean Stone", "Piedra cerúlea")
+    silk_else("cerulean_stone", B("cerulean_cobblestone"))
+
+    # --------------------------------------------------------------- minerales
+    ORE_DROP = {"coal": ("minecraft:coal", None), "iron": ("minecraft:raw_iron", None), "copper": ("minecraft:raw_copper", (2, 5)),
+                "gold": ("minecraft:raw_gold", None), "redstone": ("minecraft:redstone", (4, 5)), "lapis": ("minecraft:lapis_lazuli", (4, 9)),
+                "diamond": ("minecraft:diamond", None), "emerald": ("minecraft:emerald", None), "zinc": ("create:raw_zinc", None),
+                "crystal": (B("cerulean_crystal"), (1, 2))}
+    for ore in CERULEA_ORES:
+        item, count = ORE_DROP[ore]
+        fns = []
+        if count:
+            fns.append({"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": count[0], "max": count[1]}})
+        if ore in ("redstone",):
+            fns.append({"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:uniform_bonus_count",
+                        "parameters": {"bonusMultiplier": 1}})
+        else:
+            fns.append({"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:ore_drops"})
+        fns.append({"function": "minecraft:explosion_decay"})
+        en, es = ORE_NAMES[ore]
+        for deep in (False, True):
+            n = f"{'deep_' if deep else ''}cerulean_{ore}_ore"
+            cube(n, f"{'Deep ' if deep else ''}Cerulean {en} Ore",
+                 f"Mena de {es} en piedra cerúlea{' profunda' if deep else ''}")
+            loot(n, [pool({"type": "minecraft:alternatives", "children": [
+                {"type": "minecraft:item", "name": B(n), "conditions": [SILK]},
+                {"type": "minecraft:item", "name": item, "functions": fns}]})])
+
+    # --------------------------------------------------------------- árboles
+    WOODS = {"silverwood": ("Silverwood", "plateado"), "duskwood": ("Duskwood", "violeta"), "mirewood": ("Mirewood", "del pantano")}
+    for w, (en, es) in WOODS.items():
+        n = f"{w}_log"
+        model(n, "minecraft:block/cube_column", {"end": f"{w}_log_top", "side": f"{w}_log"})
+        model(n + "_horizontal", "minecraft:block/cube_column_horizontal", {"end": f"{w}_log_top", "side": f"{w}_log"})
+        bstate(n, {"axis=y": {"model": rl(f"block/{n}")}, "axis=z": {"model": rl(f"block/{n}_horizontal"), "x": 90},
+                   "axis=x": {"model": rl(f"block/{n}_horizontal"), "x": 90, "y": 90}})
+        item_block(n)
+        name_("block", n, f"{en} Log", f"Tronco {es}")
+        drop_self(n)
+        cube(f"{w}_planks", f"{en} Planks", f"Tablones de árbol {es}")
+        drop_self(f"{w}_planks")
+        data(f"recipe/cerulea/{w}_planks", {"type": "minecraft:crafting_shapeless", "category": "building", "group": "planks",
+                                            "ingredients": [{"item": B(n)}], "result": {"id": B(f"{w}_planks"), "count": 4}})
+        s_ = f"{w}_sapling"
+        model(s_, "minecraft:block/cross", {"cross": s_}, "minecraft:cutout")
+        bstate(s_, {"stage=0": {"model": rl(f"block/{s_}")}, "stage=1": {"model": rl(f"block/{s_}")}})
+        item_sprite(s_, f"block/{s_}")
+        name_("block", s_, f"{en} Sapling", f"Retoño de árbol {es}")
+        drop_self(s_)
+    leaves = {"silverwood_leaves": ("Silverwood Leaves", "Hojas de árbol plateado", "silverwood_sapling", 0.04),
+              "duskwood_leaves": ("Duskwood Leaves", "Hojas de árbol violeta", "duskwood_sapling", 0.05),
+              "blue_duskwood_leaves": ("Blue Duskwood Leaves", "Hojas azules de árbol violeta", "duskwood_sapling", 0.05),
+              "mirewood_leaves": ("Mirewood Leaves", "Hojas de árbol del pantano", "mirewood_sapling", 0.05),
+              "cerulean_bush": ("Cerulean Bush", "Arbusto cerúleo", None, 0.0)}
+    for n, (en, es, sap, chance) in leaves.items():
+        model(n, "minecraft:block/leaves", {"all": n}, "minecraft:cutout_mipped")
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        name_("block", n, en, es)
+        children = [{"type": "minecraft:item", "name": B(n), "conditions": [SILK_OR_SHEARS]}]
+        if sap:
+            children.append({"type": "minecraft:item", "name": B(sap), "conditions": [
+                SURVIVES[0], {"condition": "minecraft:table_bonus", "enchantment": "minecraft:fortune",
+                              "chances": [chance, chance * 1.25, chance * 1.6, chance * 2.4]}]})
+        pools = [pool({"type": "minecraft:alternatives", "children": children})]
+        pools.append(pool({"type": "minecraft:item", "name": "minecraft:stick", "functions": [
+            {"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 2}},
+            {"function": "minecraft:explosion_decay"}]}, [{"condition": "minecraft:inverted", "term": SILK_OR_SHEARS},
+                                                         {"condition": "minecraft:random_chance", "chance": 0.02}]))
+        loot(n, pools)
+
+    # --------------------------------------------------------------- plantas
+    def cross(n, en, es, tex=None, drops=None, shears=False):
+        model(n, "minecraft:block/cross", {"cross": tex or n}, "minecraft:cutout")
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_sprite(n, f"block/{tex or n}")
+        name_("block", n, en, es)
+        if shears:
+            children = [{"type": "minecraft:item", "name": B(n), "conditions": [SHEARS]}]
+            if drops:
+                children.append(drops)
+            loot(n, [pool({"type": "minecraft:alternatives", "children": children})])
+        else:
+            drop_self(n)
+
+    root_seed = {"type": "minecraft:item", "name": B("cerulean_root"), "conditions": [
+        {"condition": "minecraft:random_chance", "chance": 0.05}]}
+    cross("cerulean_grass", "Cerulean Grass", "Pasto cerúleo", drops=root_seed, shears=True)
+    cross("azure_flower", "Azure Flower", "Flor azul")
+    cross("glowbloom", "Glowbloom", "Flor luminosa")
+    cross("glowcap", "Glowcap", "Hongo luminoso")
+    cross("mire_vine", "Mire Vine", "Liana del pantano", shears=True)
+    # pasto alto y junco (dos bloques)
+    for n, en, es, drop in (("tall_cerulean_grass", "Tall Cerulean Grass", "Pasto cerúleo alto", None),
+                            ("mire_reed", "Mire Reed", "Junco del pantano", "reed_pod")):
+        model(f"{n}_bottom", "minecraft:block/cross", {"cross": f"{n}_bottom"}, "minecraft:cutout")
+        model(f"{n}_top", "minecraft:block/cross", {"cross": f"{n}_top"}, "minecraft:cutout")
+        bstate(n, {"half=lower": {"model": rl(f"block/{n}_bottom")}, "half=upper": {"model": rl(f"block/{n}_top")}})
+        name_("block", n, en, es)
+        lower = [{"condition": "minecraft:block_state_property", "block": B(n), "properties": {"half": "lower"}}]
+        if drop:
+            loot(n, [pool({"type": "minecraft:item", "name": B(drop), "functions": [
+                {"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 3}}]}, lower)])
+        else:
+            loot(n, [pool({"type": "minecraft:alternatives", "children": [
+                {"type": "minecraft:item", "name": B(n), "conditions": [SHEARS]}, dict(root_seed)]}, lower)])
+    item_sprite("tall_cerulean_grass", "block/tall_cerulean_grass_top")
+    # nenúfar
+    model("azure_lily_pad", "minecraft:block/lily_pad", {"texture": "azure_lily_pad", "particle": "azure_lily_pad"}, "minecraft:cutout")
+    bstate("azure_lily_pad", {"": [{"model": rl("block/azure_lily_pad")}, {"model": rl("block/azure_lily_pad"), "y": 90},
+                                   {"model": rl("block/azure_lily_pad"), "y": 180}, {"model": rl("block/azure_lily_pad"), "y": 270}]})
+    item_sprite("azure_lily_pad", "block/azure_lily_pad")
+    name_("block", "azure_lily_pad", "Azure Lily Pad", "Nenúfar azul")
+    drop_self("azure_lily_pad")
+
+    # --------------------------------------------------------------- comestibles
+    for k in (0, 1):
+        model(f"blueberry_bush_stage{k}", "minecraft:block/cross", {"cross": f"blueberry_bush_stage{k}"}, "minecraft:cutout")
+    bstate("blueberry_bush", {f"age={a}": {"model": rl(f"block/blueberry_bush_stage{0 if a < 2 else 1}")} for a in range(4)})
+    name_("block", "blueberry_bush", "Blueberry Bush", "Arbusto de bayas azules")
+    loot("blueberry_bush", [
+        pool({"type": "minecraft:item", "name": B("blueberries"), "functions": [
+            {"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 2, "max": 3}},
+            {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:uniform_bonus_count",
+             "parameters": {"bonusMultiplier": 1}}]},
+             [{"condition": "minecraft:block_state_property", "block": B("blueberry_bush"), "properties": {"age": "3"}}]),
+        pool({"type": "minecraft:item", "name": B("blueberries"), "functions": [
+            {"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 2}}]},
+             [{"condition": "minecraft:block_state_property", "block": B("blueberry_bush"), "properties": {"age": "2"}}])])
+    for s_ in range(4):
+        model(f"cerulean_roots_stage{s_}", "minecraft:block/crop", {"crop": f"cerulean_roots_stage{s_}"}, "minecraft:cutout")
+    bstate("cerulean_roots", {f"age={a}": {"model": rl(f"block/cerulean_roots_stage{a}")} for a in range(4)})
+    name_("block", "cerulean_roots", "Cerulean Roots", "Raíces cerúleas")
+    ripe = [{"condition": "minecraft:block_state_property", "block": B("cerulean_roots"), "properties": {"age": "3"}}]
+    loot("cerulean_roots", [
+        pool({"type": "minecraft:item", "name": B("cerulean_root")}),
+        pool({"type": "minecraft:item", "name": B("cerulean_root"), "functions": [
+            {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:binomial_with_bonus_count",
+             "parameters": {"extra": 3, "probability": 0.5714286}}]}, ripe)])
+    model("duskfruit", "minecraft:block/cross", {"cross": "duskfruit"}, "minecraft:cutout")
+    bstate("duskfruit", {"": {"model": rl("block/duskfruit")}})
+    name_("block", "duskfruit", "Duskfruit", "Fruta violeta")
+    loot("duskfruit", [pool({"type": "minecraft:item", "name": B("duskfruit")})])
+    for n, en, es in (("blueberries", "Blueberries", "Bayas azules"), ("duskfruit", "Duskfruit", "Fruta violeta"),
+                      ("cerulean_root", "Cerulean Root", "Raíz cerúlea"), ("baked_cerulean_root", "Baked Cerulean Root", "Raíz cerúlea asada"),
+                      ("reed_pod", "Reed Pod", "Vaina de junco"), ("glowcap_stew", "Glowcap Stew", "Sopa de hongo luminoso"),
+                      ("cerulean_crystal", "Cerulean Crystal", "Cristal cerúleo")):
+        item_sprite(n, f"item/{n}")
+        name_("item", n, en, es)
+
+    # --------------------------------------------------------------- recetas
+    def smelt(n, ing, out, xp=0.1, kinds=("smelting",)):
+        for k in kinds:
+            data(f"recipe/cerulea/{n}_{k}", {"type": f"minecraft:{k}", "category": "food" if "root" in out else "blocks",
+                                              "ingredient": {"item": ing}, "result": {"id": out}, "experience": xp,
+                                              "cookingtime": {"smelting": 200, "smoking": 100, "campfire_cooking": 600}[k]})
+    smelt("baked_cerulean_root", B("cerulean_root"), B("baked_cerulean_root"), 0.35, ("smelting", "smoking", "campfire_cooking"))
+    smelt("cerulean_stone", B("cerulean_cobblestone"), B("cerulean_stone"))
+    data("recipe/cerulea/glowcap_stew", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                         "ingredients": [{"item": "minecraft:bowl"}, {"item": B("glowcap")}, {"item": B("glowcap")}],
+                                         "result": {"id": B("glowcap_stew"), "count": 1}})
+    for out, ing in (("polished_cerulean_stone", "cerulean_stone"), ("cerulean_stone_bricks", "polished_cerulean_stone")):
+        data(f"recipe/cerulea/{out}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                       "key": {"#": {"item": B(ing)}}, "result": {"id": B(out), "count": 4}})
+        data(f"recipe/cerulea/{out}_stonecutting", {"type": "minecraft:stonecutting", "ingredient": {"item": B("cerulean_stone")},
+                                                    "result": {"id": B(out), "count": 1}})
+
+    # --------------------------------------------------------------- etiquetas
+    def tag(kind, tagname, values):
+        for v in values:
+            tag_add(f"data/{tagname.split(':')[0]}/tags/{kind}/{tagname.split(':')[1]}.json", v)
+
+    grass_like = [B("cerulean_grass_block"), B("cerulean_meadow_grass_block"), B("cerulean_soil"), B("cerulean_mud")]
+    stones = [B("cerulean_stone"), B("deep_cerulean_stone")]
+    ores_all = [B(f"{d}cerulean_{o}_ore") for o in CERULEA_ORES for d in ("", "deep_")]
+    logs = [B(f"{w}_log") for w in WOODS]
+    planks = [B(f"{w}_planks") for w in WOODS]
+    leaf_ids = [B(n) for n in leaves]
+    saplings = [B(f"{w}_sapling") for w in WOODS]
+    tag("block", "minecraft:dirt", grass_like)
+    tag("block", "minecraft:sand", [B("cerulean_sand")])
+    tag("block", "minecraft:mineable/shovel", grass_like + [B("cerulean_sand")])
+    tag("block", "minecraft:mineable/pickaxe", stones + ores_all + [B("cerulean_cobblestone"), B("cerulean_stone_bricks"),
+                                                                    B("polished_cerulean_stone")])
+    tag("block", "minecraft:mineable/axe", logs + planks)
+    tag("block", "minecraft:mineable/hoe", leaf_ids)
+    tag("block", "minecraft:needs_stone_tool", [B(f"{d}cerulean_{o}_ore") for o in ("iron", "copper", "lapis", "zinc") for d in ("", "deep_")])
+    tag("block", "minecraft:needs_iron_tool", [B(f"{d}cerulean_{o}_ore") for o in ("gold", "redstone", "diamond", "emerald", "crystal")
+                                              for d in ("", "deep_")])
+    tag("block", "minecraft:base_stone_overworld", stones)
+    tag("block", "minecraft:overworld_carver_replaceables", stones + grass_like + [B("cerulean_sand")])
+    tag("block", "minecraft:logs", logs)
+    tag("block", "minecraft:logs_that_burn", logs)
+    tag("block", "minecraft:planks", planks)
+    tag("block", "minecraft:leaves", leaf_ids)
+    tag("block", "minecraft:saplings", saplings)
+    tag("block", "minecraft:climbable", [B("mire_vine")])
+    tag("block", "minecraft:crops", [B("cerulean_roots")])
+    tag("block", "minecraft:small_flowers", [B("azure_flower"), B("glowbloom")])
+    tag("block", "minecraft:replaceable_by_trees", [B("cerulean_grass"), B("tall_cerulean_grass"), B("azure_flower"), B("glowbloom")])
+    tag("item", "minecraft:logs", logs)
+    tag("item", "minecraft:logs_that_burn", logs)
+    tag("item", "minecraft:planks", planks)
+    tag("item", "minecraft:leaves", leaf_ids)
+    tag("item", "minecraft:saplings", saplings)
+    tag("item", "minecraft:small_flowers", [B("azure_flower"), B("glowbloom")])
+    tag("item", "minecraft:stone_crafting_materials", [B("cerulean_cobblestone")])
+    tag("item", "minecraft:stone_tool_materials", [B("cerulean_cobblestone")])
+    tag("item", "minecraft:villager_plantable_seeds", [B("cerulean_root")])
+    for o in CERULEA_ORES:
+        both = [B(f"cerulean_{o}_ore"), B(f"deep_cerulean_{o}_ore")]
+        if o not in ("zinc", "crystal"):
+            tag("block", f"minecraft:{o}_ores", both)
+            tag("item", f"minecraft:{o}_ores", both)
+        tag("block", f"c:ores/{o}", both)
+        tag("item", f"c:ores/{o}", both)
+        tag("block", "c:ores", both)
+        tag("item", "c:ores", both)
+    # zinc de Create: Create funde las menas con la etiqueta c:ores/zinc
+    tag("item", "c:foods/berry", [B("blueberries")])
+    tag("item", "c:foods/fruit", [B("duskfruit")])
+    tag("item", "c:crops", [B("cerulean_root")])
+
+    # --------------------------------------------------------------- biomas
+    def bfeat(*ids):
+        return [rl(f"{P}/{i}") for i in ids]
+
+    def placed(name, feature, placement):
+        data(f"worldgen/placed_feature/{P}/{name}", {"feature": feature, "placement": placement})
+
+    def configured(name, obj):
+        data(f"worldgen/configured_feature/{P}/{name}", obj)
+        return rl(f"{P}/{name}")
+
+    SURFACE = [{"type": "minecraft:heightmap", "heightmap": "MOTION_BLOCKING"}, {"type": "minecraft:biome"}]
+
+    def st(n, props=None):
+        s_ = {"Name": B(n)}
+        if props:
+            s_["Properties"] = props
+        return s_
+
+    def patch(name, state, tries, spread=7, count=None, chance=None, extra_pred=None, water=False):
+        pred = [{"type": "minecraft:matching_blocks", "blocks": "minecraft:air"} if not water else
+                {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+                {"type": "minecraft:would_survive", "state": state}]
+        if extra_pred:
+            pred.append(extra_pred)
+        cf = configured(name, {"type": "minecraft:random_patch", "config": {"tries": tries, "xz_spread": spread, "y_spread": 3, "feature": {
+            "feature": {"type": "minecraft:simple_block", "config": {"to_place": {"type": "minecraft:simple_state_provider", "state": state}}},
+            "placement": [{"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": pred}}]}}})
+        pl = []
+        if chance:
+            pl.append({"type": "minecraft:rarity_filter", "chance": chance})
+        if count:
+            pl.append({"type": "minecraft:count", "count": count})
+        placed(name, cf, pl + [{"type": "minecraft:in_square"}] + (
+            [{"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}] if water else SURFACE))
+        return rl(f"{P}/{name}")
+
+    NEAR_WATER = {"type": "minecraft:any_of", "predicates": [
+        {"type": "minecraft:matching_fluids", "offset": [dx, -1, dz], "fluids": ["minecraft:water", "minecraft:flowing_water"]}
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))]}
+    tall_grass = patch("tall_grass", st("tall_cerulean_grass", {"half": "lower"}), 96, count=6)
+    tall_grass_few = patch("tall_grass_few", st("tall_cerulean_grass", {"half": "lower"}), 32, count=1)
+    short_grass = patch("short_grass", st("cerulean_grass"), 64, count=6)
+    short_grass_few = patch("short_grass_few", st("cerulean_grass"), 32, count=2)
+    flowers = patch("flowers", st("azure_flower"), 48, count=2)
+    glowblooms = patch("glowblooms", st("glowbloom"), 24, chance=3)
+    glowcaps = patch("glowcaps", st("glowcap"), 32, count=2)
+    berries = patch("blueberry_bushes", st("blueberry_bush", {"age": "3"}), 24, chance=6)
+    wild_roots = patch("wild_roots", st("cerulean_roots", {"age": "3"}), 12, chance=10)
+    reeds = patch("reeds", st("mire_reed", {"half": "lower"}), 48, count=3, extra_pred=NEAR_WATER)
+    reeds_few = patch("reeds_few", st("mire_reed", {"half": "lower"}), 24, chance=2, extra_pred=NEAR_WATER)
+    lilies = patch("lilies", st("azure_lily_pad"), 24, count=3, water=True)
+    bushes = patch("bushes", st("cerulean_bush", {"persistent": "true", "distance": "7", "waterlogged": "false"}), 8, chance=3)
+
+    # árboles
+    def tree_cf(name, leaves_id):
+        leaf = {"Name": B(leaves_id), "Properties": {"distance": "7", "persistent": "false", "waterlogged": "false"}}
+        return configured(name, {"type": "minecraft:tree", "config": {
+            "trunk_provider": {"type": "minecraft:simple_state_provider", "state": {"Name": B("duskwood_log"), "Properties": {"axis": "y"}}},
+            "trunk_placer": {"type": "minecraft:straight_trunk_placer", "base_height": 4, "height_rand_a": 2, "height_rand_b": 1},
+            "foliage_provider": {"type": "minecraft:simple_state_provider", "state": leaf},
+            "foliage_placer": {"type": "minecraft:blob_foliage_placer", "radius": 2, "offset": 0, "height": 3},
+            "minimum_size": {"type": "minecraft:two_layers_feature_size", "limit": 1, "lower_size": 0, "upper_size": 1},
+            "dirt_provider": {"type": "minecraft:simple_state_provider", "state": {"Name": B("cerulean_soil")}},
+            "decorators": [{"type": "minecraft:attached_to_leaves", "probability": 0.08, "exclusion_radius_xz": 1,
+                            "exclusion_radius_y": 0, "required_empty_blocks": 2,
+                            "block_provider": {"type": "minecraft:simple_state_provider", "state": {"Name": B("duskfruit")}},
+                            "directions": ["down"]}],
+            "ignore_vines": True, "force_dirt": False}})
+    duskwood_green = tree_cf("duskwood_tree", "duskwood_leaves")
+    duskwood_blue = tree_cf("duskwood_tree_blue", "blue_duskwood_leaves")
+    silverwood = configured("silverwood_tree", {"type": B("cerulea_tree"), "config": {"variant": "silverwood"}})
+    mirewood = configured("mirewood_tree", {"type": B("cerulea_tree"), "config": {"variant": "mirewood"}})
+
+    def trees(name, choices, count, extra=0.1):
+        cf = configured(name + "_choice", {"type": "minecraft:random_selector", "config": {
+            "features": [{"feature": {"feature": c, "placement": []}, "chance": ch} for c, ch in choices[:-1]],
+            "default": {"feature": choices[-1][0], "placement": []}}})
+        placed(name, cf, [{"type": "minecraft:count", "count": {"type": "minecraft:weighted_list", "distribution": [
+            {"data": count, "weight": 9}, {"data": count + 1, "weight": 1}]}},
+            {"type": "minecraft:in_square"}, {"type": "minecraft:surface_water_depth_filter", "max_water_depth": 0},
+            {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"}, {"type": "minecraft:biome"}])
+        return rl(f"{P}/{name}")
+    t_grove = trees("grove_trees", [(duskwood_green, 0.55), (duskwood_blue, 0.0)], 9)
+    t_meadow = trees("meadow_trees", [(duskwood_green, 0.5), (duskwood_blue, 0.0)], 0)
+    t_giant = trees("giant_trees", [(silverwood, 0.85), (duskwood_blue, 0.0)], 2)
+    cf = configured("swamp_tree_choice", {"type": "minecraft:random_selector", "config": {"features": [],
+                    "default": {"feature": mirewood, "placement": []}}})
+    placed("swamp_trees", cf, [{"type": "minecraft:count", "count": 2}, {"type": "minecraft:in_square"},
+                               {"type": "minecraft:surface_water_depth_filter", "max_water_depth": 2},
+                               {"type": "minecraft:heightmap", "heightmap": "OCEAN_FLOOR"}, {"type": "minecraft:biome"}])
+    t_swamp = rl(f"{P}/swamp_trees")
+
+    # minerales
+    def ore(name, ore_id, size, count, lo, hi, shape="minecraft:trapezoid", discard=0.0):
+        cf_ = configured(f"ore_{name}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": discard,
+            "targets": [{"target": {"predicate_type": "minecraft:block_match", "block": B("cerulean_stone")}, "state": st(f"cerulean_{ore_id}_ore")},
+                        {"target": {"predicate_type": "minecraft:block_match", "block": B("deep_cerulean_stone")},
+                         "state": st(f"deep_cerulean_{ore_id}_ore")}]}})
+        placed(f"ore_{name}", cf_, [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+                                    {"type": "minecraft:height_range", "height": {"type": shape, "min_inclusive": {"absolute": lo},
+                                                                                  "max_inclusive": {"absolute": hi}}},
+                                    {"type": "minecraft:biome"}])
+        return rl(f"{P}/ore_{name}")
+    ore_list = [
+        ore("coal", "coal", 17, 30, 0, 192, "minecraft:uniform"), ore("coal_lower", "coal", 17, 20, 0, 192, "minecraft:trapezoid", 0.5),
+        ore("iron", "iron", 9, 10, -24, 56), ore("iron_upper", "iron", 9, 90, 80, 384), ore("iron_small", "iron", 4, 10, -64, 72, "minecraft:uniform"),
+        ore("copper", "copper", 10, 16, -16, 112), ore("gold", "gold", 9, 4, -64, 32), ore("gold_lower", "gold", 9, 1, -64, -48, "minecraft:uniform", 0.5),
+        ore("redstone", "redstone", 8, 4, -64, 15, "minecraft:uniform"), ore("redstone_lower", "redstone", 8, 8, -96, -32),
+        ore("lapis", "lapis", 7, 2, -32, 32), ore("lapis_buried", "lapis", 7, 4, -64, 64, "minecraft:uniform", 1.0),
+        ore("diamond", "diamond", 4, 7, -144, 16, "minecraft:trapezoid", 0.5), ore("diamond_large", "diamond", 12, 1, -144, 16, "minecraft:trapezoid", 0.7),
+        ore("emerald", "emerald", 3, 6, -16, 320), ore("zinc", "zinc", 12, 8, -63, 70, "minecraft:uniform"),
+        ore("crystal", "crystal", 5, 3, -64, 40, "minecraft:trapezoid", 0.3),
+    ]
+
+    sky = {"cerulea_tall_meadow": rgb(120, 178, 204), "cerulea_short_meadow": rgb(126, 184, 206), "cerulea_giant_forest": rgb(108, 166, 196),
+           "cerulea_grove": rgb(114, 172, 200), "cerulea_swamp": rgb(112, 160, 176), "cerulea_river": rgb(120, 178, 204),
+           "cerulea_shore": rgb(126, 184, 206), "cerulea_ocean": rgb(118, 176, 206)}
+    water = {"cerulea_swamp": (rgb(44, 112, 104), rgb(16, 40, 40)), "cerulea_ocean": (rgb(28, 96, 150), rgb(8, 30, 56))}
+    veg = {
+        "cerulea_tall_meadow": [t_meadow, tall_grass, short_grass_few, flowers, glowblooms, berries, wild_roots, bushes],
+        "cerulea_short_meadow": [t_meadow, short_grass, flowers, glowblooms, berries, wild_roots, bushes],
+        "cerulea_giant_forest": [t_giant, short_grass, tall_grass_few, flowers, glowblooms],
+        "cerulea_grove": [t_grove, short_grass, flowers, glowblooms, berries],
+        "cerulea_swamp": [t_swamp, short_grass, glowcaps, reeds, lilies, glowblooms],
+        "cerulea_river": [reeds_few, short_grass_few],
+        "cerulea_shore": [reeds_few],
+        "cerulea_ocean": [],
+    }
+    for b in CERULEA_BIOMES:
+        wc, wf = water.get(b, (rgb(36, 128, 160), rgb(10, 36, 52)))
+        biome(b, temperature=0.7, downfall=0.6, precipitation=True, sky=sky[b], fog=rgb(240, 214, 168), water=wc, water_fog=wf,
+              carvers=["minecraft:cave", "minecraft:cave_extra_underground", "minecraft:canyon"],
+              feats=features(underground_ores=ore_list, vegetal_decoration=veg[b]))
+    for b, en, es in (("cerulea_tall_meadow", "Tall Meadow", "Pradera de pasto alto"), ("cerulea_short_meadow", "Short Meadow", "Pradera de pasto bajo"),
+                      ("cerulea_giant_forest", "Giant Forest", "Bosque gigante"), ("cerulea_grove", "Duskwood Grove", "Bosque violeta"),
+                      ("cerulea_swamp", "Mire", "Pantano"), ("cerulea_river", "River", "Río"), ("cerulea_shore", "Shore", "Costa"),
+                      ("cerulea_ocean", "Ocean", "Océano")):
+        name(b, en, es)
+
+    # reparto de biomas (como el de la Tierra: continentalidad para el mar, humedad para el tipo de tierra)
+    FULLR = [-1.0, 1.0]
+    land = [-0.11, 1.0]
+    w_out = ([-1.0, -0.05], [0.05, 1.0])
+    pts = [point("cerulea_ocean", continentalness=[-1.2, -0.19]),
+           point("cerulea_shore", continentalness=[-0.19, -0.11]),
+           point("cerulea_river", continentalness=[-0.11, 0.55], weirdness=[-0.05, 0.05], erosion=[-0.375, 1.0])]
+    for w in w_out:
+        pts += [point("cerulea_short_meadow", humidity=[-1.0, -0.35], continentalness=land, weirdness=w),
+                point("cerulea_tall_meadow", humidity=[-0.35, 0.1], continentalness=land, weirdness=w),
+                point("cerulea_grove", humidity=[0.1, 0.3], continentalness=land, weirdness=w),
+                point("cerulea_swamp", humidity=[0.3, 1.0], erosion=[0.45, 1.0], continentalness=land, weirdness=w),
+                point("cerulea_giant_forest", humidity=[0.3, 1.0], erosion=[-1.0, 0.45], temperature=[-1.0, 0.2], continentalness=land, weirdness=w),
+                point("cerulea_grove", humidity=[0.3, 1.0], erosion=[-1.0, 0.45], temperature=[0.2, 1.0], continentalness=land, weirdness=w)]
+    # los valles altos (continentalidad > 0,55) no son ríos: tierra normal
+    pts += [point("cerulea_tall_meadow", continentalness=[0.55, 1.0], weirdness=[-0.05, 0.05], humidity=[-1.0, 0.1]),
+            point("cerulea_grove", continentalness=[0.55, 1.0], weirdness=[-0.05, 0.05], humidity=[0.1, 1.0])]
+
+    ABOVE_WATER = {"type": "minecraft:water", "offset": -1, "surface_depth_multiplier": 0, "add_stone_depth": False}
+    wet = ["cerulea_ocean", "cerulea_shore", "cerulea_river"]
+    surface = seq(
+        BEDROCK_FLOOR,
+        cond(ABOVE_PRELIM, seq(
+            cond(biome_is(*wet), seq(cond(ON_FLOOR, put(st("cerulean_sand"))), cond(UNDER_FLOOR, put(st("cerulean_sand"))))),
+            cond(biome_is("cerulea_swamp"), seq(
+                cond(ON_FLOOR, seq(cond(ABOVE_WATER, put(st("cerulean_grass_block"))), put(st("cerulean_mud")))),
+                cond(UNDER_FLOOR, put(st("cerulean_mud"))))),
+            cond(biome_is("cerulea_short_meadow"), cond(ON_FLOOR, seq(cond(ABOVE_WATER, put(st("cerulean_meadow_grass_block"))),
+                                                                      put(st("cerulean_soil"))))),
+            cond(ON_FLOOR, seq(cond(ABOVE_WATER, put(st("cerulean_grass_block"))), put(st("cerulean_soil")))),
+            cond(UNDER_FLOOR, put(st("cerulean_soil"))),
+        )),
+        cond({"type": "minecraft:vertical_gradient", "random_name": rl("deep_cerulean"),
+              "true_at_and_below": {"absolute": 0}, "false_at_and_above": {"absolute": 8}}, put(st("deep_cerulean_stone"))),
+    )
+    router = RouterCloner(P).router_from("large_biomes")
+    with open(os.path.join(VWG, "noise_settings", "overworld.json")) as f:
+        vanilla = json.load(f)
+    noise_settings(P, router, default_block=st("cerulean_stone"), default_fluid=vanilla["default_fluid"], sea_level=63,
+                   aquifers=True, surface_rule=surface, spawn_target=vanilla["spawn_target"])
+    dimension(P, pts)
     dimension_type(P, effects="minecraft:overworld")
     dimension_physics(P, universal_drag=0.01)
+
     data(f"universe_planets/{P}", {
         "name": P,
         "parent": "amber",
@@ -2707,42 +3207,36 @@ def build_amber_system():
         "acceleration_at_surface": 9.8,
         "radius": 3000000.0,
         # año de 604 800 s, como la Tierra; con la masa de Ámbar queda a ~3,5e9 m de su estrella
-        "position": {"type": "circular_orbit_period",
-                     "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
-                     "period_seconds": 604800.0},
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0}, "period_seconds": 604800.0},
         "rotation": {"type": "period", "period_seconds": 1200.0, "rotation_axis": {"x": 0.0, "y": -1.0, "z": 0.0}},
         "planet_extras": {"light_source_name": "amber", "has_clouds": True},
         "dimension_data": {
-            "linked_dimension": rl(P),
-            "allowed_transfer": "all",
-            "dimension_transfer_height": 20000,
+            "linked_dimension": rl(P), "allowed_transfer": "all", "dimension_transfer_height": 20000,
             "atmosphere_composition": {"5000": [], "21000": ["low_density", "drowning"]},
-            "render_universe_in_dimension": True,
-            "dimension_day_time_controller_name": "amber",
-            "apply_gravity_correction_to_entities_in_dimension": True,
-            "entity_drag_multiplier": drag_curve(4000, 7000),
+            "render_universe_in_dimension": True, "dimension_day_time_controller_name": "amber",
+            "apply_gravity_correction_to_entities_in_dimension": True, "entity_drag_multiplier": drag_curve(4000, 7000),
         },
         "planet_atmosphere": {"enabled": True, "radius": 1.12, "intensity": 0.8, "densityFalloff": 5.0,
-                              "scatteringStrength": 0.06, "wavelengths": [700.0, 560.0, 440.0]},
-        "planet_texture": {"type": "biome_sampler", "fallback_red": 30, "fallback_green": 120, "fallback_blue": 40,
-                           "colors": OVERWORLD_COLORS},
+                              "scatteringStrength": 0.06, "wavelengths": [680.0, 540.0, 450.0]},
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 60, "fallback_green": 160, "fallback_blue": 130,
+                           "colors": [color(28, 96, 150, biomes=["cerulea_ocean"], ocean=True), color(40, 130, 165, biomes=["cerulea_river"]),
+                                      color(196, 204, 198, biomes=["cerulea_shore"]), color(77, 176, 138, biomes=["cerulea_tall_meadow"]),
+                                      color(104, 196, 150, biomes=["cerulea_short_meadow"]), color(44, 88, 170, biomes=["cerulea_giant_forest"]),
+                                      color(40, 140, 120, biomes=["cerulea_grove"]), color(52, 110, 100, biomes=["cerulea_swamp"])]},
     })
-    for body, en, es in [("amber", "Amber", "Ámbar"), (P, "Test World", "Planeta de prueba")]:
-        LANG_EN[f"hologram.{NS}.body.{body}"] = en
-        LANG_ES[f"hologram.{NS}.body.{body}"] = es
+    LANG_EN[f"hologram.{NS}.body.{P}"] = "Cerulea"
+    LANG_ES[f"hologram.{NS}.body.{P}"] = "Cerúlea"
     n = f"nav.{NS}."
-    for body, fields in {
-        "amber": {"type": ("Star (orange dwarf)", "Estrella (enana naranja)"),
-                  "desc": ("A smaller, cooler star than the Sun, far beyond its system. Its light is warm and orange.",
-                           "Una estrella más pequeña y fría que el Sol, muy lejos de su sistema. Su luz es cálida y naranja.")},
-        P: {"type": ("Test planet", "Planeta de prueba"),
-            "desc": ("Temporary world to test the second solar system.", "Mundo temporal para probar el segundo sistema solar."),
+    for field, (en, es) in {
+            "type": ("Living planet", "Planeta con vida"),
+            "desc": ("A world of turquoise meadows, giant blue forests and glowing swamps under the warm light of Amber.",
+                     "Un mundo de praderas turquesa, bosques gigantes azules y pantanos que brillan, bajo la luz cálida de Ámbar."),
             "air": ("Breathable", "Respirable"), "temp": ("Mild", "Templada"), "hazards": ("None", "Ninguno"),
-            "armor": ("Not needed", "No hace falta")},
-    }.items():
-        for field, (en, es) in fields.items():
-            LANG_EN[f"{n}body.{body}.{field}"] = en
-            LANG_ES[f"{n}body.{body}.{field}"] = es
+            "armor": ("Not needed", "No hace falta"),
+            "resources": ("Every Minecraft ore, zinc, cerulean crystal, new woods and food",
+                          "Todos los minerales de Minecraft, zinc, cristal cerúleo, maderas nuevas y comida")}.items():
+        LANG_EN[f"{n}body.{P}.{field}"] = en
+        LANG_ES[f"{n}body.{P}.{field}"] = es
 
 
 def build_meta():
@@ -2848,6 +3342,7 @@ if __name__ == "__main__":
     build_venus()
     build_venus_hazard_data()
     build_moon_fix()
+    build_cerulea()          # 1.0.3: antes de no_earth_mobs (la etiqueta de biomas del mod)
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:random_selector",
+  "config": {
+    "features": [
+      {
+        "feature": {
+          "feature": "planetary_expansion:cerulea/silverwood_tree",
+          "placement": []
+        },
+        "chance": 0.85
+      }
+    ],
+    "default": {
+      "feature": "planetary_expansion:cerulea/duskwood_tree_blue",
+      "placement": []
+    }
+  }
+}

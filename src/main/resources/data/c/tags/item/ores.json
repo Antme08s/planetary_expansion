@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:cerulean_coal_ore",
+    "planetary_expansion:deep_cerulean_coal_ore",
+    "planetary_expansion:cerulean_iron_ore",
+    "planetary_expansion:deep_cerulean_iron_ore",
+    "planetary_expansion:cerulean_copper_ore",
+    "planetary_expansion:deep_cerulean_copper_ore",
+    "planetary_expansion:cerulean_gold_ore",
+    "planetary_expansion:deep_cerulean_gold_ore",
+    "planetary_expansion:cerulean_redstone_ore",
+    "planetary_expansion:deep_cerulean_redstone_ore",
+    "planetary_expansion:cerulean_lapis_ore",
+    "planetary_expansion:deep_cerulean_lapis_ore",
+    "planetary_expansion:cerulean_diamond_ore",
+    "planetary_expansion:deep_cerulean_diamond_ore",
+    "planetary_expansion:cerulean_emerald_ore",
+    "planetary_expansion:deep_cerulean_emerald_ore",
+    "planetary_expansion:cerulean_zinc_ore",
+    "planetary_expansion:deep_cerulean_zinc_ore",
+    "planetary_expansion:cerulean_crystal_ore",
+    "planetary_expansion:deep_cerulean_crystal_ore"
+  ]
+}

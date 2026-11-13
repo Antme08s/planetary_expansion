@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "planetary_expansion:block/cerulean_meadow_grass_block_top",
+    "side": "planetary_expansion:block/cerulean_meadow_grass_block_side",
+    "bottom": "planetary_expansion:block/cerulean_soil"
+  }
+}

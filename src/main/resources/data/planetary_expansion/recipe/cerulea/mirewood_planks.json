@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "planks",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:mirewood_log"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:mirewood_planks",
+    "count": 4
+  }
+}

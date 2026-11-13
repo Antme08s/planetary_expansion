@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "planetary_expansion:block/mirewood_log_top",
+    "side": "planetary_expansion:block/mirewood_log"
+  }
+}

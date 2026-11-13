@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_planks",
+    "planetary_expansion:duskwood_planks",
+    "planetary_expansion:mirewood_planks"
+  ]
+}

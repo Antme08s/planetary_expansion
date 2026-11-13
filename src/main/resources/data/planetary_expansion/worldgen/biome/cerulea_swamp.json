@@ -1,0 +1,67 @@
+{
+  "has_precipitation": true,
+  "temperature": 0.7,
+  "downfall": 0.6,
+  "effects": {
+    "sky_color": 7381168,
+    "fog_color": 15783592,
+    "water_color": 2912360,
+    "water_fog_color": 1058856
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:cerulea/ore_coal",
+      "planetary_expansion:cerulea/ore_coal_lower",
+      "planetary_expansion:cerulea/ore_iron",
+      "planetary_expansion:cerulea/ore_iron_upper",
+      "planetary_expansion:cerulea/ore_iron_small",
+      "planetary_expansion:cerulea/ore_copper",
+      "planetary_expansion:cerulea/ore_gold",
+      "planetary_expansion:cerulea/ore_gold_lower",
+      "planetary_expansion:cerulea/ore_redstone",
+      "planetary_expansion:cerulea/ore_redstone_lower",
+      "planetary_expansion:cerulea/ore_lapis",
+      "planetary_expansion:cerulea/ore_lapis_buried",
+      "planetary_expansion:cerulea/ore_diamond",
+      "planetary_expansion:cerulea/ore_diamond_large",
+      "planetary_expansion:cerulea/ore_emerald",
+      "planetary_expansion:cerulea/ore_zinc",
+      "planetary_expansion:cerulea/ore_crystal"
+    ],
+    [],
+    [],
+    [
+      "planetary_expansion:cerulea/swamp_trees",
+      "planetary_expansion:cerulea/short_grass",
+      "planetary_expansion:cerulea/glowcaps",
+      "planetary_expansion:cerulea/reeds",
+      "planetary_expansion:cerulea/lilies",
+      "planetary_expansion:cerulea/glowblooms"
+    ],
+    []
+  ]
+}

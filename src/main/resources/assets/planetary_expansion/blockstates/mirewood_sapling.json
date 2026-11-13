@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "planetary_expansion:block/mirewood_sapling"
+    },
+    "stage=1": {
+      "model": "planetary_expansion:block/mirewood_sapling"
+    }
+  }
+}

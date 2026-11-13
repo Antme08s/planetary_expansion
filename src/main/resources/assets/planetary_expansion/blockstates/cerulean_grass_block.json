@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "planetary_expansion:block/cerulean_grass_block"
+      },
+      {
+        "model": "planetary_expansion:block/cerulean_grass_block",
+        "y": 90
+      },
+      {
+        "model": "planetary_expansion:block/cerulean_grass_block",
+        "y": 180
+      },
+      {
+        "model": "planetary_expansion:block/cerulean_grass_block",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "planetary_expansion:block/blue_duskwood_leaves"
+  },
+  "render_type": "minecraft:cutout_mipped"
+}

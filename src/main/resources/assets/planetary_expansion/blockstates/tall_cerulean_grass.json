@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=lower": {
+      "model": "planetary_expansion:block/tall_cerulean_grass_bottom"
+    },
+    "half=upper": {
+      "model": "planetary_expansion:block/tall_cerulean_grass_top"
+    }
+  }
+}

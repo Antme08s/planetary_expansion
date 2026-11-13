@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "planetary_expansion:silverwood_log",
+    "planetary_expansion:duskwood_log",
+    "planetary_expansion:mirewood_log",
+    "planetary_expansion:silverwood_planks",
+    "planetary_expansion:duskwood_planks",
+    "planetary_expansion:mirewood_planks"
+  ]
+}

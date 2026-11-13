@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "planetary_expansion:tall_cerulean_grass",
+              "conditions": [
+                {
+                  "condition": "minecraft:match_tool",
+                  "predicate": {
+                    "items": "minecraft:shears"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "planetary_expansion:cerulean_root",
+              "conditions": [
+                {
+                  "condition": "minecraft:random_chance",
+                  "chance": 0.05
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "planetary_expansion:tall_cerulean_grass",
+          "properties": {
+            "half": "lower"
+          }
+        }
+      ]
+    }
+  ],
+  "random_sequence": "planetary_expansion:blocks/tall_cerulean_grass"
+}

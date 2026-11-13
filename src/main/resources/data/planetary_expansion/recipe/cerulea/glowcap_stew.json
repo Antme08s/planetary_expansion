@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "planetary_expansion:glowcap"
+    },
+    {
+      "item": "planetary_expansion:glowcap"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:glowcap_stew",
+    "count": 1
+  }
+}

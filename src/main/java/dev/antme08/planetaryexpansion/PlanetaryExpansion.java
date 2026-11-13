@@ -69,6 +69,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.worldgen.TerrainBlendProcessor.register(modBus);
         dev.antme08.planetaryexpansion.creatures.Creatures.register(modBus); // 0.7.61: criaturas de Thalassa
         dev.antme08.planetaryexpansion.creatures.IgnisCreatures.register(modBus); // 0.7.64: caracoles de magma
+        dev.antme08.planetaryexpansion.cerulea.CeruleaBlocks.register(modBus); // 1.0.3: Cerúlea, el planeta de Ámbar
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientStormEffects.register();
             modBus.addListener(dev.antme08.planetaryexpansion.client.ArmorModels::onRegisterReloadListeners);
