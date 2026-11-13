@@ -73,6 +73,17 @@ public final class IgnisCreatures {
         modBus.addListener(IgnisCreatures::attributes);
         modBus.addListener(IgnisCreatures::spawnPlacements);
         modBus.addListener(IgnisCreatures::creativeTab);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, IgnisCreatures::breathe);
+    }
+
+    /**
+     * 1.0.1: Ignis no tiene aire y Cosmonautics (prioridad HIGHEST) deja sin respirar a toda criatura que esté ahí,
+     * así que los caracoles se ahogaban a los pocos segundos. Son de Ignis: no necesitan aire (salvo bajo el agua).
+     */
+    private static void breathe(net.neoforged.neoforge.event.entity.living.LivingBreatheEvent event) {
+        if (event.canBreathe() || !(event.getEntity() instanceof MagmaSnail snail)) return;
+        if (snail.isEyeInFluid(FluidTags.WATER)) return;
+        event.setCanBreathe(true);
     }
 
     private static void attributes(EntityAttributeCreationEvent event) {
