@@ -34,6 +34,9 @@ import java.util.EnumSet;
  */
 public class BlindStalker extends Monster {
     private static final EntityDataAccessor<Boolean> HUNTING = SynchedEntityData.defineId(BlindStalker.class, EntityDataSerializers.BOOLEAN);
+    /** Ticks que le quedan al grito de alerta (el cliente lo anima). */
+    private static final EntityDataAccessor<Integer> SCREAM = SynchedEntityData.defineId(BlindStalker.class, EntityDataSerializers.INT);
+    public static final int SCREAM_TICKS = 30;
     static final double HEAR_RANGE = 24.0;
     private static final int FORGET_TICKS = 100;
     private int quietTicks;
@@ -54,13 +57,18 @@ public class BlindStalker extends Monster {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(HUNTING, false);
+        builder.define(SCREAM, 0);
     }
 
     public boolean isHunting() { return entityData.get(HUNTING); }
 
+    /** Ticks que le quedan al grito (0 si no grita). */
+    public int screamTicks() { return entityData.get(SCREAM); }
+
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new ScreamGoal(this));
         goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.4F));
         goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.35, true));
         goalSelector.addGoal(5, new InvestigateGoal(this));
@@ -81,10 +89,8 @@ public class BlindStalker extends Monster {
                 if (d < best && p.isAlive() && FerraMobs.heard(p, now)) { best = d; heard = p; }
             }
             if (heard != null) {
-                if (target != heard) {
-                    playSound(SoundEvents.WARDEN_ANGRY, 1.2F, 1.5F);
-                    alertPack(heard);
-                }
+                // el usuario: al detectarte grita para avisar a los demás y luego ya te persigue
+                if (target == null) startScream();
                 setTarget(heard);
                 quietTicks = 0;
             } else if (target != null) {
@@ -93,12 +99,45 @@ public class BlindStalker extends Monster {
             }
         }
         entityData.set(HUNTING, getTarget() != null);
+        int sc = screamTicks();
+        if (sc > 0) {
+            entityData.set(SCREAM, sc - 1);
+            if (sc == SCREAM_TICKS - 8 && getTarget() != null) alertPack(getTarget());   // a mitad del grito avisa a la manada
+        }
+    }
+
+    private void startScream() {
+        entityData.set(SCREAM, SCREAM_TICKS);
+        getNavigation().stop();
+        playSound(FerraSounds.STALKER_SCREAM.get(), 2.5F, 0.95F + random.nextFloat() * 0.1F);
+    }
+
+    /** Mientras grita no se mueve ni ataca (tiene los flags de movimiento y salto: para a los demás objetivos). */
+    static class ScreamGoal extends Goal {
+        private final BlindStalker mob;
+
+        ScreamGoal(BlindStalker mob) {
+            this.mob = mob;
+            setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP, Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() { return mob.screamTicks() > 0; }
+
+        @Override
+        public void start() { mob.getNavigation().stop(); }
+
+        @Override
+        public void tick() {
+            LivingEntity t = mob.getTarget();
+            if (t != null) mob.getLookControl().setLookAt(t, 30, 30);
+        }
     }
 
     /** Avisa a la manada (a menos de 16 bloques). */
     private void alertPack(LivingEntity prey) {
         for (BlindStalker s : level().getEntitiesOfClass(BlindStalker.class, getBoundingBox().inflate(16)))
-            if (s != this && s.getTarget() == null) { s.setTarget(prey); s.quietTicks = 0; }
+            if (s != this && s.getTarget() == null) { s.setTarget(prey); s.quietTicks = 0; s.playSound(FerraSounds.STALKER_LISTEN.get(), 1.0F, 1.2F); }
     }
 
     /** Sin presa: va al último ruido que oyó (bloque roto, proyectil que cae). */
@@ -125,7 +164,7 @@ public class BlindStalker extends Monster {
         public void start() {
             ticks = 160;
             mob.getNavigation().moveTo(spot.x, spot.y, spot.z, 1.15);
-            mob.playSound(SoundEvents.WARDEN_SNIFF, 1.0F, 1.5F);
+            mob.playSound(FerraSounds.STALKER_LISTEN.get(), 1.0F, 1.0F);
         }
 
         @Override
@@ -135,16 +174,13 @@ public class BlindStalker extends Monster {
     }
 
     @Override
-    public float getVoicePitch() { return 1.45F + (random.nextFloat() - 0.5F) * 0.15F; }
+    protected SoundEvent getAmbientSound() { return isHunting() ? null : FerraSounds.STALKER_AMBIENT.get(); }
 
     @Override
-    protected SoundEvent getAmbientSound() { return SoundEvents.WARDEN_SNIFF; }
+    protected SoundEvent getHurtSound(DamageSource source) { return FerraSounds.STALKER_HURT.get(); }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.WARDEN_HURT; }
-
-    @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.WARDEN_DEATH; }
+    protected SoundEvent getDeathSound() { return FerraSounds.STALKER_DEATH.get(); }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) { playSound(SoundEvents.WOLF_STEP, 0.2F, 0.7F); }
@@ -152,7 +188,7 @@ public class BlindStalker extends Monster {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean r = super.doHurtTarget(target);
-        if (r) playSound(SoundEvents.WARDEN_ATTACK_IMPACT, 0.8F, 1.4F);
+        if (r) playSound(FerraSounds.STALKER_ATTACK.get(), 1.0F, 0.9F + random.nextFloat() * 0.2F);
         return r;
     }
 }

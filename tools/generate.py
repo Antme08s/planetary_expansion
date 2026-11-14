@@ -2857,6 +2857,19 @@ def build_cerulea_creatures():
         sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
         LANG_EN[sub] = en
         LANG_ES[sub] = es
+    # 1.0.3: monstruos de Ferra (tools/designs/ferra_sounds.py → tools/designs/mobs/sounds_ferra)
+    import ferra_sounds  # noqa: E402
+    fdir = os.path.join(mobs, "sounds_ferra")
+    for name, (_fn, count, en, es) in ferra_sounds.SOUNDS.items():
+        mob, kind = name.split(".")
+        files = []
+        for v in range(1, count + 1):
+            write_bytes(f"assets/{NS}/sounds/ferra/{mob}/{kind}{v}.ogg", open(os.path.join(fdir, mob, f"{kind}{v}.ogg"), "rb").read())
+            files.append(rl(f"ferra/{mob}/{kind}{v}"))
+        sub = f"subtitles.{NS}.entity.{name}"
+        sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
+        LANG_EN[sub] = en
+        LANG_ES[sub] = es
     write(f"assets/{NS}/sounds.json", sounds_json)
     LANG_EN[f"entity.{NS}.fang_arrow"] = "Fang Arrow"
     LANG_ES[f"entity.{NS}.fang_arrow"] = "Flecha de colmillo"

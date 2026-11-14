@@ -106,5 +106,18 @@ public final class FerraMobsClient {
         add(m.part("jaw"), 0.25F * hunt + 0.6F * Mth.sin(bite * Mth.PI), 0, 0);
         add(m.part("tail"), -0.15F * hunt, Mth.sin(age * 0.15F) * 0.2F, 0);
         add(m.part("neck"), 0.15F * hunt, 0, 0);
+        // grito de alerta: levanta la cabeza, abre la boca del todo, despliega las "orejas" y tiembla
+        if (e.screamTicks() > 0) {
+            float left = (e.screamTicks() - (age - e.tickCount)) / BlindStalker.SCREAM_TICKS;
+            float k = Mth.sin(Mth.PI * Mth.clamp(1F - left, 0F, 1F));
+            float shake = Mth.sin(age * 2.3F) * 0.07F * k;
+            add(m.part("neck"), -0.75F * k, shake, 0);
+            add(m.part("head"), -0.55F * k, shake, shake);
+            add(m.part("jaw"), 1.0F * k + Mth.sin(age * 3.1F) * 0.08F * k, 0, 0);
+            add(m.part("ear_l"), 0, 0, -0.9F * k);
+            add(m.part("ear_r"), 0, 0, 0.9F * k);
+            add(m.part("body"), -0.12F * k, 0, 0);
+            add(m.part("tail"), -0.5F * k, shake * 2F, 0);
+        }
     }
 }

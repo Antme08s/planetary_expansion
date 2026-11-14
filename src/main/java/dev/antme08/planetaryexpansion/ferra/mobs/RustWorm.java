@@ -87,11 +87,29 @@ public class RustWorm extends Monster {
     @Override
     protected void registerGoals() {}   // lo maneja todo customServerAiStep
 
+    private double lastX = Double.NaN, lastZ;
+
     @Override
     public void tick() {
         super.tick();
         setDeltaMovement(0, Math.min(0, getDeltaMovement().y), 0);
-        if (!level().isClientSide) entityData.set(PHASE_TICK, phaseTick() + 1);
+        if (!level().isClientSide) {
+            entityData.set(PHASE_TICK, phaseTick() + 1);
+        } else if (buried()) {
+            // en el cliente: polvo que salta en el suelo mientras avanza enterrado
+            if (!Double.isNaN(lastX) && (Math.abs(getX() - lastX) + Math.abs(getZ() - lastZ)) > 0.02) {
+                BlockState below = level().getBlockState(BlockPos.containing(getX(), getY() - 0.5, getZ()));
+                if (!below.isAir()) {
+                    for (int i = 0; i < 4; i++) {
+                        level().addParticle(new BlockParticleOption(ParticleTypes.BLOCK, below),
+                                getX() + (random.nextDouble() - 0.5) * 1.2, getY() + 0.1, getZ() + (random.nextDouble() - 0.5) * 1.2,
+                                (random.nextDouble() - 0.5) * 0.2, 0.15 + random.nextDouble() * 0.15, (random.nextDouble() - 0.5) * 0.2);
+                    }
+                }
+            }
+            lastX = getX();
+            lastZ = getZ();
+        }
     }
 
     @Override
@@ -118,7 +136,7 @@ public class RustWorm extends Monster {
                 double dist = Math.sqrt(to.x * to.x + to.z * to.z);
                 if (dist < 2.0) {
                     setPhase(Phase.EMERGING);
-                    playSound(SoundEvents.RAVAGER_ROAR, 1.6F, 0.55F);
+                    playSound(FerraSounds.WORM_EMERGE.get(), 2.0F, 0.95F + random.nextFloat() * 0.1F);
                     burst(sl, 60);
                     return;
                 }
@@ -127,11 +145,15 @@ public class RustWorm extends Monster {
                 double nx = getX() + to.x / dist * step, nz = getZ() + to.z / dist * step;
                 int top = sl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(nx), Mth.floor(nz));
                 setPos(nx, top, nz);
-                if (tickCount % 2 == 0) {
-                    BlockState below = sl.getBlockState(BlockPos.containing(nx, top - 1, nz));
-                    sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, below), nx, top + 0.1, nz, 8, 0.4, 0.1, 0.4, 0.05);
+                // rastro de polvo y tierra que salta por donde va (el usuario: "debería soltar partículas por donde se
+                // está moviendo"); el cliente además echa sus propias partículas (ver tick)
+                BlockState below = sl.getBlockState(BlockPos.containing(nx, top - 1, nz));
+                if (!below.isAir()) {
+                    sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, below), nx, top + 0.15, nz, 10, 0.45, 0.15, 0.45, 0.12);
+                    if (tickCount % 3 == 0)
+                        sl.sendParticles(new BlockParticleOption(ParticleTypes.DUST_PILLAR, below), nx, top + 0.05, nz, 6, 0.35, 0.0, 0.35, 0.1);
                 }
-                if (tickCount % 10 == 0) playSound(SoundEvents.ROOTED_DIRT_BREAK, 1.0F, 0.5F);
+                if (tickCount % 14 == 0) playSound(FerraSounds.WORM_DIG.get(), 1.3F, 0.9F + random.nextFloat() * 0.2F);
             }
             case EMERGING -> {
                 if (phaseTick() == EMERGE_TICKS / 2) {
@@ -155,7 +177,7 @@ public class RustWorm extends Monster {
                 }
                 if (--outTicks <= 0 || target == null || distanceToSqr(target) > 100) {
                     setPhase(Phase.DIVING);
-                    playSound(SoundEvents.ROOTED_DIRT_BREAK, 1.4F, 0.4F);
+                    playSound(FerraSounds.WORM_DIVE.get(), 1.4F, 1.0F);
                 }
             }
             case DIVING -> {
@@ -174,7 +196,7 @@ public class RustWorm extends Monster {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean r = super.doHurtTarget(target);
-        if (r) playSound(SoundEvents.EVOKER_FANGS_ATTACK, 1.0F, 0.6F);
+        if (r) playSound(FerraSounds.WORM_BITE.get(), 1.2F, 0.9F + random.nextFloat() * 0.2F);
         return r;
     }
 
@@ -194,16 +216,13 @@ public class RustWorm extends Monster {
     public boolean removeWhenFarAway(double dist) { return buried() && super.removeWhenFarAway(dist); }
 
     @Override
-    protected SoundEvent getAmbientSound() { return buried() ? null : SoundEvents.RAVAGER_AMBIENT; }
+    protected SoundEvent getAmbientSound() { return buried() ? null : FerraSounds.WORM_AMBIENT.get(); }
 
     @Override
-    public float getVoicePitch() { return 0.5F + random.nextFloat() * 0.1F; }
+    protected SoundEvent getHurtSound(DamageSource source) { return FerraSounds.WORM_HURT.get(); }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.RAVAGER_HURT; }
-
-    @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.RAVAGER_DEATH; }
+    protected SoundEvent getDeathSound() { return FerraSounds.WORM_DEATH.get(); }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {}

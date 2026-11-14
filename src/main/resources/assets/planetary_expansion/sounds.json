@@ -195,5 +195,96 @@
       "planetary_expansion:cerulea/ironjaw/bite1",
       "planetary_expansion:cerulea/ironjaw/bite2"
     ]
+  },
+  "entity.rust_worm.dig": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.dig",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/dig1",
+      "planetary_expansion:ferra/rust_worm/dig2",
+      "planetary_expansion:ferra/rust_worm/dig3"
+    ]
+  },
+  "entity.rust_worm.emerge": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.emerge",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/emerge1",
+      "planetary_expansion:ferra/rust_worm/emerge2"
+    ]
+  },
+  "entity.rust_worm.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.ambient",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/ambient1",
+      "planetary_expansion:ferra/rust_worm/ambient2",
+      "planetary_expansion:ferra/rust_worm/ambient3"
+    ]
+  },
+  "entity.rust_worm.bite": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.bite",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/bite1",
+      "planetary_expansion:ferra/rust_worm/bite2"
+    ]
+  },
+  "entity.rust_worm.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.hurt",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/hurt1",
+      "planetary_expansion:ferra/rust_worm/hurt2"
+    ]
+  },
+  "entity.rust_worm.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.death",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/death1"
+    ]
+  },
+  "entity.rust_worm.dive": {
+    "subtitle": "subtitles.planetary_expansion.entity.rust_worm.dive",
+    "sounds": [
+      "planetary_expansion:ferra/rust_worm/dive1"
+    ]
+  },
+  "entity.blind_stalker.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.ambient",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/ambient1",
+      "planetary_expansion:ferra/blind_stalker/ambient2",
+      "planetary_expansion:ferra/blind_stalker/ambient3"
+    ]
+  },
+  "entity.blind_stalker.listen": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.listen",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/listen1",
+      "planetary_expansion:ferra/blind_stalker/listen2"
+    ]
+  },
+  "entity.blind_stalker.scream": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.scream",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/scream1",
+      "planetary_expansion:ferra/blind_stalker/scream2"
+    ]
+  },
+  "entity.blind_stalker.attack": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.attack",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/attack1",
+      "planetary_expansion:ferra/blind_stalker/attack2"
+    ]
+  },
+  "entity.blind_stalker.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.hurt",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/hurt1",
+      "planetary_expansion:ferra/blind_stalker/hurt2"
+    ]
+  },
+  "entity.blind_stalker.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.blind_stalker.death",
+    "sounds": [
+      "planetary_expansion:ferra/blind_stalker/death1"
+    ]
   }
 }

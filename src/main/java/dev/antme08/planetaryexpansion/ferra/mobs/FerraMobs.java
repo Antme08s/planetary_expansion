@@ -59,6 +59,7 @@ public final class FerraMobs {
     public static void register(IEventBus modBus) {
         ENTITIES.register(modBus);
         ITEMS.register(modBus);
+        FerraSounds.register(modBus);
         modBus.addListener(FerraMobs::attributes);
         modBus.addListener(FerraMobs::spawnPlacements);
         modBus.addListener(FerraMobs::creativeTab);

@@ -1031,3 +1031,12 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   de sculk: pasos, saltos, caídas, poner/romper bloques, golpes, comer, puertas…) y guarda la última de cada jugador
   (`FerraMobs.heard`, 1,5 s). Agachado, los pasos no cuentan (`GameEventTags.IGNORE_VIBRATIONS_SNEAKING`, como el Warden).
   Los proyectiles que caen siguen sirviendo para distraer a la manada.
+- Peticiones del usuario tras probarlos:
+  - El gusano enterrado ahora suelta partículas por donde avanza: tierra que salta (`BLOCK`) y columnas de polvo
+    (`DUST_PILLAR`) desde el servidor, y además el cliente echa las suyas al ver que se mueve (`RustWorm.tick`).
+  - El rastreador grita antes de perseguir: al detectarte se para 1,5 s (`ScreamGoal`, bloquea moverse y atacar),
+    grita, a mitad del grito avisa a la manada y después caza. El cliente anima el grito: cabeza y cuello arriba, boca
+    abierta del todo, "orejas" desplegadas, cola arriba y temblor. Los avisados hacen un chasquido y van directos.
+  - Sonidos propios sintetizados (`tools/designs/ferra_sounds.py tools/designs/mobs/sounds_ferra`, `ferra/mobs/FerraSounds`):
+    gusano (excavar, salir, rechinar, morder, herido, muerte, enterrarse) y rastreador (chasquidos de sonar, escuchar,
+    grito de alerta, mordisco, herido, muerte). Archivos en `sounds/ferra/<criatura>/`.
