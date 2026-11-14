@@ -602,7 +602,8 @@ public class NavMapScreen extends Screen {
             line = Component.translatable(K + "status_wait").withStyle(ChatFormatting.GRAY);
         } else {
             WarpStatus s = st.warpStatus();
-            line = Component.translatable(K + "drive").withStyle(ChatFormatting.GRAY).append(" ").append(s.text());
+            line = Component.translatable(K + (st.stellar() ? "drive_stellar" : "drive")).withStyle(st.stellar() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY)
+                    .append(" ").append(s.text());
             if (s != WarpStatus.NO_DRIVE) {
                 line = line.copy().append(Component.literal("   "))
                         .append(Component.translatable(K + "charge", (int) (st.charge() * 100)).withStyle(st.charge() >= 1 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.WHITE))
@@ -622,7 +623,7 @@ public class NavMapScreen extends Screen {
 
     private List<Component> popupItems() {
         List<Component> items = new ArrayList<>();
-        items.add(Component.translatable(K + "travel"));
+        items.add(Component.translatable(K + (popup != null && interstellar(popup) ? "travel_interstellar" : "travel")));
         items.add(Component.translatable(K + "read"));
         return items;
     }
@@ -635,7 +636,29 @@ public class NavMapScreen extends Screen {
         if (st == null || !st.console().equals(console)) return Component.translatable(K + "status_wait");
         if (id.equals(st.orbit()) || (isDeepSpace() && id.equals(currentBody()))) return Component.translatable(K + "blocked_here");
         if (st.warpStatus() != WarpStatus.READY) return st.warpStatus().text();
+        // 1.0.3: saltos entre estrellas (motor estelar, 200 % de carga y más nitrógeno)
+        String[] sys = systems(id);
+        if (sys != null) return WarpDriveBlockEntity.interstellarProblem(st.stellar(), st.charge(), st.nitrogen(), sys[0], sys[1]);
         return null;
+    }
+
+    /** {sistema de aquí, sistema del destino}, o null si no se sabe. */
+    private String[] systems(String id) {
+        try {
+            UniverseDefinition u = DeepSpaceHandler.getUniverse();
+            NavStatusPayload st = WarpClient.lastStatus;
+            if (u == null || id == null) return null;
+            String here = st != null && !st.orbit().isEmpty() ? st.orbit() : currentBody();
+            if (here == null || here.isEmpty()) return null;
+            return new String[]{StarSystems.systemOf(u, here), StarSystems.systemOf(u, id)};
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private boolean interstellar(String id) {
+        String[] sys = systems(id);
+        return sys != null && !sys[0].equals(sys[1]);
     }
 
     private int popupW() {

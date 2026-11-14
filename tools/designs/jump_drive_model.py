@@ -15,6 +15,8 @@ RAMP = {
     'dark': ['07060b', '0d0b14', '15111f', '1e182c'],
     'cyan': ['0f3a40', '1d6f74', '2fb3b0', '5ff2e6', 'c8fff8'],
     'shaft': ['4a4742', '67635c', '8f8a80', 'b6b1a6', 'cfcabd'],
+    # 1.0.3 motor estelar: violeta que acaba en blanco (núcleo como una estrellita)
+    'stellar': ['2a0f4a', '4b1f86', '7a3fd0', 'a86bff', 'd3b8ff', 'f1e8ff', 'ffffff'],
 }
 
 
@@ -41,7 +43,8 @@ def paint(mat, face, w, h, seed):
     base = {'plate': 'steel', 'body': 'steel', 'trim': 'brass', 'tank': 'frost', 'ring': 'brass', 'ringv': 'violet',
             'core': 'violet', 'bearing': 'dark', 'shaft': 'shaft', 'pipe': 'frost', 'screen': 'dark', 'glass': 'cyan',
             'holo': 'cyan', 'leg': 'steel', 'panel': 'steel', 'button': 'brass', 'vent': 'steel',
-            'post': 'steel', 'band': 'frost', 'tglass': 'frost', 'n2': 'frost'}[mat]
+            'post': 'steel', 'band': 'frost', 'tglass': 'frost', 'n2': 'frost',
+            'sbody': 'steel', 'sringv': 'stellar', 'score': 'stellar', 'shard': 'stellar'}[mat]
     cols = RAMP[base]
 
     def metal(b=0.6, g=0.32, n=0.035):
@@ -94,14 +97,15 @@ def paint(mat, face, w, h, seed):
             for y in range(2, h - 2):
                 for x in range(2, w - 2):
                     px[x, y] = ramp(RAMP['dark'], 0.5 + 0.02 * ((x * 7 + y * 3) % 5))
-    elif mat == 'body':
+    elif mat in ('body', 'sbody'):
         metal(0.55, 0.35)
-        if side and h >= 8 and w >= 8:                       # paneles con franja de estado cian
+        stripe = RAMP['cyan'] if mat == 'body' else RAMP['stellar']   # el estelar lleva las franjas violetas
+        if side and h >= 8 and w >= 8:                       # paneles con franja de estado
             for x in range(2, w - 2):
                 px[x, 2] = H(RAMP['steel'][1])
                 px[x, h - 3] = H(RAMP['steel'][1])
             for x in range(3, w - 3):
-                px[x, h // 2] = ramp(RAMP['cyan'], 0.85 if (x // 3) % 2 == 0 else 0.6)
+                px[x, h // 2] = ramp(stripe, 0.85 if (x // 3) % 2 == 0 else 0.6)
     elif mat == 'vent':
         metal(0.45, 0.25)
         if side:
@@ -123,10 +127,24 @@ def paint(mat, face, w, h, seed):
             for y in range(4, h - 4):                                  # visor del nivel de nitrógeno
                 for x in range(max(1, int(cx) - 1), min(w - 1, int(cx) + 1)):
                     px[x, y] = ramp(RAMP['cyan'], 0.9 if y > h // 3 else 0.35)
-    elif mat == 'ringv':
+    elif mat in ('ringv', 'sringv'):
+        b = 0.62 if mat == 'ringv' else 0.74
         for y in range(h):
             for x in range(w):
-                px[x, y] = ramp(cols, 0.62 + 0.18 * math.sin((x + y) * 0.9) + rnd.uniform(-0.04, 0.04))
+                px[x, y] = ramp(cols, b + 0.18 * math.sin((x + y) * 0.9) + rnd.uniform(-0.04, 0.04))
+    elif mat == 'shard':
+        for y in range(h):
+            for x in range(w):
+                px[x, y] = ramp(cols, 0.95 if (x + y) % 2 == 0 else 0.7)
+    elif mat == 'score':
+        # estelar: casi todo blanco-lavanda, con el borde violeta y un remolino suave
+        for y in range(h):
+            for x in range(w):
+                r = math.hypot(x - cx, y - cy) / max(1.0, math.hypot(cx, cy))
+                a = math.atan2(y - cy, x - cx)
+                t = 0.42 + 0.75 * max(0.0, 1 - r) ** 0.9 + 0.08 * math.sin(a * 3 + r * 6)
+                if r < 0.3: t = 1.0
+                px[x, y] = ramp(cols, t)
     elif mat == 'core':
         for y in range(h):
             for x in range(w):
@@ -200,7 +218,7 @@ def faces(el):
     return [(n, R(o), D(u), D(v), D(nm), w, h) for (n, o, u, v, nm, w, h) in raw]
 
 
-GLOW = ('core', 'holo', 'glass', 'screen')
+GLOW = ('core', 'holo', 'glass', 'screen', 'score', 'shard')
 GLOW_PREFIX = 'p_'
 
 
@@ -300,6 +318,27 @@ DRIVE += [(12, 13, 6, 24, 15, 9, 'pipe', 0), (22, 13, 9, 25, 15, 24, 'pipe', 0),
           (12, 13, 55, 22, 15, 58, 'pipe', 0), (42, 13, 6, 52, 15, 9, 'pipe', 0)]
 # rejillas de ventilación en el cuerpo
 DRIVE += [(18, 5, 3.5, 46, 11, 4, 'vent', 0), (18, 5, 60, 46, 11, 60.5, 'vent', 0)]
+
+# 1.0.3 motor estelar (con el núcleo de distorsión estelar puesto): mismas piezas con el núcleo blanco-violeta, el
+# anillo interior más claro, las franjas violetas y 6 esquirlas que orbitan el núcleo dentro del anillo
+SHARD_R = 8.2
+SHARDS = []
+for k in range(6):
+    a = math.radians(k * 60 + 30)
+    x, y = 32 + SHARD_R * math.cos(a), 31 + SHARD_R * math.sin(a)
+    SHARDS.append((x - 1, y - 1, 31, x + 1, y + 1, 33, 'shard', ('z', 45 if k % 2 else 0)))
+CORE_S = 0.68   # el núcleo estelar es más pequeño y más brillante: deja ver las esquirlas
+
+
+def _shrink(el, c=(32, 31, 32), k=CORE_S):
+    x1, y1, z1, x2, y2, z2 = el[:6]
+    f = lambda v, j: c[j] + (v - c[j]) * k
+    return (f(x1, 0), f(y1, 1), f(z1, 2), f(x2, 0), f(y2, 1), f(z2, 2), 'score') + el[7:]
+
+
+STELLAR_MAT = {'body': 'sbody'}
+STELLAR = [_shrink(el) if el[6] == 'core' else el[:6] + (STELLAR_MAT.get(el[6], el[6]),) + el[7:] for el in DRIVE]
+
 
 # ---------------------------------------------------------------- consola de navegación: 2x2 bloques
 CONSOLE = [
@@ -403,6 +442,14 @@ def export(outdir, ns='planetary_expansion'):
     core = [(i, el) for i, el in enumerate(drive) if el[6] == 'core']
     c = (32, 31, 32)  # centro del núcleo: el modelo suelto va centrado en el origen para girarlo
     save('warp_drive_core', [element(0, i, el, uv, 0.5, (-c[0], -c[1], -c[2])) for i, el in core], 'warp_drive')
+    # 1.0.3 motor estelar: marco con franjas violetas, núcleo estelar y esquirlas (centrados en el núcleo), su propia textura
+    sdrive = [el for el in STELLAR if el[6] != 'shaft']
+    uvs, _ = pack([(sdrive, 'drive'), (SHARDS, 'shards')], 'warp_drive_stellar')
+    save('warp_drive_frame_stellar', [element(0, i, el, uvs, 0.5) for i, el in enumerate(sdrive)
+                                      if el[6] != 'score' and not lit(el[6]) and not clear(el[6])], 'warp_drive_stellar')
+    save('warp_drive_core_stellar', [element(0, i, el, uvs, 0.5, (-c[0], -c[1], -c[2])) for i, el in enumerate(sdrive)
+                                     if el[6] == 'score'], 'warp_drive_stellar')
+    save('warp_drive_shards', [element(1, i, el, uvs, 0.5, (-c[0], -c[1], -c[2])) for i, el in enumerate(SHARDS)], 'warp_drive_stellar')
     # consola: mesa + anillos (puntos) + un cubo por astro, centrado en el origen
     table = [el for el in CONSOLE if el[6] not in ('holo',) and not el[6].startswith('p_')]
     rings = [el for el in CONSOLE if el[6] == 'holo']
@@ -427,6 +474,15 @@ def export(outdir, ns='planetary_expansion'):
 
 
 if __name__ == '__main__':
+    if sys.argv[1] == '--stellar':
+        fill = 0.65
+        fl = [(x1, FLUID_Y0 + y1 * fill, z1, x2, FLUID_Y0 + y2 * fill, z2, m, r) for (x1, y1, z1, x2, y2, z2, m, r) in FLUID]
+        sheet(DRIVE + fl, (32, 32), (1400, 720), 4.6, 520, 'Motor de distorsión normal', ['Frente', 'Lado'], '/tmp/_n.png')
+        sheet(STELLAR + SHARDS + fl, (32, 32), (1400, 720), 4.6, 520, 'Motor de distorsión ESTELAR (con el núcleo puesto)',
+              ['Frente', 'Lado'], '/tmp/_s.png')
+        a, b = Image.open('/tmp/_n.png'), Image.open('/tmp/_s.png')
+        out = Image.new('RGBA', (1400, 1440)); out.paste(a, (0, 0)); out.paste(b, (0, 720)); out.save(sys.argv[2])
+        sys.exit(0)
     if sys.argv[1] == '--export':
         print(export(sys.argv[2]))
         sys.exit(0)

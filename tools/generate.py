@@ -1971,7 +1971,9 @@ def build_warp():
     al doble)."""
     for tex in ["warp_drive", "warp_drive_item", "nav_console", "nav_console_item"]:
         write_bytes(f"assets/{NS}/textures/block/{tex}.png", open(os.path.join(DESIGNS, f"{tex}.png"), "rb").read())
-    parts = ["warp_drive_frame", "warp_drive_glow", "warp_drive_glass", "warp_drive_fluid", "warp_drive_core", "nav_console_table", "nav_console_glow",
+    write_bytes(f"assets/{NS}/textures/block/warp_drive_stellar.png", open(os.path.join(DESIGNS, "warp_drive_stellar.png"), "rb").read())
+    parts = ["warp_drive_frame", "warp_drive_glow", "warp_drive_glass", "warp_drive_fluid", "warp_drive_core",
+             "warp_drive_frame_stellar", "warp_drive_core_stellar", "warp_drive_shards", "nav_console_table", "nav_console_glow",
              "nav_console_rings"] + [f"nav_console_body_{b}" for b in
                                      ["sun", "venus", "earth", "mars", "giant", "ice", "thalassa", "ignis"]]
     for m in parts:
@@ -2017,6 +2019,31 @@ def build_warp():
                 "T": {"item": "rocketnautics:titanium_alloy_sheet"}, "E": {"item": "minecraft:ender_eye"}},
         "result": {"id": rl("nav_console"), "count": 1}})
 
+    # 1.0.3 motor estelar: núcleo de distorsión estelar (un objeto de cada astro del sistema solar) y cristal de helio-3
+    # (Luna). Texturas: tools/designs/stellar_items.py
+    for item, en, es in [("helium3_crystal", "Helium-3 Crystal", "Cristal de helio-3"),
+                         ("stellar_warp_core", "Stellar Warp Core", "Núcleo de distorsión estelar")]:
+        write_bytes(f"assets/{NS}/textures/item/{item}.png", open(os.path.join(DESIGNS, "stellar", f"{item}.png"), "rb").read())
+        write(f"assets/{NS}/models/item/{item}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": rl(f"item/{item}")}})
+        LANG_EN[f"item.{NS}.{item}"] = en
+        LANG_ES[f"item.{NS}.{item}"] = es
+    LANG_EN[f"item.{NS}.stellar_warp_core.tooltip"] = "Right-click a Warp Drive to let it jump between stars"
+    LANG_ES[f"item.{NS}.stellar_warp_core.tooltip"] = "Clic derecho sobre un motor de distorsión para que pueda saltar entre estrellas"
+    data("recipe/stellar_warp_core", {
+        "type": "minecraft:crafting_shaped", "category": "misc",
+        # Tierra (estrella del Nether y netherita), Luna, Marte, Venus, mundo helado, Thalassa e Ignis
+        "pattern": ["HNM", "VSC", "KNI"],
+        "key": {"H": {"item": rl("helium3_crystal")}, "N": {"item": "minecraft:netherite_ingot"},
+                "M": {"item": rl("meteorite_fragment")}, "V": {"item": rl("venusian_sulfur")},
+                "S": {"item": "minecraft:nether_star"}, "C": {"item": rl("cryo_crystal")},
+                "K": {"item": rl("king_shell")}, "I": {"item": rl("magma_core")}},
+        "result": {"id": rl("stellar_warp_core"), "count": 1}, "show_notification": True})
+    # el regolito lunar suelto no tenía molienda en Cosmonautics: Luna -> regolito -> fragmentado -> suelto -> helio-3
+    data("recipe/crushing/helium3_from_lunar_loose_regolith", {
+        "type": "create:crushing", "ingredients": [{"item": "rocketnautics:lunar_loose_regolith"}], "processing_time": 300,
+        "results": [{"chance": 0.15, "id": rl("helium3_crystal")}, {"chance": 0.5, "id": "minecraft:sand"},
+                    {"chance": 0.25, "id": "create:experience_nugget"}]})
+
     m = f"message.{NS}."
     for key, en, es in [
             ("warp_summary", "Warp drive: charge %s%% · heat %s%% · nitrogen %s/%s mB",
@@ -2028,7 +2055,19 @@ def build_warp():
             ("warp_ready", "Ready: choose a planet on the Navigation Console", "Listo: elige un planeta en la consola de navegación"),
             ("warp_not_ready", "Warp drive not ready: %s", "El motor de distorsión no está listo: %s"),
             ("warp_bad_target", "That body can't be reached with the warp drive", "No se puede llegar a ese astro con el motor de distorsión"),
-            ("warp_already_there", "You are already orbiting it", "Ya lo estás orbitando")]:
+            ("warp_already_there", "You are already orbiting it", "Ya lo estás orbitando"),
+            # 1.0.3 motor estelar
+            ("warp_upgraded", "Stellar Warp Core installed: this drive can now jump between stars",
+             "Núcleo estelar instalado: este motor ya puede saltar entre estrellas"),
+            ("warp_already_stellar", "This warp drive already has a Stellar Warp Core", "Este motor ya tiene un núcleo de distorsión estelar"),
+            ("warp_needs_stellar", "Jumping to another star system needs a Stellar Warp Drive",
+             "Saltar a otro sistema solar requiere un motor de distorsión estelar"),
+            ("warp_needs_overcharge", "An interstellar jump needs 200%% charge (now %s%%)",
+             "Un salto interestelar necesita 200%% de carga (ahora %s%%)"),
+            ("warp_needs_n2_interstellar", "An interstellar jump needs %s mB of liquid nitrogen",
+             "Un salto interestelar necesita %s mB de nitrógeno líquido"),
+            ("warp_ready_interstellar", "Overcharged: ready for an interstellar jump", "Sobrecargado: listo para un salto interestelar"),
+            ("warp_stellar_name", "Stellar Warp Drive", "Motor de distorsión estelar")]:
         LANG_EN[m + key] = en
         LANG_ES[m + key] = es
     n = f"nav.{NS}."
@@ -2042,6 +2081,9 @@ def build_warp():
             ("center_sun", "Star", "Estrella"), ("center_me", "My position", "Mi posición"),
             ("system", "System: %s", "Sistema: %s"),
             ("travel", "Travel (orbit)", "Viajar (orbitar)"), ("read", "Read description", "Leer descripción"),
+            ("travel_interstellar", "Interstellar jump (orbit)", "Salto interestelar (orbitar)"),
+            ("drive_stellar", "Stellar warp drive:", "Motor estelar:"),
+            ("arrived_system", "%s system", "Sistema %s"),
             ("blocked_sun", "The warp drive can't orbit a star", "El motor de distorsión no puede orbitar una estrella"),
             ("blocked_here", "You are already here", "Ya estás aquí"),
             ("you_here", "You are here", "Estás aquí"), ("orbiting_here", "You are orbiting here", "Estás en su órbita"),
@@ -2226,6 +2268,9 @@ def build_advancements():
          # al menos 5 de los 8: en cada grupo de 4 destinos tiene que haber al menos uno visitado
          [list(c) for c in itertools.combinations(JUMP_TARGETS, len(JUMP_TARGETS) - 5 + 1)], 500,
          "Interplanetary Commuter", "Warp to five different destinations", "Viajero interplanetario", "Salta a cinco destinos distintos"),
+        ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
+         "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",
+         "Más allá del Sol", "Salta a otro sistema solar con el motor de distorsión estelar"),
     ]
     for (aid, parent, icon, frame, criteria, reqs, xp, en_t, en_d, es_t, es_d) in A:
         key = f"advancements.{NS}.{aid}"

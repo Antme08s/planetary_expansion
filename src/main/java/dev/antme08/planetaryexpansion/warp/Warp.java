@@ -77,6 +77,11 @@ public final class Warp {
             ITEMS.registerSimpleBlockItem(DRIVE, new Item.Properties().rarity(Rarity.EPIC).stacksTo(1));
     public static final DeferredItem<BlockItem> CONSOLE_ITEM =
             ITEMS.registerSimpleBlockItem(CONSOLE, new Item.Properties().rarity(Rarity.RARE).stacksTo(1));
+    /** 1.0.3: cristal de helio-3 (al triturar regolito lunar suelto con Create); ingrediente lunar del núcleo estelar. */
+    public static final DeferredItem<Item> HELIUM3 = ITEMS.registerSimpleItem("helium3_crystal", new Item.Properties().rarity(Rarity.UNCOMMON));
+    /** 1.0.3: núcleo de distorsión estelar: clic derecho sobre un motor de distorsión para que pueda saltar entre estrellas. */
+    public static final DeferredItem<StellarCoreItem> STELLAR_CORE = ITEMS.register("stellar_warp_core",
+            () -> new StellarCoreItem(new Item.Properties().rarity(Rarity.EPIC).stacksTo(16).fireResistant()));
 
     @SuppressWarnings("DataFlowIssue")
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WarpDriveBlockEntity>> DRIVE_BE =
@@ -125,7 +130,7 @@ public final class Warp {
     private static void addToCreativeTab(BuildCreativeModeTabContentsEvent event) {
         ResourceLocation tab = event.getTabKey().location();
         if (!tab.getNamespace().equals("rocketnautics") || !tab.getPath().equals("world_tab")) return;
-        for (Supplier<? extends Item> item : java.util.List.<Supplier<? extends Item>>of(CONSOLE_ITEM, DRIVE_ITEM)) {
+        for (Supplier<? extends Item> item : java.util.List.<Supplier<? extends Item>>of(CONSOLE_ITEM, DRIVE_ITEM, STELLAR_CORE, HELIUM3)) {
             try {
                 event.accept(item.get().getDefaultInstance(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
             } catch (RuntimeException e) {
@@ -171,9 +176,9 @@ public final class Warp {
         ServerLevel level = player.serverLevel();
         WarpDriveBlockEntity drive = WarpDriveBlockEntity.find(level, p.console());
         NavStatusPayload out = drive == null
-                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "")
+                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false)
                 : new NavStatusPayload(p.console(), drive.status(level).ordinal(), (float) drive.charge(), (float) drive.heat(),
-                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level));
+                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level), drive.isStellar());
         PacketDistributor.sendToPlayer(player, out);
     }
 

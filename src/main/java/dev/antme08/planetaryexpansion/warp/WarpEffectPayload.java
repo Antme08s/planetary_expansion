@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Servidor → cliente: empieza (o se cancela) el efecto del salto para un jugador a bordo. */
 public record WarpEffectPayload(int stage, String target, int altitudeKm) implements CustomPacketPayload {
-    public static final int START = 0, ABORT = 1;
+    public static final int START = 0, ABORT = 1, START_STELLAR = 2;   // 2: salto entre estrellas (1.0.3)
     public static final Type<WarpEffectPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "warp_effect"));
     public static final StreamCodec<FriendlyByteBuf, WarpEffectPayload> CODEC = StreamCodec.ofMember(WarpEffectPayload::write, WarpEffectPayload::read);
 

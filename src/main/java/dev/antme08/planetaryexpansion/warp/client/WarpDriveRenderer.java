@@ -39,7 +39,8 @@ public class WarpDriveRenderer implements BlockEntityRenderer<WarpDriveBlockEnti
         ms.pushPose();
         toFootprint(ms, be.facing(), 1.5, 0.5, 4, 4);
         ms.scale(2f, 2f, 2f);
-        SuperByteBuffer frame = CachedBuffers.partial(WarpClient.DRIVE_FRAME, be.getBlockState());
+        boolean stellar = be.isStellar();
+        SuperByteBuffer frame = CachedBuffers.partial(stellar ? WarpClient.DRIVE_FRAME_STELLAR : WarpClient.DRIVE_FRAME, be.getBlockState());
         frame.light(light).renderInto(ms, buffers.getBuffer(RenderType.solid()));
 
         float glow = Mth.clamp(be.coreGlow, 0f, 1f);
@@ -71,9 +72,18 @@ public class WarpDriveRenderer implements BlockEntityRenderer<WarpDriveBlockEnti
         ms.mulPose(Axis.YP.rotationDegrees(angle));
         ms.mulPose(Axis.XP.rotationDegrees(Mth.sin(t * 0.02f) * 12f));
         ms.scale(pulse, pulse, pulse);
-        SuperByteBuffer core = CachedBuffers.partial(WarpClient.DRIVE_CORE, be.getBlockState());
+        SuperByteBuffer core = CachedBuffers.partial(stellar ? WarpClient.DRIVE_CORE_STELLAR : WarpClient.DRIVE_CORE, be.getBlockState());
         core.light(LightTexture.FULL_BRIGHT).color(c, c, c, 255).renderInto(ms, buffers.getBuffer(RenderType.solid()));
         ms.popPose();
+        if (stellar) {
+            // esquirlas: giran en el plano del anillo, al revés que el núcleo
+            ms.pushPose();
+            ms.translate(1.0, 31.0 / 32.0, 1.0);
+            ms.mulPose(Axis.ZP.rotationDegrees(-angle * 0.6f));
+            SuperByteBuffer shards = CachedBuffers.partial(WarpClient.DRIVE_SHARDS, be.getBlockState());
+            shards.light(LightTexture.FULL_BRIGHT).color(c, c, c, 255).renderInto(ms, buffers.getBuffer(RenderType.solid()));
+            ms.popPose();
+        }
         ms.popPose();
     }
 

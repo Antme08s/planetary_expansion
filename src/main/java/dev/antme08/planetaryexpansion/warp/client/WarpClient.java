@@ -33,6 +33,10 @@ public final class WarpClient {
     public static final PartialModel DRIVE_GLASS = partial("warp_drive_glass");
     public static final PartialModel DRIVE_FLUID = partial("warp_drive_fluid");
     public static final PartialModel DRIVE_CORE = partial("warp_drive_core");
+    // 1.0.3 motor estelar: franjas violetas, núcleo blanco-violeta más pequeño y esquirlas que orbitan dentro del anillo
+    public static final PartialModel DRIVE_FRAME_STELLAR = partial("warp_drive_frame_stellar");
+    public static final PartialModel DRIVE_CORE_STELLAR = partial("warp_drive_core_stellar");
+    public static final PartialModel DRIVE_SHARDS = partial("warp_drive_shards");
     public static final PartialModel CONSOLE_TABLE = partial("nav_console_table");
     public static final PartialModel CONSOLE_GLOW = partial("nav_console_glow");
     public static final PartialModel CONSOLE_RINGS = partial("nav_console_rings");
@@ -71,9 +75,9 @@ public final class WarpClient {
     }
 
     public static void receiveEffect(WarpEffectPayload payload) {
-        if (payload.stage() == WarpEffectPayload.START) {
+        if (payload.stage() == WarpEffectPayload.START || payload.stage() == WarpEffectPayload.START_STELLAR) {
             if (Minecraft.getInstance().screen instanceof NavMapScreen) Minecraft.getInstance().setScreen(null);
-            WarpEffectOverlay.start(payload.target(), payload.altitudeKm());
+            WarpEffectOverlay.start(payload.target(), payload.altitudeKm(), payload.stage() == WarpEffectPayload.START_STELLAR);
         } else {
             WarpEffectOverlay.stop();
         }

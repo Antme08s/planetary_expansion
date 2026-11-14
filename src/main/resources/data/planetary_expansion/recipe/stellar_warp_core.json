@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "HNM",
+    "VSC",
+    "KNI"
+  ],
+  "key": {
+    "H": {
+      "item": "planetary_expansion:helium3_crystal"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "M": {
+      "item": "planetary_expansion:meteorite_fragment"
+    },
+    "V": {
+      "item": "planetary_expansion:venusian_sulfur"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "C": {
+      "item": "planetary_expansion:cryo_crystal"
+    },
+    "K": {
+      "item": "planetary_expansion:king_shell"
+    },
+    "I": {
+      "item": "planetary_expansion:magma_core"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:stellar_warp_core",
+    "count": 1
+  },
+  "show_notification": true
+}

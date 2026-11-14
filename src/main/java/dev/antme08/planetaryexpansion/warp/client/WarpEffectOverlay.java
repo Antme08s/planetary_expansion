@@ -27,11 +27,14 @@ import java.util.Locale;
  *   <li>5,6-8 s: se desvanece y aparece el nombre del planeta y la altura de la órbita.</li>
  * </ol>
  * Los tiempos van en ticks de 50 ms contados con el reloj real, así no dependen de la velocidad del servidor.
+ *
+ * <p>1.0.3, salto interestelar: todo dura el doble, el túnel es blanco y violeta con estrellas que pasan de largo, al
+ * llegar se enciende la estrella del sistema nuevo en el centro y aparece "Sistema X" encima del nombre del planeta.
  */
 public final class WarpEffectOverlay {
     private WarpEffectOverlay() {}
 
-    private static final float STRETCH_END = 60, FLASH_END = 72, TUNNEL_END = 112, END = WarpDriveBlockEntity.END_TICK;
+    private static final float STRETCH_END = 60, FLASH_END = 72, TUNNEL_END = 112;
     private static final int STREAKS = 220;
     private static final float[] SEED_A = new float[STREAKS], SEED_R = new float[STREAKS], SEED_S = new float[STREAKS];
 
@@ -49,14 +52,35 @@ public final class WarpEffectOverlay {
     private static int altitudeKm;
     private static boolean flashSound, arriveSound;
     private static boolean loggedError;
+    private static boolean stellar;
+    private static String system = "";
 
     public static void start(String targetName, int altKm) {
+        start(targetName, altKm, false);
+    }
+
+    public static void start(String targetName, int altKm, boolean interstellar) {
         startNanos = System.nanoTime();
         target = targetName;
         altitudeKm = altKm;
+        stellar = interstellar;
+        system = "";
+        if (interstellar) {
+            try {
+                system = dev.antme08.planetaryexpansion.warp.StarSystems.systemOf(
+                        dev.devce.rocketnautics.client.DeepSpaceHandler.getUniverse(), targetName);
+            } catch (Throwable ignored) {
+            }
+        }
         flashSound = arriveSound = false;
-        play(SoundEvents.PORTAL_TRIGGER, 0.7f, 0.6f);
-        play(SoundEvents.BEACON_ACTIVATE, 0.6f, 1.0f);
+        play(SoundEvents.PORTAL_TRIGGER, interstellar ? 0.5f : 0.7f, 0.6f);
+        play(SoundEvents.BEACON_ACTIVATE, interstellar ? 0.45f : 0.6f, 1.0f);
+        if (interstellar) play(SoundEvents.RESPAWN_ANCHOR_CHARGE, 0.5f, 0.8f);
+    }
+
+    /** Escala de tiempo: el salto interestelar dura el doble. */
+    private static float k() {
+        return stellar ? 2f : 1f;
     }
 
     public static void stop() {
@@ -78,12 +102,12 @@ public final class WarpEffectOverlay {
     public static void onRenderGui(RenderGuiEvent.Post event) {
         if (startNanos < 0) return;
         float t = (System.nanoTime() - startNanos) / 50_000_000f;
-        if (t >= END) {
+        if (t >= (stellar ? WarpDriveBlockEntity.STELLAR_END_TICK : WarpDriveBlockEntity.END_TICK)) {
             startNanos = -1;
             return;
         }
         try {
-            draw(event.getGuiGraphics(), t);
+            draw(event.getGuiGraphics(), t / k());   // en el interestelar todo va a la mitad de velocidad
         } catch (Throwable e) {
             if (!loggedError) {
                 loggedError = true;
@@ -93,6 +117,7 @@ public final class WarpEffectOverlay {
     }
 
     private static void draw(GuiGraphics g, float t) {
+        final float END = WarpDriveBlockEntity.END_TICK;
         int w = g.guiWidth(), h = g.guiHeight();
         float cx = w / 2f, cy = h / 2f;
         float maxR = (float) Math.hypot(cx, cy) * 1.05f;
@@ -110,6 +135,7 @@ public final class WarpEffectOverlay {
             if (!flashSound) {
                 flashSound = true;
                 play(SoundEvents.ENDERMAN_TELEPORT, 0.5f, 1.0f);
+                if (stellar) play(SoundEvents.WITHER_SPAWN, 1.6f, 0.35f);
             }
             fill(vc, m, 0, 0, w, h, argb(1f, Mth.lerp(p, 1f, 0.55f), Mth.lerp(p, 1f, 0.25f), Mth.lerp(p, 1f, 0.9f)));
         } else if (t < TUNNEL_END) {
@@ -118,6 +144,7 @@ public final class WarpEffectOverlay {
             fill(vc, m, 0, 0, w, h, argb(1f, 0.07f, 0.01f, 0.16f));
             tunnel(vc, m, cx, cy, maxR, t);
             streaks(vc, m, cx, cy, maxR, t * 3f, 1f, 0.8f);
+            if (stellar) passingStars(vc, m, cx, cy, maxR, t);
             if (p < 0.15f) fill(vc, m, 0, 0, w, h, argb(1f - p / 0.15f, 0.55f, 0.25f, 0.9f)); // resto del destello
         } else {
             // 4. se desvanece; nombre del planeta
@@ -126,10 +153,12 @@ public final class WarpEffectOverlay {
                 arriveSound = true;
                 play(SoundEvents.BEACON_POWER_SELECT, 1.2f, 1.0f);
                 play(SoundEvents.AMETHYST_BLOCK_CHIME, 0.6f, 1.0f);
+                if (stellar) play(SoundEvents.END_PORTAL_SPAWN, 0.8f, 0.5f);
             }
             float a = 1f - Mth.clamp(p * 1.6f, 0f, 1f);
             fill(vc, m, 0, 0, w, h, argb(a, 0.07f, 0.01f, 0.16f));
             if (a > 0.02f) tunnel(vc, m, cx, cy, maxR, t);
+            if (stellar) arrivalStar(vc, m, cx, cy, maxR, p);
         }
         g.flush();
 
@@ -142,6 +171,10 @@ public final class WarpEffectOverlay {
                 String name = bodyName(target);
                 String sub = I18n.get("nav." + PlanetaryExpansion.MODID + ".arrived",
                         String.format(Locale.ROOT, "%,d", altitudeKm).replace(',', ' '));
+                if (stellar && !system.isEmpty()) {
+                    String sys = I18n.get("nav." + PlanetaryExpansion.MODID + ".arrived_system", bodyName(system));
+                    centered(g, font, sys, cx, cy - 48, 1.6f, (ai << 24) | 0xFFD98A);
+                }
                 centered(g, font, name, cx, cy - 26, 3f, (ai << 24) | 0xE8D8FF);
                 centered(g, font, sub, cx, cy + 10, 1.3f, (ai << 24) | 0x9FE6FF);
             }
@@ -182,6 +215,53 @@ public final class WarpEffectOverlay {
         }
     }
 
+    /** Interestelar: estrellas grandes que pasan de largo durante el túnel (una cada poco, desde el centro hacia fuera). */
+    private static void passingStars(VertexConsumer vc, Matrix4f m, float cx, float cy, float maxR, float t) {
+        for (int i = 0; i < 6; i++) {
+            float life = ((t * 0.045f + i / 6f) % 1f);           // 0 nace en el centro, 1 sale de la pantalla
+            float ang = SEED_A[i * 31 % STREAKS] + i * 1.1f;
+            float r = life * life * maxR * 1.1f;
+            float x = cx + Mth.cos(ang) * r, y = cy + Mth.sin(ang) * r;
+            float size = 1.5f + life * life * 22f;
+            float a = Mth.clamp(life * 3f, 0f, 1f) * (1f - Mth.clamp((life - 0.85f) / 0.15f, 0f, 1f));
+            disc(vc, m, x, y, size * 2.6f, argb(a * 0.35f, 0.75f, 0.55f, 1f), argb(0f, 0.6f, 0.3f, 1f));   // halo
+            disc(vc, m, x, y, size, argb(a, 1f, 1f, 1f), argb(a * 0.6f, 0.85f, 0.75f, 1f));
+        }
+    }
+
+    /** Interestelar: la estrella del sistema nuevo se enciende en el centro y se apaga mientras se ve el nombre. */
+    private static void arrivalStar(VertexConsumer vc, Matrix4f m, float cx, float cy, float maxR, float p) {
+        float grow = Mth.clamp(p * 4f, 0f, 1f);
+        float a = 1f - Mth.clamp((p - 0.2f) / 0.4f, 0f, 1f);   // se apaga pronto para que se lea bien el nombre
+        if (a <= 0.01f) return;
+        float r = maxR * 0.06f * (0.4f + 0.6f * grow);
+        disc(vc, m, cx, cy, r * 6f, argb(a * 0.30f, 1f, 0.8f, 0.45f), argb(0f, 1f, 0.6f, 0.3f));
+        disc(vc, m, cx, cy, r * 2.2f, argb(a * 0.6f, 1f, 0.92f, 0.7f), argb(0f, 1f, 0.75f, 0.4f));
+        disc(vc, m, cx, cy, r, argb(a, 1f, 1f, 1f), argb(a * 0.8f, 1f, 0.95f, 0.8f));
+        // rayos en cruz
+        for (int i = 0; i < 4; i++) {
+            float ang = i * Mth.HALF_PI + 0.3f;
+            float ca = Mth.cos(ang), sa = Mth.sin(ang), len = r * 9f * grow, wdt = r * 0.25f;
+            NavMapScreen.quad(vc, m, cx - sa * wdt, cy + ca * wdt, cx + sa * wdt, cy - ca * wdt,
+                    cx + ca * len, cy + sa * len, cx + ca * len, cy + sa * len, argb(a * 0.8f, 1f, 0.95f, 0.85f), argb(0f, 1f, 0.9f, 0.7f));
+        }
+    }
+
+    /** Disco con degradado del centro ({@code inner}) al borde ({@code outer}). */
+    private static void disc(VertexConsumer vc, Matrix4f m, float x, float y, float r, int inner, int outer) {
+        int seg = 28;
+        for (int i = 0; i < seg; i++) {
+            float a0 = i * Mth.TWO_PI / seg, a1 = (i + 1) * Mth.TWO_PI / seg;
+            float ex = x + Mth.cos(a1) * r, ey = y + Mth.sin(a1) * r, fx = x + Mth.cos(a0) * r, fy = y + Mth.sin(a0) * r;
+            // quad() decide el orden con los dos primeros puntos, que aquí coinciden (el centro): se ordena a mano
+            if ((ex - x) * (fy - ey) - (ey - y) * (fx - ex) > 0) {
+                float tx = ex, ty = ey;
+                ex = fx; ey = fy; fx = tx; fy = ty;
+            }
+            NavMapScreen.quad(vc, m, x, y, x, y, ex, ey, fx, fy, inner, outer);
+        }
+    }
+
     /** Anillos deformados que avanzan hacia la cámara. */
     private static void tunnel(VertexConsumer vc, Matrix4f m, float cx, float cy, float maxR, float t) {
         int rings = 14, seg = 72;
@@ -192,6 +272,7 @@ public final class WarpEffectOverlay {
             float thick = 1f + d * d * 26f;
             float a = Mth.clamp(d * 1.3f, 0f, 1f) * (1f - Mth.clamp((d - 0.85f) / 0.15f, 0f, 1f));
             int col = (k % 2 == 0) ? argb(a * 0.85f, 0.62f, 0.3f, 1f) : argb(a * 0.6f, 0.9f, 0.85f, 1f);
+            if (stellar) col = (k % 2 == 0) ? argb(a * 0.85f, 0.78f, 0.55f, 1f) : argb(a * 0.75f, 1f, 0.97f, 1f);
             float px = 0, py = 0, qx = 0, qy = 0;
             for (int i = 0; i <= seg; i++) {
                 float ang = i * Mth.TWO_PI / seg;

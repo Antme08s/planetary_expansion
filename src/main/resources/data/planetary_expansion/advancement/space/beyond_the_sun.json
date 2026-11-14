@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:stellar_warp_core"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.beyond_the_sun.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.beyond_the_sun.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "jumped": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "jumped"
+    ]
+  ],
+  "parent": "planetary_expansion:space/warp_speed",
+  "rewards": {
+    "experience": 500
+  }
+}

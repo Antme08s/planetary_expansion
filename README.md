@@ -945,3 +945,27 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   Spawn: mar de Cerúlea con 12+ bloques de agua encima, muy raro (1/6 y ninguno a menos de 80).
 - Sonidos propios (`ironjaw.ambient/hurt/death/charge/bite`). Botín: placa de coraza 1–3 y cuchilla de mandíbula (15 %),
   todavía sin receta.
+### Motor de distorsión estelar
+- Idea acordada con el usuario: un **núcleo de distorsión estelar** hecho con un objeto de cada astro del sistema solar;
+  se pone con **clic derecho sobre el motor ya montado** (no hay que desmontarlo). Si se rompe el motor, suelta el núcleo.
+- Receta (mesa de crafteo): `HNM / VSC / KNI` → cristal de helio-3 (Luna), lingote de netherita ×2 (Tierra), fragmento
+  de meteorito (Marte), azufre venusiano (Venus), estrella del Nether (Tierra, en el centro), cristal criogénico (mundo
+  helado), caparazón de rey azul (Thalassa) y núcleo de magma (Ignis).
+- **Cristal de helio-3**: ruedas trituradoras de Create con regolito lunar suelto (15 %, más arena 50 % y pepita de
+  experiencia 25 %). Cosmonautics ya tritura el regolito normal y el fragmentado (regolito → fragmentado → suelto), así
+  que se usa el suelto, que no tenía receta.
+- Reglas (`WarpDriveBlockEntity.interstellarProblem`, la usan el servidor y la consola):
+  - motor normal: solo salta dentro de su sistema; **siempre puede volver al Sol** (para que nadie se quede atrapado),
+    con 12 000 mB y el 100 % de carga;
+  - motor estelar: la carga llega al **200 %**; dentro del sistema igual que antes (4000 mB, gasta 100 %); a otra
+    estrella gasta **12 000 mB y el 200 %** y el salto dura el doble (320 ticks, la órbita cambia en el 160).
+- Aspecto (`jump_drive_model.py --stellar <png>` para la vista previa; `--export` saca `warp_drive_frame_stellar`,
+  `warp_drive_core_stellar`, `warp_drive_shards` con la textura `warp_drive_stellar`): franjas violetas, núcleo
+  blanco-violeta más pequeño y 6 esquirlas que giran en el plano del anillo al revés que el núcleo. Texturas de los
+  objetos: `tools/designs/stellar_items.py`.
+- Efecto del salto interestelar (`WarpEffectOverlay`, etapa `START_STELLAR` del `WarpEffectPayload`): todo a la mitad
+  de velocidad, túnel blanco y violeta con estrellas que pasan de largo, al llegar se enciende la estrella del sistema
+  nuevo y sale "Sistema X" encima del planeta; sonidos más graves.
+- Consola: "Salto interestelar (orbitar)" en el menú cuando el destino es de otro sistema, con el motivo si no se
+  puede; la barra de estado dice "Motor estelar". Goggles: nombre "Motor de distorsión estelar" y aviso de sobrecarga.
+- Logro **Más allá del Sol** (desafío, 500 XP): saltar a otro sistema solar.

@@ -57,6 +57,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  * El salto dura {@value #END_TICK} ticks: los jugadores ven el efecto (estrellas que se estiran, destello, túnel y el
  * nombre del planeta) y la órbita cambia a mitad del túnel, en el tick {@value #TELEPORT_TICK}.
+ *
+ * <p>1.0.3, motor estelar: con el núcleo de distorsión estelar puesto la carga llega al 200 %. Un motor normal solo
+ * salta dentro de su sistema solar (y siempre puede volver al Sol, para que nadie se quede atrapado). Un salto a otra
+ * estrella gasta {@value #INTERSTELLAR_MB} mB, el 200 % de la carga (el motor normal que vuelve al Sol, el 100 %) y
+ * dura el doble ({@value #STELLAR_END_TICK} ticks).
  */
 public class WarpDriveBlockEntity extends BlockEntity {
     static final ResourceLocation DEEP_SPACE = ResourceLocation.fromNamespaceAndPath("rocketnautics", "deep_space");
@@ -69,6 +74,9 @@ public class WarpDriveBlockEntity extends BlockEntity {
     private static final double FULL_CHARGE_TICKS_AT_256 = 1200;
     public static final int TELEPORT_TICK = 80;
     public static final int END_TICK = 160;
+    public static final int INTERSTELLAR_MB = 12000;
+    public static final int STELLAR_TELEPORT_TICK = 160;
+    public static final int STELLAR_END_TICK = 320;
 
     /** Motores cargados en el servidor (para que la consola encuentre el de su nave). */
     private static final Set<WarpDriveBlockEntity> LOADED = ConcurrentHashMap.newKeySet();
@@ -79,6 +87,8 @@ public class WarpDriveBlockEntity extends BlockEntity {
     private double drainDebt;
     private int jumpTick = -1;
     private String target = "";
+    private boolean stellar;
+    private boolean interstellarJump;
     private final FluidTank tank = new FluidTank(TANK_CAPACITY, s -> s.is(NITROGEN)) {
         @Override
         protected void onContentsChanged() {
@@ -122,6 +132,40 @@ public class WarpDriveBlockEntity extends BlockEntity {
 
     public double rpm() {
         return lastRpm;
+    }
+
+    public boolean isStellar() {
+        return stellar;
+    }
+
+    /** Carga máxima: 100 % (normal) o 200 % (estelar). */
+    public double maxCharge() {
+        return stellar ? 2.0 : 1.0;
+    }
+
+    /** Pone el núcleo estelar. false si ya lo tenía. */
+    public boolean makeStellar() {
+        if (stellar) return false;
+        stellar = true;
+        dirtySync = true;
+        setChanged();
+        if (level != null && !level.isClientSide) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        return true;
+    }
+
+    /**
+     * Motivo por el que no se puede saltar de un sistema a otro (null si se puede o si es el mismo sistema). Lo usa el
+     * servidor al saltar y la consola para avisar antes.
+     */
+    public static Component interstellarProblem(boolean stellar, double charge, int nitrogen, String fromSystem, String toSystem) {
+        if (fromSystem == null || toSystem == null || fromSystem.equals(toSystem)) return null;
+        String k = "message.planetary_expansion.";
+        if (!stellar && !toSystem.equals("sol")) return Component.translatable(k + "warp_needs_stellar").withStyle(ChatFormatting.RED);
+        if (stellar && charge < 2.0 - 1e-6)
+            return Component.translatable(k + "warp_needs_overcharge", (int) Math.floor(charge * 100)).withStyle(ChatFormatting.GOLD);
+        if (nitrogen < INTERSTELLAR_MB)
+            return Component.translatable(k + "warp_needs_n2_interstellar", INTERSTELLAR_MB).withStyle(ChatFormatting.RED);
+        return null;
     }
 
     public boolean isJumping() {
@@ -193,8 +237,8 @@ public class WarpDriveBlockEntity extends BlockEntity {
         if (rpm != lastRpm) {
             lastRpm = rpm;
         }
-        if (jumpTick < 0 && charge < 1.0 && rpm > 0) {
-            charge = Math.min(1.0, charge + rpm / 256.0 / FULL_CHARGE_TICKS_AT_256);
+        if (jumpTick < 0 && charge < maxCharge() && rpm > 0) {
+            charge = Math.min(maxCharge(), charge + rpm / 256.0 / FULL_CHARGE_TICKS_AT_256);
             setChanged();
         }
 
@@ -216,10 +260,11 @@ public class WarpDriveBlockEntity extends BlockEntity {
         // salto en curso
         if (jumpTick >= 0) {
             jumpTick++;
-            if (jumpTick == TELEPORT_TICK) teleport(sl);
-            if (jumpTick >= END_TICK) {
+            if (jumpTick == (interstellarJump ? STELLAR_TELEPORT_TICK : TELEPORT_TICK)) teleport(sl);
+            if (jumpTick >= (interstellarJump ? STELLAR_END_TICK : END_TICK)) {
                 jumpTick = -1;
                 target = "";
+                interstellarJump = false;
                 dirtySync = true;
             }
             setChanged();
@@ -248,7 +293,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         if (shownFill < 0) shownFill = targetFill;
         prevShownFill = shownFill;
         shownFill += (targetFill - shownFill) * 0.08f;
-        float targetSpeed = clientJumping ? 40f : heat > 0 ? 1.0f : charge >= 1.0 ? 6f : (float) (1.0 + 3.0 * charge);
+        float targetSpeed = clientJumping ? 40f : heat > 0 ? 1.0f : charge >= 2.0 ? 10f : charge >= 1.0 ? 6f : (float) (1.0 + 3.0 * charge);
         coreSpeed += (targetSpeed - coreSpeed) * (clientJumping ? 0.08f : 0.04f);
         float glow = clientJumping ? 1f : heat > 0 ? 0.25f : (float) (0.35 + 0.65 * charge);
         coreGlow += (glow - coreGlow) * 0.08f;
@@ -262,7 +307,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
             // chispas violetas alrededor del núcleo
             Vector3d c = coreCenter();
             double a = level.random.nextDouble() * Math.PI * 2, r = 0.6 + level.random.nextDouble() * 0.8;
-            level.addParticle(ParticleTypes.REVERSE_PORTAL, c.x + Math.cos(a) * r, c.y + (level.random.nextDouble() - 0.5), c.z + Math.sin(a) * r, 0, 0, 0);
+            level.addParticle(stellar && level.random.nextInt(3) == 0 ? ParticleTypes.END_ROD : ParticleTypes.REVERSE_PORTAL, c.x + Math.cos(a) * r, c.y + (level.random.nextDouble() - 0.5), c.z + Math.sin(a) * r, 0, 0, 0);
         }
         if (level != null && heat > 0 && level.random.nextInt(4) == 0) {
             Vector3d c = coreCenter();
@@ -372,14 +417,25 @@ public class WarpDriveBlockEntity extends BlockEntity {
             player.displayClientMessage(WarpStatus.NOT_IN_SPACE.text(), true);
             return;
         }
-        refund = tank.drain(JUMP_MB, IFluidHandler.FluidAction.EXECUTE).copy();
+        // 1.0.3: ¿salto a otra estrella?
+        String from = StarSystems.systemOf(data.getUniverse(), currentOrbit(sl));
+        String to = StarSystems.systemOf(data.getUniverse(), targetName);
+        Component problem = interstellarProblem(stellar, charge, tank.getFluidAmount(), from, to);
+        if (problem != null) {
+            player.displayClientMessage(problem, true);
+            return;
+        }
+        interstellarJump = !from.equals(to);
+        refund = tank.drain(interstellarJump ? INTERSTELLAR_MB : JUMP_MB, IFluidHandler.FluidAction.EXECUTE).copy();
         jumpTick = 0;
         target = targetName;
         dirtySync = true;
         setChanged();
-        WarpEffectPayload effect = new WarpEffectPayload(WarpEffectPayload.START, targetName, (int) Math.round(arrival.altitudeKm()));
+        WarpEffectPayload effect = new WarpEffectPayload(interstellarJump ? WarpEffectPayload.START_STELLAR : WarpEffectPayload.START,
+                targetName, (int) Math.round(arrival.altitudeKm()));
         for (ServerPlayer p : playersAboard(sl, inst)) PacketDistributor.sendToPlayer(p, effect);
-        PlanetaryExpansion.LOGGER.info("[Distorsión] {} inicia el salto a {} desde {}", player.getScoreboardName(), targetName, worldPosition);
+        PlanetaryExpansion.LOGGER.info("[Distorsión] {} inicia el salto {}a {} desde {}", player.getScoreboardName(),
+                interstellarJump ? "interestelar (" + from + " -> " + to + ") " : "", targetName, worldPosition);
     }
 
     private static List<ServerPlayer> playersAboard(ServerLevel level, DeepSpaceInstance inst) {
@@ -419,7 +475,8 @@ public class WarpDriveBlockEntity extends BlockEntity {
             abort(sl, inst);
             return;
         }
-        charge = 0;
+        // el normal gasta todo (100 %); el estelar, 100 % dentro del sistema y 200 % entre estrellas
+        charge = interstellarJump ? 0 : Math.max(0, charge - 1.0);
         heat = 1.0;
         drainDebt = 0;
         refund = FluidStack.EMPTY;
@@ -428,9 +485,11 @@ public class WarpDriveBlockEntity extends BlockEntity {
         for (ServerPlayer p : playersAboard(sl, inst)) {
             dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "warp_speed", "jumped");
             dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "interplanetary_commuter", target);
+            if (interstellarJump) dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "beyond_the_sun", "jumped");
         }
         Vector3d c = Warp.toWorld(sl, worldPosition);
         sl.sendParticles(ParticleTypes.REVERSE_PORTAL, c.x, c.y + 1.5, c.z, 120, 2.0, 1.5, 2.0, 0.4);
+        if (interstellarJump) sl.sendParticles(ParticleTypes.END_ROD, c.x, c.y + 1.5, c.z, 80, 2.5, 1.5, 2.5, 0.25);
         PlanetaryExpansion.LOGGER.info("[Distorsión] Nave en órbita de {} a {} km", target, String.format("%,.0f", arrival.altitudeKm()));
     }
 
@@ -446,6 +505,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         refund = FluidStack.EMPTY;
         jumpTick = -1;
         target = "";
+        interstellarJump = false;
         dirtySync = true;
         setChanged();
         PlanetaryExpansion.LOGGER.warn("[Distorsión] Salto cancelado en {}", worldPosition);
@@ -479,7 +539,8 @@ public class WarpDriveBlockEntity extends BlockEntity {
     /** Líneas para las goggles de Create (en el cliente, con los datos sincronizados). */
     public void appendStatus(List<Component> tooltip) {
         String k = "message.planetary_expansion.";
-        tooltip.add(Component.literal("    ").append(Component.translatable("block.planetary_expansion.warp_drive").withStyle(ChatFormatting.WHITE)));
+        tooltip.add(Component.literal("    ").append(Component.translatable(stellar ? k + "warp_stellar_name" : "block.planetary_expansion.warp_drive")
+                .withStyle(stellar ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.WHITE)));
         tooltip.add(line(Component.translatable(k + "warp_charge", pct(charge)), charge >= 1.0 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY));
         tooltip.add(line(Component.translatable(k + "warp_heat", pct(heat)), heat > 0 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
         tooltip.add(line(Component.translatable(k + "warp_nitrogen", tank.getFluidAmount(), TANK_CAPACITY),
@@ -487,6 +548,9 @@ public class WarpDriveBlockEntity extends BlockEntity {
         if (heat > 0 && tank.isEmpty()) tooltip.add(line(Component.translatable(k + "warp_needs_coolant"), ChatFormatting.RED));
         if (charge >= 1.0 && heat <= 0 && tank.getFluidAmount() >= JUMP_MB) {
             tooltip.add(line(Component.translatable(k + "warp_ready"), ChatFormatting.GREEN));
+        }
+        if (stellar && charge >= 2.0 && heat <= 0 && tank.getFluidAmount() >= INTERSTELLAR_MB) {
+            tooltip.add(line(Component.translatable(k + "warp_ready_interstellar"), ChatFormatting.LIGHT_PURPLE));
         }
     }
 
@@ -503,6 +567,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         tag.putDouble("DrainDebt", drainDebt);
         tag.putInt("JumpTick", jumpTick);
         tag.putString("Target", target);
+        tag.putBoolean("Interstellar", interstellarJump);
     }
 
     @Override
@@ -515,8 +580,11 @@ public class WarpDriveBlockEntity extends BlockEntity {
         clientJumping = tag.getBoolean("Jumping");
         if (tag.contains("DrainDebt")) drainDebt = tag.getDouble("DrainDebt");
         if (tag.contains("Target")) target = tag.getString("Target");
+        stellar = tag.getBoolean("Stellar");
+        if (tag.contains("Interstellar")) interstellarJump = tag.getBoolean("Interstellar");
         // un salto a medias al cargar el mundo se termina (el efecto de los jugadores ya no existe)
-        if (tag.contains("JumpTick")) jumpTick = tag.getInt("JumpTick") >= 0 ? Math.max(tag.getInt("JumpTick"), TELEPORT_TICK - 1) : -1;
+        int tp = interstellarJump ? STELLAR_TELEPORT_TICK : TELEPORT_TICK;
+        if (tag.contains("JumpTick")) jumpTick = tag.getInt("JumpTick") >= 0 ? Math.max(tag.getInt("JumpTick"), tp - 1) : -1;
     }
 
     private void writeSync(CompoundTag tag, HolderLookup.Provider registries) {
@@ -524,6 +592,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         tag.putDouble("Heat", heat);
         tag.put("Tank", tank.writeToNBT(registries, new CompoundTag()));
         tag.putBoolean("Jumping", jumpTick >= 0);
+        tag.putBoolean("Stellar", stellar);
     }
 
     @Override
