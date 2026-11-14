@@ -31,8 +31,7 @@
     },
     "erosion": 0.0,
     "depth": 0.0,
-    "ridges": 0.0,
-    "weirdness": {
+    "ridges": {
       "type": "minecraft:noise",
       "noise": "planetary_expansion:ferra/canyon",
       "xz_scale": 1.0,

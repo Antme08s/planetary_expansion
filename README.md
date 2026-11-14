@@ -1052,3 +1052,7 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
     espagueti y fideos y cavernas de queso, con el mismo esquema que el `final_density` de la Tierra (sin pilares).
     Antes solo había carvers, que se cortan al llegar al borde de su alcance. Por debajo de y −54 las cuevas tienen lava.
   - Solo cambia en chunks nuevos: donde se junten con los ya generados puede haber cortes.
+- Arreglo de verdad de los biomas de Ferra (y de Velo): la "rareza" (weirdness) de los biomas multi_noise sale del campo
+  `ridges` del router de ruido; no existe un campo `weirdness`. Se había puesto ahí el ruido de los cañones (Ferra) y el de
+  los campos de cristal (Velo); Minecraft lo ignoraba, la rareza valía siempre 0 y en Ferra todo era bioma de cañón (en
+  Velo no salían nunca campos de cristal). Ahora va en `ridges`.

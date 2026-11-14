@@ -3923,7 +3923,9 @@ def build_velo():
               "ridges": zero, "initial_density_without_jaggedness": density,
               "final_density": {"type": "minecraft:interpolated", "argument": density},
               "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
-    router["weirdness"] = n2(crystal_n)
+    # 1.0.3: la "rareza" (weirdness) de los biomas sale del campo "ridges" del router (no hay campo "weirdness": se
+    # ignoraba y los campos de cristal no salían nunca)
+    router["ridges"] = n2(crystal_n)
     dust = st_ = {"Name": B("velo_dust")}
     surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
         cond(ON_FLOOR, put(dust)),
@@ -4286,7 +4288,9 @@ def build_ferra():
     zero = 0.0
     router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
               "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
-              "ridges": zero, "weirdness": n2(canyon), "initial_density_without_jaggedness": density,
+              # la rareza de los biomas sale de "ridges" (antes se puso en un campo "weirdness" que no existe y se ignoraba:
+              # rareza siempre 0 = todo Ferra era bioma de cañón)
+              "ridges": n2(canyon), "initial_density_without_jaggedness": density,
               "final_density": final,
               "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
     dust, ochre = {"Name": B("ferra_dust")}, {"Name": B("ferra_ochre")}

@@ -31,7 +31,12 @@
     },
     "erosion": 0.0,
     "depth": 0.0,
-    "ridges": 0.0,
+    "ridges": {
+      "type": "minecraft:noise",
+      "noise": "planetary_expansion:velo/crystal",
+      "xz_scale": 1.0,
+      "y_scale": 0.0
+    },
     "initial_density_without_jaggedness": {
       "type": "minecraft:add",
       "argument1": {
@@ -103,13 +108,7 @@
     },
     "vein_toggle": 0.0,
     "vein_ridged": 0.0,
-    "vein_gap": 0.0,
-    "weirdness": {
-      "type": "minecraft:noise",
-      "noise": "planetary_expansion:velo/crystal",
-      "xz_scale": 1.0,
-      "y_scale": 0.0
-    }
+    "vein_gap": 0.0
   },
   "spawn_target": [
     {
