@@ -43,6 +43,7 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
         this.animator = animator;
         for (String name : names)   // 1.0.3: todos los grupos del JSON (cuello, orejas, alas…)
             if (root.hasChild(name)) groups.put(name, root.getChild(name));
+        if (root.hasChild("head") && root.getChild("head").hasChild("jaw")) groups.put("jaw", root.getChild("head").getChild("jaw"));
         for (String name : new String[]{"body", "head", "jaw", "tail", "lure", "legs", "claw_r", "claw_l", "eyes", "spines", "shell"})
             if (root.hasChild(name)) groups.put(name, root.getChild(name));
         for (int i = 0; i < 8; i++) {   // 0.7.65: patas sueltas (leg_l0…, leg_r0…), cada una gira desde la cadera
@@ -67,12 +68,26 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
             texW = tex.get(0).getAsInt();
             texH = tex.get(1).getAsInt();
             PartDefinition rootDef = mesh.getRoot();
-            for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("parts").entrySet()) {
+            JsonObject parts = json.getAsJsonObject("parts");
+            // 1.0.3: la mandíbula cuelga de la cabeza (gira con ella; antes se despegaba al voltear la cabeza)
+            java.util.List<Map.Entry<String, JsonElement>> order = new java.util.ArrayList<>(parts.entrySet());
+            order.sort(java.util.Comparator.comparingInt(en -> en.getKey().equals("jaw") ? 1 : 0));
+            JsonArray headPiv = parts.has("head") ? parts.getAsJsonObject("head").getAsJsonArray("pivot") : null;
+            PartDefinition headDef = null;
+            for (Map.Entry<String, JsonElement> e : order) {
                 JsonObject partJson = e.getValue().getAsJsonObject();
                 names.add(e.getKey());
                 JsonArray piv = partJson.getAsJsonArray("pivot");
-                PartDefinition part = rootDef.addOrReplaceChild(e.getKey(), CubeListBuilder.create(),
-                        PartPose.offset(piv.get(0).getAsFloat(), piv.get(1).getAsFloat(), piv.get(2).getAsFloat()));
+                PartDefinition part;
+                if (e.getKey().equals("jaw") && headDef != null) {
+                    part = headDef.addOrReplaceChild("jaw", CubeListBuilder.create(), PartPose.offset(
+                            piv.get(0).getAsFloat() - headPiv.get(0).getAsFloat(), piv.get(1).getAsFloat() - headPiv.get(1).getAsFloat(),
+                            piv.get(2).getAsFloat() - headPiv.get(2).getAsFloat()));
+                } else {
+                    part = rootDef.addOrReplaceChild(e.getKey(), CubeListBuilder.create(),
+                            PartPose.offset(piv.get(0).getAsFloat(), piv.get(1).getAsFloat(), piv.get(2).getAsFloat()));
+                    if (e.getKey().equals("head")) headDef = part;
+                }
                 int n = 0;
                 for (JsonElement nodeEl : partJson.getAsJsonArray("nodes")) {
                     JsonObject node = nodeEl.getAsJsonObject();

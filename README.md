@@ -901,3 +901,7 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
 - Arreglos tras la primera prueba: la punta de la cola del corredor quedaba suelta (estaba bajada en el diseño y además
   girada con la cola; ahora va al final de la cola en su marco sin girar). El saltarín no podía subir bloques (salto de
   0,36): ahora salta normal (1,25 bloques) cuando choca y hace saltitos bajos (0,3) solo al caminar en llano.
+- Segunda ronda: el mechón de la cola del pastoreador quedaba suelto (mismo error que la cola del corredor). La
+  mandíbula ahora cuelga de la cabeza en `JsonMobModel` (antes era una parte aparte con su propio pivote y se despegaba
+  al voltear la cabeza; vale también para el pez farol y el acechador abisal). El corredor sentado ya no flota: el
+  cuerpo baja 6 y se inclina, la grupa toca el suelo, las patas de delante se acortan y las de atrás quedan dobladas.

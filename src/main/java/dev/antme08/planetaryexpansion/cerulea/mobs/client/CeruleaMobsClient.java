@@ -154,11 +154,7 @@ public final class CeruleaMobsClient {
         look(m, hy, hp, 0.5F);
         float hit = Mth.sin(m.attackTime * Mth.PI);
         float open = (e.isAggressive() ? 0.25F : 0.05F + 0.04F * (Mth.sin(age * 0.07F) + 1)) + hit * 0.5F;
-        ModelPart jaw = m.part("jaw"), head = m.part("head");
-        if (jaw != null && head != null) {
-            jaw.yRot += head.yRot - 0F;
-            jaw.xRot += open;
-        }
+        add(m.part("jaw"), open, 0, 0);   // la mandíbula cuelga de la cabeza (JsonMobModel)
     }
 
     /** Croador: saco vocal que se infla al croar; patas traseras estiradas al saltar. */
@@ -199,7 +195,7 @@ public final class CeruleaMobsClient {
         add(m.part("leg_l1"), -a, 0, 0);
         add(m.part("leg_r1"), a, 0, 0);
         if (crouch > 0 && !sit) {   // agachado: el cuerpo baja y las patas se doblan
-            for (String g : new String[]{"body", "neck", "head", "jaw", "tail"}) down(m.part(g), 2.6F * crouch, 0);
+            for (String g : new String[]{"body", "neck", "head", "tail"}) down(m.part(g), 2.6F * crouch, 0);
             for (String g : new String[]{"leg_l0", "leg_r0", "leg_l1", "leg_r1"}) {
                 ModelPart p = m.part(g);
                 if (p != null) {
@@ -209,29 +205,40 @@ public final class CeruleaMobsClient {
             }
             add(m.part("tail"), -0.3F * crouch, 0, 0);
         }
-        if (sit) {   // sentado: la parte de atrás baja
-            down(m.part("body"), 3.5F, 0);
-            add(m.part("body"), -0.35F, 0, 0);
-            down(m.part("tail"), 6F, 0);
+        if (sit) {
+            // sentado como un perro: el cuerpo baja 6 y se inclina hacia arriba (la grupa toca el suelo), las patas de
+            // delante se acortan para seguir apoyadas y las de atrás quedan dobladas hacia delante en el suelo
+            float tilt = 0.45F, sin = Mth.sin(tilt);
+            ModelPart body = m.part("body");
+            if (body != null) {
+                body.y += 6F;
+                body.xRot -= tilt;
+            }
+            for (String g : new String[]{"neck", "head"}) down(m.part(g), 6F - 8F * sin, 0);
+            for (String g : new String[]{"leg_l0", "leg_r0"}) {
+                ModelPart p = m.part(g);
+                if (p == null) continue;
+                float drop = 6F - 5F * sin;
+                p.y += drop;
+                p.yScale = (13F - drop) / 13F;
+                p.xRot = -0.15F;
+            }
             for (String g : new String[]{"leg_l1", "leg_r1"}) {
                 ModelPart p = m.part(g);
-                if (p != null) {
-                    p.y += 6F;
-                    p.yScale = 0.45F;
-                    p.xRot = -1.2F;
-                }
+                if (p == null) continue;
+                p.y += 6F + 4.5F * sin + 1.5F;
+                p.yScale = 0.6F;
+                p.xRot = -1.45F;
             }
-            down(m.part("neck"), 1.0F, 0);
-            down(m.part("head"), 1.0F, 0);
-            down(m.part("jaw"), 1.0F, 0);
+            ModelPart tail = m.part("tail");
+            if (tail != null) {
+                tail.y += 6F + 7F * sin + 1F;
+                tail.xRot += 0.5F;
+            }
         }
         add(m.part("tail"), 0, e.tailWag(age), 0);
         look(m, hy, hp, 0.8F);
-        ModelPart head = m.part("head"), jaw = m.part("jaw");
         float hit = Mth.sin(m.attackTime * Mth.PI);
-        if (jaw != null && head != null) {
-            jaw.xRot += head.xRot + 0.05F + hit * 0.6F;
-            jaw.yRot += head.yRot;
-        }
+        add(m.part("jaw"), 0.05F + hit * 0.6F, 0, 0);
     }
 }

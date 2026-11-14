@@ -153,7 +153,8 @@ def grazer():
         Box("head", [-2.4, 13.6, -31.3], [-1.2, 14.8, -31], nostril),
         Box("head", [1.2, 13.6, -31.3], [2.4, 14.8, -31], nostril),
         Box("tail", [-1, 20, 11], [1, 22, 18], hide, rot=(28, 0, 0), origin=[0, 21, 12]),
-        Box("tail", [-1.6, 15, 15.5], [1.6, 18.5, 19], tuft, rot=(28, 0, 0), origin=[0, 21, 12]),
+        # 1.0.3: el mechón va al final de la cola en su marco sin girar (antes quedaba suelto debajo)
+        Box("tail", [-1.6, 19.2, 17.0], [1.6, 22.8, 20.5], tuft, rot=(28, 0, 0), origin=[0, 21, 12]),
     ]
     side = [
         Box("head", [3.9, 17, -24.5], [4.4, 18.8, -22.5], eye), Box("head", [4.2, 17.9, -24.2], [4.5, 18.6, -23.5], glint),
