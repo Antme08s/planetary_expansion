@@ -74,6 +74,8 @@ public final class CeruleaMobs {
             () -> EntityType.Builder.of(Ribbonfin::new, MobCategory.WATER_AMBIENT).sized(0.4F, 0.5F).clientTrackingRange(4).build("ribbonfin"));
     public static final DeferredHolder<EntityType<?>, EntityType<Runner>> RUNNER = ENTITIES.register("runner",
             () -> EntityType.Builder.of(Runner::new, MobCategory.CREATURE).sized(0.7F, 1.0F).clientTrackingRange(10).build("runner"));
+    public static final DeferredHolder<EntityType<?>, EntityType<Ironjaw>> IRONJAW = ENTITIES.register("ironjaw",
+            () -> EntityType.Builder.of(Ironjaw::new, MobCategory.MONSTER).sized(1.4F, 1.1F).clientTrackingRange(10).build("ironjaw"));
     public static final DeferredHolder<EntityType<?>, EntityType<FangArrow>> FANG_ARROW_ENTITY = ENTITIES.register("fang_arrow",
             () -> EntityType.Builder.<FangArrow>of(FangArrow::new, MobCategory.MISC).sized(0.5F, 0.5F).eyeHeight(0.13F)
                     .clientTrackingRange(4).updateInterval(20).build("fang_arrow"));
@@ -108,6 +110,8 @@ public final class CeruleaMobs {
             () -> new SwordItem(Tiers.IRON, new Item.Properties().attributes(SwordItem.createAttributes(Tiers.IRON, 2, -1.6F))));
     public static final DeferredItem<FangArrowItem> FANG_ARROW = ITEMS.register("fang_arrow", () -> new FangArrowItem(new Item.Properties()));
     public static final DeferredItem<Item> CROAKER_SLIME = ITEMS.registerSimpleItem("croaker_slime");
+    public static final DeferredItem<Item> ARMOR_PLATE = ITEMS.registerSimpleItem("armor_plate");
+    public static final DeferredItem<Item> IRONJAW_BLADE = ITEMS.registerSimpleItem("ironjaw_blade");
     public static final DeferredItem<Item> CROAKER_LEGS = food("croaker_legs", 2, 0.3F);
     public static final DeferredItem<Item> COOKED_CROAKER_LEGS = food("cooked_croaker_legs", 5, 0.6F);
     public static final DeferredItem<Item> RIBBONFIN_ITEM = food("ribbonfin", 2, 0.1F);
@@ -126,6 +130,7 @@ public final class CeruleaMobs {
     public static final DeferredItem<DeferredSpawnEggItem> CROAKER_EGG = egg("croaker", CROAKER, 0x369680, 0xe8be46);
     public static final DeferredItem<DeferredSpawnEggItem> RIBBONFIN_EGG = egg("ribbonfin", RIBBONFIN, 0x407ade, 0x50c8a0);
     public static final DeferredItem<DeferredSpawnEggItem> RUNNER_EGG = egg("runner", RUNNER, 0x2c604a, 0x34548a);
+    public static final DeferredItem<DeferredSpawnEggItem> IRONJAW_EGG = egg("ironjaw", IRONJAW, 0x3e526e, 0x5ae8d6);
 
     private static DeferredItem<DeferredSpawnEggItem> egg(String name, Supplier<? extends EntityType<? extends Mob>> type, int a, int b) {
         return ITEMS.register(name + "_spawn_egg", () -> new DeferredSpawnEggItem(type, a, b, new Item.Properties()));
@@ -154,6 +159,7 @@ public final class CeruleaMobs {
         event.put(CROAKER.get(), Croaker.attributes().build());
         event.put(RIBBONFIN.get(), Ribbonfin.attributes().build());
         event.put(RUNNER.get(), Runner.attributes().build());
+        event.put(IRONJAW.get(), Ironjaw.attributes().build());
     }
 
     /** Pata de saltarín: poción de salto (como la pata de conejo). */
@@ -205,6 +211,12 @@ public final class CeruleaMobs {
                         && (level.getBlockState(pos.below()).is(BlockTags.DIRT) || level.getBlockState(pos.below()).is(CeruleaBlocks.LILY.get())
                         || level.getBlockState(pos.below()).is(BlockTags.SAND))
                         && waterNear(level, pos, 3), op);
+        // Ironjaw: solo en mar hondo (12+ bloques de agua encima), muy raro: nunca dos a menos de 80 bloques
+        event.register(IRONJAW.get(), SpawnPlacementTypes.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (t, level, reason, pos, random) -> inCerulea(level) && level.getFluidState(pos).is(FluidTags.WATER)
+                        && level.getFluidState(pos.above(12)).is(FluidTags.WATER)
+                        && (reason != net.minecraft.world.entity.MobSpawnType.NATURAL || (random.nextInt(6) == 0
+                        && level.getEntitiesOfClass(Ironjaw.class, new AABB(pos).inflate(80)).isEmpty())), op);
         event.register(RIBBONFIN.get(), SpawnPlacementTypes.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inCerulea(level) && level.getFluidState(pos).is(FluidTags.WATER)
                         && level.getFluidState(pos.above()).is(FluidTags.WATER), op);
@@ -213,7 +225,8 @@ public final class CeruleaMobs {
     private static void creativeTab(BuildCreativeModeTabContentsEvent event) {
         ResourceLocation tab = event.getTabKey().location();
         try {
-            List<DeferredItem<?>> eggs = List.of(GRAZER_EGG, HOPPER_EGG, GLIDER_EGG, LURKER_EGG, CROAKER_EGG, RIBBONFIN_EGG, RUNNER_EGG);
+            List<DeferredItem<?>> eggs = List.of(GRAZER_EGG, HOPPER_EGG, GLIDER_EGG, LURKER_EGG, CROAKER_EGG, RIBBONFIN_EGG, RUNNER_EGG,
+                    IRONJAW_EGG);
             if (tab.getNamespace().equals("minecraft") && tab.getPath().equals("spawn_eggs")) {
                 for (DeferredItem<?> egg : eggs)
                     event.accept(egg.get().getDefaultInstance(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
@@ -221,7 +234,7 @@ public final class CeruleaMobs {
             if (tab.getNamespace().equals("rocketnautics") && tab.getPath().equals("world_tab")) {
                 for (DeferredItem<?> item : List.of(GRAZER_MEAT, COOKED_GRAZER_MEAT, CERULEAN_LEATHER, ANTENNA_BULB, BULB_LAMP_ITEM,
                         HOPPER_MEAT, COOKED_HOPPER_MEAT, HOPPER_FOOT, GLIDER_MEMBRANE, GLOWING_SCALE, GLOWING_SCALE_BLOCK_ITEM,
-                        LURKER_FANG, RUNNER_FANG, STRIPED_PELT, FANG_DAGGER, FANG_ARROW, CROAKER_SLIME, CROAKER_LEGS,
+                        LURKER_FANG, RUNNER_FANG, STRIPED_PELT, FANG_DAGGER, FANG_ARROW, ARMOR_PLATE, IRONJAW_BLADE, CROAKER_SLIME, CROAKER_LEGS,
                         COOKED_CROAKER_LEGS, CROAKER_BUCKET, RIBBONFIN_ITEM, COOKED_RIBBONFIN, RIBBONFIN_BUCKET))
                     event.accept(item.get().getDefaultInstance(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
                 for (DeferredItem<?> egg : eggs)

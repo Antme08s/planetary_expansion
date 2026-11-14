@@ -360,6 +360,63 @@ def runner_attack(v):
     return norm(snarl + 1.3 * snap, 0.8)
 
 
+def ironjaw_ambient(v):
+    """Ironjaw: rechinar grave de placas y dientes bajo el agua, con un retumbo de fondo."""
+    dur = [2.0, 1.6, 2.4][v]
+    n = len(t_of(dur))
+    rumble = lowpass(saw(curve([(0, 42), (0.5, 50 + 4 * v), (1, 38)], n), 20), 260)
+    grind = np.zeros(n)
+    for _ in range(18 + 6 * v):   # chasquidos de dientes / placas
+        s0 = int(RNG.random() * (n - 2000))
+        d = int(SR * (0.01 + 0.02 * RNG.random()))
+        grind[s0:s0 + d] += bandpass(noise(d), 700, 2600) * np.exp(-np.linspace(0, 6, d))
+    y = rumble / (np.max(np.abs(rumble)) + 1e-9) * 0.8 + 0.5 * grind / (np.max(np.abs(grind)) + 1e-9)
+    y = lowpass(y, 3000)   # bajo el agua: apagado
+    return norm(room(y * env(n, 0.2, 0.3), 0.35), 0.85)
+
+
+def ironjaw_hurt(v):
+    dur = 0.5
+    n = len(t_of(dur))
+    clank = np.zeros(n)
+    clank[:int(SR * 0.25)] = sum(np.sin(2 * np.pi * f * t_of(0.25)) for f in (410 + 30 * v, 1130, 1870)) * np.exp(-np.linspace(0, 9, int(SR * 0.25)))
+    growl = formants(saw(curve([(0, 90), (1, 70)], n), 30), np.full(n, 420.0), np.full(n, 900.0))
+    growl = growl / (np.max(np.abs(growl)) + 1e-9) * env(n, 0.05, 0.5)
+    return norm(room(0.7 * clank / np.max(np.abs(clank)) + 0.8 * growl, 0.2), 0.85)
+
+
+def ironjaw_death(v):
+    dur = 2.4
+    n = len(t_of(dur))
+    x = saw(curve([(0, 80), (0.4, 60), (1, 28)], n), 40) * (1 + 0.7 * np.abs(np.sin(2 * np.pi * curve([(0, 9), (1, 2)], n) * t_of(dur))))
+    y = formants(x, curve([(0, 400), (1, 220)], n), curve([(0, 850), (1, 500)], n))
+    y = lowpass(y, 2500)
+    return norm(room(y * env(n, 0.03, 0.5), 0.4), 0.9)
+
+
+def ironjaw_charge(v):
+    """Rugido que sube al lanzarse a embestir, con el agua que se abre."""
+    dur = 1.1
+    n = len(t_of(dur))
+    x = saw(curve([(0, 55), (0.7, 120 + 10 * v), (1, 100)], n), 40)
+    y = formants(x, curve([(0, 350), (1, 700)], n), curve([(0, 800), (1, 1400)], n))
+    y = y / (np.max(np.abs(y)) + 1e-9)
+    rush = bandpass(noise(n), 300, 1800) * curve([(0, 0.0), (0.6, 0.6), (1, 0.2)], n)
+    return norm(room(lowpass(y * env(n, 0.3, 0.2) + 0.5 * rush, 3500), 0.3), 0.9)
+
+
+def ironjaw_bite(v):
+    dur = 0.4
+    n = len(t_of(dur))
+    crunch = np.zeros(n)
+    for k in range(5):   # crujido de muchos dientes
+        s0 = int(SR * (0.02 + 0.03 * k + 0.01 * RNG.random()))
+        d = int(SR * 0.03)
+        crunch[s0:s0 + d] += bandpass(noise(d), 900, 5000) * np.exp(-np.linspace(0, 5, d))
+    thud = osc(curve([(0, 120), (1, 60)], n)) * env(n, 0.01, 0.8, 2)
+    return norm(room(crunch / np.max(np.abs(crunch)) + 0.7 * thud, 0.2), 0.9)
+
+
 # nombre del evento → (función, variantes, subtítulo en inglés, en español)
 SOUNDS = {
     "grazer.ambient": (grazer_ambient, 3, "Grazer lows", "Pastoreador muge"),
@@ -385,6 +442,11 @@ SOUNDS = {
     "runner.hurt": (runner_hurt, 2, "Runner yelps", "Corredor aúlla"),
     "runner.death": (runner_death, 1, "Runner dies", "Corredor muere"),
     "runner.attack": (runner_attack, 2, "Runner snarls", "Corredor ataca"),
+    "ironjaw.ambient": (ironjaw_ambient, 3, "Ironjaw grinds", "Ironjaw rechina"),
+    "ironjaw.hurt": (ironjaw_hurt, 2, "Ironjaw hurts", "Ironjaw herido"),
+    "ironjaw.death": (ironjaw_death, 1, "Ironjaw dies", "Ironjaw muere"),
+    "ironjaw.charge": (ironjaw_charge, 2, "Ironjaw charges", "Ironjaw embiste"),
+    "ironjaw.bite": (ironjaw_bite, 2, "Ironjaw bites", "Ironjaw muerde"),
 }
 
 

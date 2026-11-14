@@ -933,3 +933,15 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   OCEAN_FLOOR, solo en agua): mar con praderas de pasto, algas de cinta (2–8 si hay hondura), algas de perlas (35 % de
   trozos con perlas), tubos y abanicos; ríos con pasto y algún tubo. Solo en chunks nuevos.
 - Compostables (data map) para todas.
+### Ironjaw
+- Idea del usuario: "como el dunkleosteus pero más alienígena". Modelo en `cerulea_mobs.py` (`ironjaw(open_)`,
+  `python3 -I tools/designs/cerulea_mobs.py tools/designs/mobs ironjaw` → modelo, textura, brillo y vista previa):
+  coraza de placas con grietas que brillan, dos pares de ojos, boca de cuatro pétalos en punta (hueso por fuera, carne
+  con filas de dientes por dentro) y garganta en túnel con tres anillos de dientes; bisagras de los pétalos en el borde
+  de la garganta (a pedido del usuario, un pétalo parecía suelto).
+- `cerulea/mobs/Ironjaw` (Monster acuático, como el acechador abisal): lo atrae el ruido (`AbyssalStalker.noisy`,
+  32 bloques) y te persigue si estás en el agua a menos de 12; embiste (se aleja, apunta, se lanza a ~0,9 bloques/tick
+  con la boca abierta, muerde y sigue de largo); caza peces de cinta; la coraza de delante deja pasar el 40 % del daño.
+  Spawn: mar de Cerúlea con 12+ bloques de agua encima, muy raro (1/6 y ninguno a menos de 80).
+- Sonidos propios (`ironjaw.ambient/hurt/death/charge/bite`). Botín: placa de coraza 1–3 y cuchilla de mandíbula (15 %),
+  todavía sin receta.

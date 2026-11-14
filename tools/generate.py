@@ -1405,7 +1405,7 @@ def build_moon_fix():
 # Sin mobs de la Tierra en los planetas
 # ==========================================================================
 PLANET_MOBS = ["lantern_fish", "vent_crab", "king_crab", "abyssal_stalker", "magma_snail", "magma_titan"]
-CERULEA_MOBS = ["grazer", "hopper", "glider", "lurker", "croaker", "ribbonfin", "runner"]   # 1.0.3
+CERULEA_MOBS = ["grazer", "hopper", "glider", "lurker", "croaker", "ribbonfin", "runner", "ironjaw"]   # 1.0.3
 
 
 def build_no_earth_mobs():
@@ -2737,7 +2737,7 @@ def cerulea_spawns(b):
         "cerulea_giant_forest": dict(creature=[c("glider", 14, 1, 2), c("hopper", 4, 2, 3), c("runner", 3, 2, 3)]),
         "cerulea_swamp": dict(creature=[c("croaker", 12, 2, 3)], monster=[c("lurker", 100, 1, 1)]),
         "cerulea_river": dict(water_ambient=[c("ribbonfin", 15, 3, 6)], creature=[c("croaker", 3, 1, 2)]),
-        "cerulea_ocean": dict(water_ambient=[c("ribbonfin", 20, 4, 8)]),
+        "cerulea_ocean": dict(water_ambient=[c("ribbonfin", 20, 4, 8)], monster=[c("ironjaw", 10, 1, 1)]),
         "cerulea_shore": dict(),
     }
     return spawners(**table.get(b, {}))
@@ -2768,6 +2768,7 @@ def build_cerulea_creatures():
         "cooked_croaker_legs": ("Cooked Croaker Legs", "Ancas de croador cocinadas"),
         "ribbonfin": ("Raw Ribbonfin", "Pez de cinta crudo"), "cooked_ribbonfin": ("Cooked Ribbonfin", "Pez de cinta cocinado"),
         "ribbonfin_bucket": ("Bucket of Ribbonfin", "Cubeta con pez de cinta"), "croaker_bucket": ("Bucket of Croaker", "Cubeta con croador"),
+        "armor_plate": ("Armor Plate", "Placa de coraza"), "ironjaw_blade": ("Ironjaw Blade", "Cuchilla de mandíbula"),
     }
     for item, (en, es) in names.items():
         write_bytes(f"assets/{NS}/textures/item/{item}.png", open(os.path.join(items_dir, f"item_{item}.png"), "rb").read())
@@ -2788,7 +2789,7 @@ def build_cerulea_creatures():
     tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl("glowing_scale_block"))
     mob_names = {"grazer": ("Grazer", "Pastoreador"), "hopper": ("Hopper", "Saltarín"), "glider": ("Glider", "Planeador"),
                  "lurker": ("Lurker", "Acechador"), "croaker": ("Croaker", "Croador"), "ribbonfin": ("Ribbonfin", "Pez de cinta"),
-                 "runner": ("Runner", "Corredor")}
+                 "runner": ("Runner", "Corredor"), "ironjaw": ("Ironjaw", "Ironjaw")}
     for m, (en, es) in mob_names.items():
         LANG_EN[f"entity.{NS}.{m}"] = en
         LANG_ES[f"entity.{NS}.{m}"] = es
@@ -2837,6 +2838,7 @@ def build_cerulea_creatures():
         "runner": [drop(rl("runner_fang"), 0, 2), drop(rl("striped_pelt"), 0, 1)],
         "croaker": [drop(rl("croaker_slime"), 0, 2), drop(rl("croaker_legs"), 0, 1, smelt=True)],
         "ribbonfin": [drop(rl("ribbonfin"), 1, 1, smelt=True, looting=0), drop("minecraft:bone_meal", 1, 1, 0.05, looting=0)],
+        "ironjaw": [drop(rl("armor_plate"), 1, 3), drop(rl("ironjaw_blade"), 1, 1, 0.15, looting=0)],
     }
     for m, pools in loot.items():
         data(f"loot_table/entities/{m}", {"type": "minecraft:entity", "pools": pools})
@@ -2885,7 +2887,7 @@ def build_cerulea_creatures():
         tag_add("data/c/tags/item/slime_balls.json", rl(f))
     for f in ("cerulean_leather", "striped_pelt"):
         tag_add("data/c/tags/item/leathers.json", rl(f))
-    for m in ("lurker", "croaker"):
+    for m in ("lurker", "croaker", "ironjaw"):
         tag_add("data/minecraft/tags/entity_type/can_breathe_under_water.json", rl(m))
     tag_add("data/minecraft/tags/entity_type/arrows.json", rl("fang_arrow"))
     tag_add("data/minecraft/tags/entity_type/impact_projectiles.json", rl("fang_arrow"))

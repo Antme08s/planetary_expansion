@@ -160,5 +160,40 @@
       "planetary_expansion:cerulea/runner/attack1",
       "planetary_expansion:cerulea/runner/attack2"
     ]
+  },
+  "entity.ironjaw.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.ironjaw.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/ironjaw/ambient1",
+      "planetary_expansion:cerulea/ironjaw/ambient2",
+      "planetary_expansion:cerulea/ironjaw/ambient3"
+    ]
+  },
+  "entity.ironjaw.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.ironjaw.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/ironjaw/hurt1",
+      "planetary_expansion:cerulea/ironjaw/hurt2"
+    ]
+  },
+  "entity.ironjaw.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.ironjaw.death",
+    "sounds": [
+      "planetary_expansion:cerulea/ironjaw/death1"
+    ]
+  },
+  "entity.ironjaw.charge": {
+    "subtitle": "subtitles.planetary_expansion.entity.ironjaw.charge",
+    "sounds": [
+      "planetary_expansion:cerulea/ironjaw/charge1",
+      "planetary_expansion:cerulea/ironjaw/charge2"
+    ]
+  },
+  "entity.ironjaw.bite": {
+    "subtitle": "subtitles.planetary_expansion.entity.ironjaw.bite",
+    "sounds": [
+      "planetary_expansion:cerulea/ironjaw/bite1",
+      "planetary_expansion:cerulea/ironjaw/bite2"
+    ]
   }
 }

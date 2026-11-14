@@ -543,5 +543,183 @@ def build(out_dir):
     print("ok", out_dir)
 
 
+def ironjaw(open_=0.0):
+    """Ironjaw (~3,5 bloques): depredador acorazado del mar hondo de Cerúlea, como un dunkleosteus alienígena (idea del
+    usuario). Cabeza y parte de delante cubiertas de placas azul pizarra con grietas turquesa que brillan, dos pares de
+    ojos metidos en la coraza, cuerpo de piel oscura con el vientre claro, aletas como alas, aleta del lomo y cola larga.
+    Boca (segunda versión, a pedido del usuario): cuatro pétalos con la cara de fuera de hueso y la de dentro de carne
+    roja cubierta de filas de dientes; cerrada forma un pico en punta, abierta se abre como una flor y deja ver la
+    garganta con su anillo de dientes.
+    open_: 0 cerrada .. 1 abierta (para la vista previa; en el juego lo hará la animación)."""
+    def cracks(p, n, c):
+        k = math.sin(p[0] * 0.9 + p[2] * 0.35) * math.cos(p[1] * 0.8 - p[2] * 0.25)
+        if abs(k) < 0.07 and h3(math.floor(p[0] / 3), math.floor(p[1] / 3), math.floor(p[2] / 3), 3) < 0.55:
+            return (90, 232, 214), True
+        if (math.floor(p[2] / 4) + math.floor(p[1] / 5)) % 2 == 0 and abs(n[1]) < 0.5:
+            return [x * 0.9 for x in c], False          # placas
+        return c, False
+
+    def skin_fn(p, n, c):
+        if n[1] > -0.3 and spots(p, 3.0, 0.35, 0.8, 41):
+            return [x * 0.75 for x in c], False
+        return c, False
+
+    def rays(p, n, c):
+        if (p[2] * 0.9 + p[0] * 0.3) % 2.2 < 0.6:
+            return mix(c, (110, 170, 210), 0.5), False
+        return c, False
+
+    def bone_fn(p, n, c):
+        if p[2] < -33.0:
+            return [x * 0.74 for x in c], False                 # borde gastado, más oscuro
+        if (p[2] * 1.6) % 2.2 < 0.45:
+            return [x * 0.88 for x in c], False                 # líneas de crecimiento
+        return c, False
+
+    def flesh_fn(p, n, c):
+        if (p[2] * 1.3 + p[0] * 0.4 + p[1] * 0.4) % 1.8 < 0.45:
+            return [x * 0.72 for x in c], False                 # pliegues
+        return c, False
+    armor = mat("armor", (62, 82, 110), (92, 108, 124), 0.05, cracks, belly_y=4.5)
+    skin = mat("skin", (34, 62, 82), (150, 176, 180), 0.05, skin_fn, belly_y=6.5)
+    bone = mat("bone", (224, 218, 198), noise=0.04, fn=bone_fn)
+    flesh = mat("flesh", (150, 46, 74), noise=0.06, fn=flesh_fn)
+    tooth = mat("tooth", (240, 236, 222), noise=0.03)
+    mouth = mat("mouth", (34, 8, 22), noise=0.05)
+    gum = mat("gum", (110, 30, 56), noise=0.06)
+    membrane = mat("membrane", (40, 86, 128), noise=0.05, fn=rays)
+    eye = mat("eye", (110, 255, 230), emissive=True, noise=0.0)
+    socket = mat("socket", (12, 16, 22), noise=0.0)
+    o = open_
+    rt = (-24 + 104 * o, 0, 0)     # pétalo de arriba: cerrado -24°, abierto +80°
+    rb = (24 - 104 * o, 0, 0)
+    rs = (0, 26 - 106 * o, 0)      # pétalos de los lados
+    OT, OB, OS = [0, 13.4, -26], [0, 4.6, -26], [5.2, 9, -26]   # bisagras en el borde de la garganta
+    B = [
+        Box("head", [-7, 2, -22], [7, 16, -10], armor),
+        Box("head", [-6, 16, -24], [6, 18, -11], armor),
+        Box("head", [-1, 18, -22], [1, 19.5, -13], armor),
+        # 1.0.3 (a pedido del usuario): la garganta es un túnel de 4 de hondo con anillos de dientes que se estrechan
+        # hacia dentro. La coraza rodea el túnel.
+        Box("head", [-7, 13.8, -26], [7, 16, -22], armor),
+        Box("head", [-7, 2, -26], [7, 4.2, -22], armor),
+        Box("head", [-7, 4.2, -26], [-5.5, 13.8, -22], armor),
+        Box("head", [5.5, 4.2, -26], [7, 13.8, -22], armor),
+        Box("head", [-5.5, 4.2, -22.6], [5.5, 13.8, -22.0], mouth),       # fondo de la garganta
+        Box("body", [-6, 3, -10], [6, 15, 10], skin),
+        Box("body", [-0.5, 15, -6], [0.5, 21, 4], membrane, rot=(-22, 0, 0), origin=[0, 15, -1]),
+        Box("tail", [-4.5, 5, 10], [4.5, 13, 22], skin),
+        Box("tail", [-3, 6.5, 22], [3, 11.5, 32], skin),
+        Box("tail", [-0.6, 1, 30], [0.6, 17, 38], membrane),
+        Box("tail", [-0.4, 11.5, 14], [0.4, 15, 22], membrane),
+    ]
+    # pétalos en punta (tres tramos que se estrechan): hueso por fuera, carne roja con filas de dientes por dentro
+    SEG = [(5.5, -30.0, -26.0), (4.0, -32.5, -30.0), (2.2, -34.8, -32.5)]
+    for half, z0, z1 in SEG:
+        tip = 0.3 if z0 < -34 else 0.0   # 1.0.3: la carne sigue sin cortes de un tramo al otro (antes quedaba una raya)
+        B += [Box("jaw_t", [-half, 13.2, z0], [half, 14.4, z1], bone, rot=rt, origin=OT),
+              Box("jaw_t", [-half + 0.4, 12.6, z0 + tip], [half - 0.4, 13.2, z1], flesh, rot=rt, origin=OT),
+              Box("jaw_b", [-half, 3.6, z0], [half, 4.8, z1], bone, rot=rb, origin=OB),
+              Box("jaw_b", [-half + 0.4, 4.8, z0 + tip], [half - 0.4, 5.4, z1], flesh, rot=rb, origin=OB)]
+        k = 0
+        for z in [z0 + 0.5 + 1.7 * i for i in range(int((z1 - z0 - 0.5) / 1.7))]:
+            h = 1.2 if z < -32 else (1.0 if z < -29.5 else 0.8)
+            x = -half + 0.7 + (0.85 if k % 2 else 0.0)
+            while x + 0.8 <= half - 0.5:
+                B.append(Box("jaw_t", [x, 12.6 - h, z], [x + 0.8, 12.6, z + 0.8], tooth, rot=rt, origin=OT))
+                B.append(Box("jaw_b", [x, 5.4, z], [x + 0.8, 5.4 + h, z + 0.8], tooth, rot=rb, origin=OB))
+                x += 1.7
+            k += 1
+    # anillos de la garganta: cada uno es un marco de carne más estrecho y más oscuro que el anterior, con dientes en
+    # el borde de dentro que apuntan al centro (más grandes fuera, más chicos dentro)
+    ring_mats = (gum, mat("flesh2", (118, 34, 60), noise=0.06, fn=flesh_fn), mat("flesh3", (84, 22, 44), noise=0.06, fn=flesh_fn))
+    for i, (z0, hx, y0, y1, tsz) in enumerate(((-26.0, 4.6, 5.0, 13.0, 1.1), (-24.8, 3.6, 6.0, 12.0, 0.9),
+                                              (-23.6, 2.6, 7.0, 11.0, 0.7))):
+        z1 = z0 + 1.2
+        m_ = ring_mats[i]
+        B += [Box("head", [-5.5, y1, z0], [5.5, 13.8, z1], m_), Box("head", [-5.5, 4.2, z0], [5.5, y0, z1], m_),
+              Box("head", [-5.5, y0, z0], [-hx, y1, z1], m_), Box("head", [hx, y0, z0], [5.5, y1, z1], m_)]
+        w = tsz * 0.75
+        x = -hx + 0.3 + (0.5 if i % 2 else 0)
+        while x + w <= hx - 0.2:
+            B.append(Box("head", [x, y1 - tsz, z0 + 0.2], [x + w, y1, z0 + 0.2 + w], tooth))      # cuelgan de arriba
+            B.append(Box("head", [x + w * 0.6, y0, z0 + 0.2], [x + w * 1.6, y0 + tsz, z0 + 0.2 + w], tooth))
+            x += w * 2.2
+        y = y0 + 0.4
+        while y + w <= y1 - 0.4:
+            B.append(Box("head", [-hx, y, z0 + 0.2], [-hx + tsz, y + w, z0 + 0.2 + w], tooth))    # de los lados
+            B.append(Box("head", [hx - tsz, y + w * 0.5, z0 + 0.2], [hx, y + w * 1.5, z0 + 0.2 + w], tooth))
+            y += w * 2.4
+    side = [
+        Box("head", [6.5, 4, -24], [7.6, 13, -12], armor),
+        Box("head", [6.9, 10, -21.5], [7.7, 12.4, -18.5], socket),
+        Box("head", [7.2, 10.4, -21.0], [7.9, 11.9, -19.0], eye),
+        Box("head", [6.9, 7.2, -17.5], [7.6, 8.9, -15.5], socket),
+        Box("head", [7.2, 7.5, -17.1], [7.8, 8.6, -15.9], eye),
+        Box("fin_l", [6, 6, -8], [17, 7, 1], membrane, rot=(0, 0, -14), origin=[6, 6.5, -4]),
+        Box("body", [3, 2.2, 4], [6.5, 3.2, 9], membrane),
+    ]
+    for half, z0, z1 in SEG:   # pétalos de los lados (mitad de alto que de ancho los de arriba)
+        tip = 0.3 if z0 < -34 else 0.0
+        hh = half * 0.72
+        side += [Box("jaw_l", [5.4, 9 - hh, z0], [6.6, 9 + hh, z1], bone, rot=rs, origin=OS),
+                 Box("jaw_l", [4.8, 9 - hh + 0.4, z0 + tip], [5.4, 9 + hh - 0.4, z1], flesh, rot=rs, origin=OS)]
+        k = 0
+        for z in [z0 + 0.5 + 1.7 * i for i in range(int((z1 - z0 - 0.5) / 1.7))]:
+            h = 1.2 if z < -32 else (1.0 if z < -29.5 else 0.8)
+            y = 9 - hh + 0.7 + (0.85 if k % 2 else 0.0)
+            while y + 0.8 <= 9 + hh - 0.5:
+                side.append(Box("jaw_l", [4.8 - h, y, z], [4.8, y + 0.8, z + 0.8], tooth, rot=rs, origin=OS))
+                y += 1.7
+            k += 1
+    out = mirror_x(side)
+    for b in out:
+        b.group = b.group.replace("jaw_l", "jaw_r").replace("fin_l", "fin_r")
+    piv = {"head": [0, 9, -10], "jaw_t": OT, "jaw_b": OB, "jaw_l": OS, "jaw_r": [-5.2, 9, -26],
+           "body": [0, 9, 0], "tail": [0, 9, 10], "fin_l": [6, 6.5, -4], "fin_r": [-6, 6.5, -4]}
+    return "ironjaw", B + side + out, 128, piv
+
+
+def preview_ironjaw(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    name, boxes, tw, piv = ironjaw(0.0)
+    th = T.pack(boxes, tw)
+    tex, glow = paint(boxes, tw, th, seed=zlib.crc32(name.encode()) & 0xffff)
+    tex.save(f"{out_dir}/{name}.png")
+    glow.save(f"{out_dir}/{name}_glow.png")
+    json.dump(T.to_mob_json(boxes, piv, tw, th), open(f"{out_dir}/{name}.json", "w"), indent=1)
+    json.dump(T.to_bbmodel(name, boxes, tex, tw, th), open(f"{out_dir}/{name}.bbmodel", "w"))
+    _, open_boxes, _, _ = ironjaw(1.0)
+    T.pack(open_boxes, tw)
+    W, H = 560, 380
+    views = [(boxes, 90, -6, 4.6, "de lado"), (boxes, -40, -18, 4.6, "de frente, cerrada"),
+             (open_boxes, -28, -10, 6.5, "mandíbula abierta (4 cuchillas)"), (open_boxes, -12, -6, 12, "la boca de cerca")]
+    sheet = Image.new("RGBA", (W * 2 + 300, H * 2 + 60), (14, 30, 44, 255))
+    d = ImageDraw.Draw(sheet)
+    d.text((14, 12), "Ironjaw — depredador acorazado del mar hondo de Cerúlea (~3,5 bloques)", fill=(225, 240, 235, 255),
+           font=T.title_font(18))
+    for k, (bx, a, p_, sc, label) in enumerate(views):
+        ctr = (W // 2, H // 2 + 40) if sc < 10 else (150, 205)
+        r = T.render(bx, tex, a, p_, sc, (W, H), ctr)
+        g = np.linspace(0, 1, H)[:, None]
+        bg = np.zeros((H, W, 4), np.uint8)
+        for i, (t0, t1) in enumerate(((48, 14), (120, 40), (150, 62))):
+            bg[..., i] = (t0 * (1 - g) + t1 * g).astype(np.uint8)
+        bg[..., 3] = 255
+        bgi = Image.fromarray(bg, "RGBA")
+        bgi.alpha_composite(r)
+        x0, y0 = (k % 2) * W, 50 + (k // 2) * H
+        sheet.alpha_composite(bgi, (x0, y0))
+        d.text((x0 + 10, y0 + 8), label, fill=(200, 230, 230, 255), font=T.title_font(14))
+    tv = tex.resize((tex.width * 2, tex.height * 2), Image.NEAREST)
+    tv.thumbnail((280, 700), Image.NEAREST)
+    sheet.alpha_composite(tv, (W * 2 + 10, 60))
+    sheet.save(f"{out_dir}/ironjaw_preview.png")
+    print("ok", out_dir)
+
+
 if __name__ == "__main__":
-    build(sys.argv[1] if len(sys.argv) > 1 else ".")
+    if len(sys.argv) > 2 and sys.argv[2] == "ironjaw":
+        preview_ironjaw(sys.argv[1])
+    else:
+        build(sys.argv[1] if len(sys.argv) > 1 else ".")

@@ -495,6 +495,39 @@ def arrow_entity():
     return im
 
 
+def armor_plate():
+    """Placa de coraza del Ironjaw: placa gruesa azul pizarra con borde biselado, una grieta turquesa que brilla y
+    marcas de crecimiento."""
+    im = img()
+    shape = lambda x, y: 2 <= x <= 13 and 2 <= y <= 13 and (x + y) >= 6 and (x + y) <= 24 and abs(x - y) <= 9  # noqa: E731
+    fill(im, shape, (62, 82, 110), 21, 1.3, 0.72, 0.04, 0.4)
+    for t in range(8):
+        put(im, [(4 + t, 10 - t // 2 + (1 if t % 3 == 0 else 0))], (90, 232, 214))
+    put(im, [(6, 9), (9, 7)], (180, 255, 245))
+    for k in range(3):
+        for t in range(6):
+            put(im, [(3 + t + k * 3, 12 - k)], shade((62, 82, 110), 0.8))
+    return im
+
+
+def ironjaw_blade():
+    """Cuchilla de mandíbula: pétalo de hueso en punta con una fila de dientes de sierra en el filo y la carne roja de
+    la base."""
+    im = img()
+    blade = lambda x, y: 3 <= y <= 14 and abs(x + 0.5 - 8) <= (y - 2) * 0.42  # noqa: E731
+    fill(im, blade, (224, 218, 198), 22, 1.12, 0.8, 0.03, 0.42)
+    for y in range(4, 13, 2):                                      # dientes de sierra
+        w = int((y - 2) * 0.42)
+        put(im, [(8 - w - 1, y), (8 + w, y)], (246, 244, 234))
+    for x in range(5, 11):
+        put(im, [(x, 14)], (150, 46, 74))
+        put(im, [(x, 15)], (110, 30, 56))
+    put(im, [(7, 3), (8, 3)], shade((224, 218, 198), 0.75))
+    for y in (6, 9, 12):
+        put(im, [(7, y), (8, y)], shade((224, 218, 198), 0.88))
+    return im
+
+
 def bulb_lamp():
     """Lámpara de bulbo: marco azul oscuro con remaches y, dentro, tres bulbos que brillan sobre un fondo turquesa."""
     im = Image.new("RGBA", (16, 16))
@@ -539,6 +572,8 @@ ITEMS = [
     ("croaker_slime", "Croaker Slime", "Baba de croador", slime, "Croador"),
     ("croaker_legs", "Croaker Legs", "Ancas de croador", lambda: frog_legs((54, 150, 128)), "Croador"),
     ("cooked_croaker_legs", "Cooked Croaker Legs", "Ancas de croador cocinadas", lambda: frog_legs((150, 104, 64), True), "Croador"),
+    ("armor_plate", "Armor Plate", "Placa de coraza", armor_plate, "Ironjaw"),
+    ("ironjaw_blade", "Ironjaw Blade", "Cuchilla de mandíbula", ironjaw_blade, "Ironjaw"),
     ("ribbonfin", "Raw Ribbonfin", "Pez de cinta crudo", lambda: ribbon_fish((64, 122, 222), (206, 226, 244), (80, 200, 160)), "Pez de cinta"),
     ("cooked_ribbonfin", "Cooked Ribbonfin", "Pez de cinta cocinado", lambda: ribbon_fish((150, 98, 60), (220, 176, 128), (176, 120, 76), True), "Pez de cinta"),
 ]

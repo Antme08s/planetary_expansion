@@ -7,6 +7,7 @@ import dev.antme08.planetaryexpansion.cerulea.mobs.FangArrow;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Glider;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Grazer;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Hopper;
+import dev.antme08.planetaryexpansion.cerulea.mobs.Ironjaw;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Lurker;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Ribbonfin;
 import dev.antme08.planetaryexpansion.cerulea.mobs.Runner;
@@ -47,6 +48,8 @@ public final class CeruleaMobsClient {
         event.registerEntityRenderer(CeruleaMobs.RIBBONFIN.get(), RibbonfinRenderer::new);
         event.registerEntityRenderer(CeruleaMobs.RUNNER.get(), ctx -> new CreatureRenderer<Runner>(ctx, "runner", 0.45F, 1.0F,
                 CreatureRenderer.Swim.NONE, CeruleaMobsClient::runner, e -> 0.25 + 0.65 * night(e)));
+        event.registerEntityRenderer(CeruleaMobs.IRONJAW.get(), ctx -> new CreatureRenderer<Ironjaw>(ctx, "ironjaw", 0.9F, 1.0F,
+                CreatureRenderer.Swim.SWIMMER, CeruleaMobsClient::ironjaw, e -> e.isCharging() ? 1.0 : 0.55 + 0.2 * Math.sin(e.tickCount * 0.05)));
         event.registerEntityRenderer(CeruleaMobs.FANG_ARROW_ENTITY.get(), ctx -> new ArrowRenderer<FangArrow>(ctx) {
             private final ResourceLocation tex = ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID,
                     "textures/entity/projectiles/fang_arrow.png");
@@ -189,6 +192,27 @@ public final class CeruleaMobsClient {
         float s = Mth.sin(age * speed);
         add(m.part("tail"), 0, s * 0.45F, 0);
         add(m.part("body"), 0, -s * 0.07F, 0);
+    }
+
+    /**
+     * Ironjaw: la cola y el cuerpo ondulan al nadar (más rápido al embestir), las aletas laterales baten y la boca de
+     * cuatro pétalos se abre al embestir (en el diseño, abrir = +104° en x arriba/abajo y −106° en y a los lados; el
+     * modelo del juego invierte x e y).
+     */
+    private static void ironjaw(JsonMobModel<Ironjaw> m, Ironjaw e, float ls, float la, float age, float hy, float hp) {
+        float open = e.mouth(age - e.tickCount);
+        float r = Mth.DEG_TO_RAD;
+        add(m.part("jaw_t"), -104F * r * open, 0, 0);
+        add(m.part("jaw_b"), 104F * r * open, 0, 0);
+        add(m.part("jaw_l"), 0, 106F * r * open, 0);
+        add(m.part("jaw_r"), 0, -106F * r * open, 0);
+        float speed = e.isCharging() ? 0.55F : 0.18F;
+        float amp = e.isCharging() ? 0.35F : 0.22F;
+        add(m.part("tail"), 0, Mth.sin(age * speed) * amp, 0);
+        add(m.part("body"), 0, -Mth.sin(age * speed) * amp * 0.25F, 0);
+        float flap = Mth.sin(age * 0.12F) * 0.18F;
+        add(m.part("fin_l"), 0, 0, flap);
+        add(m.part("fin_r"), 0, 0, -flap);
     }
 
     /** Corredor: galope, agachado al acechar, sentado si se lo ordenan, cola, mandíbula al morder. */

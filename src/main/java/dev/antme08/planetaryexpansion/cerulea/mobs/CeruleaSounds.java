@@ -46,5 +46,11 @@ public final class CeruleaSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> RUNNER_DEATH = s("runner.death");
     public static final DeferredHolder<SoundEvent, SoundEvent> RUNNER_ATTACK = s("runner.attack");
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> IRONJAW_AMBIENT = s("ironjaw.ambient");
+    public static final DeferredHolder<SoundEvent, SoundEvent> IRONJAW_HURT = s("ironjaw.hurt");
+    public static final DeferredHolder<SoundEvent, SoundEvent> IRONJAW_DEATH = s("ironjaw.death");
+    public static final DeferredHolder<SoundEvent, SoundEvent> IRONJAW_CHARGE = s("ironjaw.charge");
+    public static final DeferredHolder<SoundEvent, SoundEvent> IRONJAW_BITE = s("ironjaw.bite");
+
     public static void register(IEventBus modBus) { SOUNDS.register(modBus); }
 }
