@@ -139,7 +139,7 @@ public class Glider extends PathfinderMob {
         h = new Vec3(h.x, 0, h.z).normalize().scale(GLIDE_SPEED);
         setDeltaMovement(h.x, jump ? 0.42 : getDeltaMovement().y, h.z);
         hasImpulse = true;
-        playSound(SoundEvents.PHANTOM_FLAP, 0.4F, 1.6F);
+        playSound(CeruleaSounds.GLIDER_GLIDE.get(), 0.6F, 0.9F + random.nextFloat() * 0.2F);
     }
 
     @Override
@@ -275,17 +275,15 @@ public class Glider extends PathfinderMob {
     public boolean removeWhenFarAway(double distance) { return false; }
 
     @Override
-    protected SoundEvent getAmbientSound() { return SoundEvents.PARROT_AMBIENT; }
+    protected SoundEvent getAmbientSound() { return CeruleaSounds.GLIDER_AMBIENT.get(); }
 
     @Override
     public int getAmbientSoundInterval() { return 240; }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.PARROT_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.GLIDER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.PARROT_DEATH; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.GLIDER_DEATH.get(); }
 
-    @Override
-    public float getVoicePitch() { return super.getVoicePitch() * 0.8F; }
 }

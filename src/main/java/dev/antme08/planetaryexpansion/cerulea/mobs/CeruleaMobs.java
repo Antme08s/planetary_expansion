@@ -137,6 +137,7 @@ public final class CeruleaMobs {
 
     public static void register(IEventBus modBus) {
         ENTITIES.register(modBus);
+        CeruleaSounds.register(modBus);
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         modBus.addListener(CeruleaMobs::attributes);

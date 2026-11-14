@@ -905,3 +905,8 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   mandíbula ahora cuelga de la cabeza en `JsonMobModel` (antes era una parte aparte con su propio pivote y se despegaba
   al voltear la cabeza; vale también para el pez farol y el acechador abisal). El corredor sentado ya no flota: el
   cuerpo baja 6 y se inclina, la grupa toca el suelo, las patas de delante se acortan y las de atrás quedan dobladas.
+- **Sonidos propios** (el usuario pidió que sonaran más alienígenas que la vaca, el lobo y el conejo):
+  `tools/designs/cerulea_sounds.py` los sintetiza (glissandos, formantes que cambian, modulación en anillo, pulsos,
+  burbujas, ruido filtrado; nada copiado) en `tools/designs/mobs/sounds_cerulea/<criatura>/<sonido><n>.ogg` más un
+  `preview.mp3`. `generate.py` los copia a `sounds/cerulea/` y escribe `sounds.json` con subtítulos;
+  `cerulea/mobs/CeruleaSounds` registra los 23 eventos. El pez de cinta sigue con los del salmón.

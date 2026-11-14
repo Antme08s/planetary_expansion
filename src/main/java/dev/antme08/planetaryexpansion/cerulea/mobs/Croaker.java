@@ -79,7 +79,7 @@ public class Croaker extends Animal implements Bucketable {
     public void playAmbientSound() {
         if (level().isNight() || random.nextInt(4) == 0) {
             level().broadcastEntityEvent(this, (byte) 64);
-            playSound(SoundEvents.FROG_AMBIENT, 1.0F, 0.75F + random.nextFloat() * 0.15F);
+            playSound(CeruleaSounds.CROAKER_CROAK.get(), 1.0F, 0.9F + random.nextFloat() * 0.2F);
         }
     }
 
@@ -149,8 +149,8 @@ public class Croaker extends Animal implements Bucketable {
     }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.FROG_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.CROAKER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.FROG_DEATH; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.CROAKER_DEATH.get(); }
 }

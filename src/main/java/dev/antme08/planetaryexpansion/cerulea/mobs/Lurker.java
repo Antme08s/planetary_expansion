@@ -100,16 +100,20 @@ public class Lurker extends Monster {
     }
 
     @Override
-    protected SoundEvent getAmbientSound() { return SoundEvents.AXOLOTL_IDLE_AIR; }
+    protected SoundEvent getAmbientSound() { return CeruleaSounds.LURKER_AMBIENT.get(); }
 
     @Override
-    public float getVoicePitch() { return super.getVoicePitch() * 0.45F; }
+    public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        boolean r = super.doHurtTarget(target);
+        if (r) playSound(CeruleaSounds.LURKER_ATTACK.get(), 1.0F, 0.9F + random.nextFloat() * 0.2F);
+        return r;
+    }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.RAVAGER_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.LURKER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.RAVAGER_DEATH; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.LURKER_DEATH.get(); }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) { playSound(SoundEvents.HOGLIN_STEP, 0.15F, 1.3F); }

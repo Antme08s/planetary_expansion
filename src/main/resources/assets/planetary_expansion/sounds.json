@@ -1,0 +1,164 @@
+{
+  "entity.grazer.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.grazer.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/grazer/ambient1",
+      "planetary_expansion:cerulea/grazer/ambient2",
+      "planetary_expansion:cerulea/grazer/ambient3"
+    ]
+  },
+  "entity.grazer.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.grazer.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/grazer/hurt1",
+      "planetary_expansion:cerulea/grazer/hurt2"
+    ]
+  },
+  "entity.grazer.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.grazer.death",
+    "sounds": [
+      "planetary_expansion:cerulea/grazer/death1"
+    ]
+  },
+  "entity.hopper.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.hopper.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/hopper/ambient1",
+      "planetary_expansion:cerulea/hopper/ambient2",
+      "planetary_expansion:cerulea/hopper/ambient3"
+    ]
+  },
+  "entity.hopper.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.hopper.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/hopper/hurt1",
+      "planetary_expansion:cerulea/hopper/hurt2"
+    ]
+  },
+  "entity.hopper.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.hopper.death",
+    "sounds": [
+      "planetary_expansion:cerulea/hopper/death1"
+    ]
+  },
+  "entity.hopper.hop": {
+    "subtitle": "subtitles.planetary_expansion.entity.hopper.hop",
+    "sounds": [
+      "planetary_expansion:cerulea/hopper/hop1",
+      "planetary_expansion:cerulea/hopper/hop2"
+    ]
+  },
+  "entity.glider.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.glider.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/glider/ambient1",
+      "planetary_expansion:cerulea/glider/ambient2",
+      "planetary_expansion:cerulea/glider/ambient3"
+    ]
+  },
+  "entity.glider.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.glider.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/glider/hurt1",
+      "planetary_expansion:cerulea/glider/hurt2"
+    ]
+  },
+  "entity.glider.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.glider.death",
+    "sounds": [
+      "planetary_expansion:cerulea/glider/death1"
+    ]
+  },
+  "entity.glider.glide": {
+    "subtitle": "subtitles.planetary_expansion.entity.glider.glide",
+    "sounds": [
+      "planetary_expansion:cerulea/glider/glide1",
+      "planetary_expansion:cerulea/glider/glide2"
+    ]
+  },
+  "entity.lurker.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.lurker.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/lurker/ambient1",
+      "planetary_expansion:cerulea/lurker/ambient2",
+      "planetary_expansion:cerulea/lurker/ambient3"
+    ]
+  },
+  "entity.lurker.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.lurker.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/lurker/hurt1",
+      "planetary_expansion:cerulea/lurker/hurt2"
+    ]
+  },
+  "entity.lurker.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.lurker.death",
+    "sounds": [
+      "planetary_expansion:cerulea/lurker/death1"
+    ]
+  },
+  "entity.lurker.attack": {
+    "subtitle": "subtitles.planetary_expansion.entity.lurker.attack",
+    "sounds": [
+      "planetary_expansion:cerulea/lurker/attack1",
+      "planetary_expansion:cerulea/lurker/attack2"
+    ]
+  },
+  "entity.croaker.croak": {
+    "subtitle": "subtitles.planetary_expansion.entity.croaker.croak",
+    "sounds": [
+      "planetary_expansion:cerulea/croaker/croak1",
+      "planetary_expansion:cerulea/croaker/croak2",
+      "planetary_expansion:cerulea/croaker/croak3"
+    ]
+  },
+  "entity.croaker.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.croaker.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/croaker/hurt1",
+      "planetary_expansion:cerulea/croaker/hurt2"
+    ]
+  },
+  "entity.croaker.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.croaker.death",
+    "sounds": [
+      "planetary_expansion:cerulea/croaker/death1"
+    ]
+  },
+  "entity.runner.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.runner.ambient",
+    "sounds": [
+      "planetary_expansion:cerulea/runner/ambient1",
+      "planetary_expansion:cerulea/runner/ambient2",
+      "planetary_expansion:cerulea/runner/ambient3"
+    ]
+  },
+  "entity.runner.growl": {
+    "subtitle": "subtitles.planetary_expansion.entity.runner.growl",
+    "sounds": [
+      "planetary_expansion:cerulea/runner/growl1",
+      "planetary_expansion:cerulea/runner/growl2",
+      "planetary_expansion:cerulea/runner/growl3"
+    ]
+  },
+  "entity.runner.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.runner.hurt",
+    "sounds": [
+      "planetary_expansion:cerulea/runner/hurt1",
+      "planetary_expansion:cerulea/runner/hurt2"
+    ]
+  },
+  "entity.runner.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.runner.death",
+    "sounds": [
+      "planetary_expansion:cerulea/runner/death1"
+    ]
+  },
+  "entity.runner.attack": {
+    "subtitle": "subtitles.planetary_expansion.entity.runner.attack",
+    "sounds": [
+      "planetary_expansion:cerulea/runner/attack1",
+      "planetary_expansion:cerulea/runner/attack2"
+    ]
+  }
+}

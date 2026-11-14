@@ -2784,6 +2784,22 @@ def build_cerulea_creatures():
         write(f"assets/{NS}/models/item/{m}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
         LANG_EN[f"item.{NS}.{m}_spawn_egg"] = f"{en} Spawn Egg"
         LANG_ES[f"item.{NS}.{m}_spawn_egg"] = f"Huevo generador de {es.lower()}"
+    # sonidos propios (tools/designs/cerulea_sounds.py → tools/designs/mobs/sounds_cerulea)
+    sys.path.insert(0, DESIGNS)
+    import cerulea_sounds  # noqa: E402
+    snd_dir = os.path.join(mobs, "sounds_cerulea")
+    sounds_json = {}
+    for name, (_fn, count, en, es) in cerulea_sounds.SOUNDS.items():
+        mob, kind = name.split(".")
+        files = []
+        for v in range(1, count + 1):
+            write_bytes(f"assets/{NS}/sounds/cerulea/{mob}/{kind}{v}.ogg", open(os.path.join(snd_dir, mob, f"{kind}{v}.ogg"), "rb").read())
+            files.append(rl(f"cerulea/{mob}/{kind}{v}"))
+        sub = f"subtitles.{NS}.entity.{name}"
+        sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
+        LANG_EN[sub] = en
+        LANG_ES[sub] = es
+    write(f"assets/{NS}/sounds.json", sounds_json)
     LANG_EN[f"entity.{NS}.fang_arrow"] = "Fang Arrow"
     LANG_ES[f"entity.{NS}.fang_arrow"] = "Flecha de colmillo"
 

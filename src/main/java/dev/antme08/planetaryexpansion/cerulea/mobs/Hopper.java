@@ -70,7 +70,7 @@ public class Hopper extends Animal {
         if (moving && onGround() && hopCooldown == 0 && !isInWater() && !horizontalCollision) {
             setDeltaMovement(v.x, 0.3, v.z);
             hasImpulse = true;
-            playSound(SoundEvents.RABBIT_JUMP, 0.3F, 1.2F);
+            playSound(CeruleaSounds.HOPPER_HOP.get(), 0.25F, 0.9F + random.nextFloat() * 0.2F);
             hopCooldown = 6 + random.nextInt(5);
         }
     }
@@ -82,11 +82,11 @@ public class Hopper extends Animal {
     public AgeableMob getBreedOffspring(ServerLevel level, AgeableMob other) { return CeruleaMobs.HOPPER.get().create(level); }
 
     @Override
-    protected SoundEvent getAmbientSound() { return SoundEvents.RABBIT_AMBIENT; }
+    protected SoundEvent getAmbientSound() { return CeruleaSounds.HOPPER_AMBIENT.get(); }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.RABBIT_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.HOPPER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.RABBIT_DEATH; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.HOPPER_DEATH.get(); }
 }

@@ -167,16 +167,13 @@ public class Grazer extends Animal {
     // ------------------------------------------------------------------ sonidos
 
     @Override
-    protected SoundEvent getAmbientSound() { return SoundEvents.COW_AMBIENT; }
+    protected SoundEvent getAmbientSound() { return CeruleaSounds.GRAZER_AMBIENT.get(); }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.COW_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.GRAZER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.COW_DEATH; }
-
-    @Override
-    public float getVoicePitch() { return super.getVoicePitch() * 0.75F; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.GRAZER_DEATH.get(); }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) { playSound(SoundEvents.COW_STEP, 0.15F, 0.9F); }

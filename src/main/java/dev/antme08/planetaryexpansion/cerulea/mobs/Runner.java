@@ -119,7 +119,7 @@ public class Runner extends TamableAnimal {
     @Override
     public boolean doHurtTarget(Entity target) {
         boolean r = super.doHurtTarget(target);
-        if (r) playSound(SoundEvents.WOLF_GROWL, 0.8F, 1.3F);
+        if (r) playSound(CeruleaSounds.RUNNER_ATTACK.get(), 1.0F, 0.9F + random.nextFloat() * 0.2F);
         return r;
     }
 
@@ -196,7 +196,7 @@ public class Runner extends TamableAnimal {
                         mob.setDeltaMovement(h.x, 0.48, h.z);
                         mob.hasImpulse = true;
                         mob.setStalking(false);
-                        mob.playSound(SoundEvents.WOLF_GROWL, 1.0F, 1.1F);
+                        mob.playSound(CeruleaSounds.RUNNER_ATTACK.get(), 1.0F, 1.1F);
                         phase = Phase.LEAP;
                         timer = 0;
                     }
@@ -429,18 +429,15 @@ public class Runner extends TamableAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        if (isTame()) return SoundEvents.WOLF_AMBIENT;
-        return night(level()) ? SoundEvents.WOLF_GROWL : SoundEvents.WOLF_AMBIENT;
+        if (isTame()) return CeruleaSounds.RUNNER_AMBIENT.get();
+        return night(level()) ? CeruleaSounds.RUNNER_GROWL.get() : CeruleaSounds.RUNNER_AMBIENT.get();
     }
 
     @Override
-    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.WOLF_HURT; }
+    protected SoundEvent getHurtSound(DamageSource source) { return CeruleaSounds.RUNNER_HURT.get(); }
 
     @Override
-    protected SoundEvent getDeathSound() { return SoundEvents.WOLF_DEATH; }
-
-    @Override
-    public float getVoicePitch() { return super.getVoicePitch() * 0.85F; }
+    protected SoundEvent getDeathSound() { return CeruleaSounds.RUNNER_DEATH.get(); }
 
     /** Para la animación: 0..1 hacia la postura de acecho (agachado). */
     public float crouch(float partial) { return isStalking() ? 1F : 0F; }
