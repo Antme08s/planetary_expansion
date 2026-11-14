@@ -1044,3 +1044,11 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   ondas de sierra limpias por una garganta: pulsos irregulares (jitter y shimmer), duplicación de periodo (voz rota),
   pulsos sueltos graves (fry), aire, 2–4 voces desafinadas (bicho grande), filtro de vocal, saturación y eco de cueva;
   sub-graves en el rugido y la muerte del gusano. El grito del rastreador arranca en gruñido y se rompe en alarido.
+- Ferra, biomas y cuevas (el usuario solo encontraba cañones y las cuevas "se cortan y casi ninguna sale a la superficie"):
+  - El ruido de los cañones daba |ruido| < 0,17 en casi medio mapa: casi todo era fondo de cañón. Ahora el cañón es una
+    franja estrecha (del todo con |ruido| < 0,035, pared hasta 0,06, bioma hasta 0,06) y las regiones (charcas, llanuras,
+    chimeneas) van a escala de ~512 bloques con cortes en ±0,22.
+  - Cuevas de ruido como las de la Tierra (clonadas con `RouterCloner`): entradas que llegan a la superficie, túneles
+    espagueti y fideos y cavernas de queso, con el mismo esquema que el `final_density` de la Tierra (sin pilares).
+    Antes solo había carvers, que se cortan al llegar al borde de su alcance. Por debajo de y −54 las cuevas tienen lava.
+  - Solo cambia en chunks nuevos: donde se junten con los ya generados puede haber cortes.

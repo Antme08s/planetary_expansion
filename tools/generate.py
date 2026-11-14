@@ -4246,11 +4246,13 @@ def build_ferra():
         data(f"worldgen/noise/{P}/{n}", {"firstOctave": first, "amplitudes": amps})
         return rl(f"{P}/{n}")
     hills, detail = noise("hills", -8, [1.0, 1.0, 0.5]), noise("detail", -5, [1.0, 0.5])
-    regions, canyon = noise("regions", -10, [1.0, 1.0]), noise("canyon", -9, [1.0, 0.6])
+    # 1.0.3 (el usuario solo encontraba cañones): las regiones van a escala de ~512 bloques (antes ~1024) y los cañones son
+    # franjas estrechas (|ruido| < 0,035 del todo, hasta 0,06 la pared); antes |ruido| < 0,17 era casi la mitad del mapa
+    regions, canyon = noise("regions", -9, [1.0, 1.0]), noise("canyon", -9, [1.0, 0.6])
     n2 = lambda n: {"type": "minecraft:noise", "noise": n, "xz_scale": 1.0, "y_scale": 0.0}           # noqa: E731
     base_h = 76
-    cut = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:add", "argument1": 3.0, "argument2": {
-        "type": "minecraft:mul", "argument1": {"type": "minecraft:abs", "argument": n2(canyon)}, "argument2": -18.0}}}
+    cut = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:add", "argument1": 2.4, "argument2": {
+        "type": "minecraft:mul", "argument1": {"type": "minecraft:abs", "argument": n2(canyon)}, "argument2": -40.0}}}
     density = {"type": "minecraft:add",
                "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": -64, "to_y": 320,
                              "from_value": (base_h + 64) / 16.0, "to_value": (base_h - 320) / 16.0},
@@ -4259,11 +4261,33 @@ def build_ferra():
                                            "argument1": {"type": "minecraft:mul", "argument1": n2(hills), "argument2": 8 / 16.0},
                                            "argument2": {"type": "minecraft:mul", "argument1": n2(detail), "argument2": 3 / 16.0}},
                              "argument2": {"type": "minecraft:mul", "argument1": cut, "argument2": -30 / 16.0}}}
+    # 1.0.3: cuevas de ruido como las de la Tierra (el usuario: "se cortan las cuevas y casi ninguna sale a la superficie";
+    # antes solo había carvers, que se cortan en el borde de su alcance): entradas que salen a la superficie, túneles
+    # (espagueti y fideos) y cavernas (queso). Mismo esquema que el final_density de la Tierra, sin pilares.
+    cl = RouterCloner(P)
+    entr = cl.df("minecraft:overworld/caves/entrances")
+    spag = {"type": "minecraft:add", "argument1": cl.df("minecraft:overworld/caves/spaghetti_2d"),
+            "argument2": cl.df("minecraft:overworld/caves/spaghetti_roughness_function")}
+    noodle = cl.df("minecraft:overworld/caves/noodle")
+    cheese = {"type": "minecraft:add",
+              "argument1": {"type": "minecraft:mul", "argument1": 4.0, "argument2": {"type": "minecraft:square", "argument": {
+                  "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_layer"), "xz_scale": 1.0, "y_scale": 8.0}}},
+              "argument2": {"type": "minecraft:add",
+                            "argument1": {"type": "minecraft:clamp", "min": -1.0, "max": 1.0, "input": {
+                                "type": "minecraft:add", "argument1": 0.27, "argument2": {
+                                    "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_cheese"), "xz_scale": 1.0, "y_scale": 0.6666666666666666}}},
+                            "argument2": {"type": "minecraft:clamp", "min": 0.0, "max": 0.5, "input": {
+                                "type": "minecraft:add", "argument1": 1.5, "argument2": {"type": "minecraft:mul", "argument1": -0.64, "argument2": density}}}}}
+    deep = {"type": "minecraft:min", "argument1": {"type": "minecraft:min", "argument1": cheese, "argument2": entr}, "argument2": spag}
+    caved = {"type": "minecraft:range_choice", "input": density, "min_inclusive": -1000000.0, "max_exclusive": 1.5625,
+             "when_in_range": {"type": "minecraft:min", "argument1": density, "argument2": {"type": "minecraft:mul", "argument1": 5.0, "argument2": entr}},
+             "when_out_of_range": deep}
+    final = {"type": "minecraft:min", "argument1": {"type": "minecraft:interpolated", "argument": caved}, "argument2": noodle}
     zero = 0.0
     router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
               "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
               "ridges": zero, "weirdness": n2(canyon), "initial_density_without_jaggedness": density,
-              "final_density": {"type": "minecraft:interpolated", "argument": density},
+              "final_density": final,
               "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
     dust, ochre = {"Name": B("ferra_dust")}, {"Name": B("ferra_ochre")}
     surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
@@ -4333,12 +4357,12 @@ def build_ferra():
     name("ferra_canyons", "Rust Canyons", "Cañones de óxido")
     name("ferra_copper_pools", "Copper Pools", "Charcas de cobre")
     name("ferra_iron_chimneys", "Iron Chimneys", "Chimeneas de hierro")
-    out_c = [-2.0, -0.17], [0.17, 2.0]
-    pts = [point("ferra_canyons", continentalness=WIDE, weirdness=[-0.17, 0.17], temperature=[-1.0, 1.0])]
+    out_c = [-2.0, -0.06], [0.06, 2.0]
+    pts = [point("ferra_canyons", continentalness=WIDE, weirdness=[-0.06, 0.06], temperature=[-1.0, 1.0])]
     for w in out_c:
-        pts += [point("ferra_copper_pools", continentalness=[-2.0, -0.3], weirdness=w, temperature=[-1.0, 1.0]),
-                point("ferra_rust_plains", continentalness=[-0.3, 0.35], weirdness=w, temperature=[-1.0, 1.0]),
-                point("ferra_iron_chimneys", continentalness=[0.35, 2.0], weirdness=w, temperature=[-1.0, 1.0])]
+        pts += [point("ferra_copper_pools", continentalness=[-2.0, -0.22], weirdness=w, temperature=[-1.0, 1.0]),
+                point("ferra_rust_plains", continentalness=[-0.22, 0.22], weirdness=w, temperature=[-1.0, 1.0]),
+                point("ferra_iron_chimneys", continentalness=[0.22, 2.0], weirdness=w, temperature=[-1.0, 1.0])]
     dimension(P, pts)
     dimension_type(P, effects="minecraft:overworld")
     dimension_physics(P, universal_drag=0.002, base_gravity=[0.0, -2.4, 0.0],
