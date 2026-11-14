@@ -45,6 +45,14 @@ public class RustWorm extends Monster {
     private int hideTicks;
     /** Ticks fuera tras morder, antes de meterse (para que se vea el mordisco y se le pueda devolver el golpe). */
     private static final int AFTER_BITE_TICKS = 10;
+    /** Si no consigue morder a su presa en 20 s se rinde (el usuario: "si no es capaz de alcanzarte por más de cierto
+     *  tiempo, que se rinda y se vaya"): no le hace caso durante 60 s y se aleja bajo el polvo. */
+    private static final int GIVE_UP_TICKS = 400, IGNORE_TICKS = 1200;
+    private int frustration, leaveTicks;
+    private LivingEntity chased;
+    private java.util.UUID ignored;
+    private long ignoredUntil;
+    private Vec3 leaveFrom;
 
     public RustWorm(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -129,15 +137,26 @@ public class RustWorm extends Monster {
             double best = HEAR_RANGE * HEAR_RANGE;
             for (Player p : sl.players()) {
                 double d = p.distanceToSqr(this);
+                if (now < ignoredUntil && p.getUUID().equals(ignored)) continue;   // ya lo dio por imposible
                 if (d < best && p.isAlive() && FerraMobs.heard(p, now)) { best = d; heard = p; }
             }
             if (heard != null) { setTarget(heard); quietTicks = 0; }
             else if (target != null && (quietTicks += 5) > 100) { setTarget(null); quietTicks = 0; }
         }
         target = getTarget();
+        if (target != chased) { chased = target; frustration = 0; }
+        if (target != null && ++frustration > GIVE_UP_TICKS) { giveUp(target, now); target = null; }
         switch (phase()) {
             case BURIED -> {
                 if (hideTicks > 0) hideTicks--;
+                if (leaveTicks > 0) {
+                    // se ha rendido: se aleja bajo el polvo (hasta unos 40 bloques de donde estaba la presa)
+                    leaveTicks--;
+                    Vec3 away = position().subtract(leaveFrom);
+                    double d = Math.sqrt(away.x * away.x + away.z * away.z);
+                    if (d < 40.0) burrow(sl, d < 1e-3 ? 1 : away.x / d, d < 1e-3 ? 0 : away.z / d, 0.3);
+                    return;
+                }
                 if (target == null) return;
                 Vec3 to = target.position().subtract(position());
                 double dist = Math.sqrt(to.x * to.x + to.z * to.z);
@@ -201,6 +220,18 @@ public class RustWorm extends Monster {
         if (tickCount % 14 == 0) playSound(FerraSounds.WORM_DIG.get(), 1.3F, 0.9F + random.nextFloat() * 0.2F);
     }
 
+    /** Se rinde con esta presa: gruñe, la ignora un rato y se va (si está fuera, se mete primero: ver OUT). */
+    private void giveUp(LivingEntity target, long now) {
+        ignored = target.getUUID();
+        ignoredUntil = now + IGNORE_TICKS;
+        leaveFrom = target.position();
+        leaveTicks = 100 + random.nextInt(60);
+        setTarget(null);
+        chased = null;
+        frustration = 0;
+        playSound(FerraSounds.WORM_AMBIENT.get(), 1.6F, 0.7F);
+    }
+
     private void burst(ServerLevel sl, int n) {
         BlockState below = sl.getBlockState(blockPosition().below());
         if (below.isAir()) return;
@@ -210,6 +241,7 @@ public class RustWorm extends Monster {
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
         boolean r = super.doHurtTarget(target);
+        if (r) frustration = 0;   // la ha alcanzado: no se rinde
         if (r) playSound(FerraSounds.WORM_BITE.get(), 1.2F, 0.9F + random.nextFloat() * 0.2F);
         return r;
     }

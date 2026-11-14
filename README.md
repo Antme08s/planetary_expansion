@@ -1091,3 +1091,6 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
     7 bloques de ti y después vuelve a por ti. Antes, si seguías encima, volvía a salir al momento.
   - El movimiento enterrado (con su rastro de partículas) pasó a `RustWorm.burrow`.
   - Si falla el mordisco se queda fuera 3–6 s (antes 5–8; el usuario: "está algo exagerado").
+- Gusano de óxido: se rinde (el usuario: "si el gusano no es capaz de alcanzarte por más de cierto tiempo, que se rinda y
+  se vaya"): si lleva 20 s persiguiendo a la misma presa sin morderla, gruñe, la ignora 60 s (no la oye) y se aleja bajo
+  el polvo hasta unos 40 bloques de donde estaba. Si estaba fuera, se mete primero. Cada mordisco reinicia la cuenta.
