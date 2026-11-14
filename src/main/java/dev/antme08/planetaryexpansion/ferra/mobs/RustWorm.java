@@ -39,6 +39,12 @@ public class RustWorm extends Monster {
     public static final int EMERGE_TICKS = 14, DIVE_TICKS = 20;
     private static final double HEAR_RANGE = 20.0;
     private int attackCooldown, quietTicks, outTicks;
+    /** Ya mordió en esta salida: se mete enseguida (el usuario: "que te golpee y se esconda"). */
+    private boolean bit;
+    /** Ticks enterrado antes de poder volver a salir; mientras tanto se aleja un poco por debajo. */
+    private int hideTicks;
+    /** Ticks fuera tras morder, antes de meterse (para que se vea el mordisco y se le pueda devolver el golpe). */
+    private static final int AFTER_BITE_TICKS = 10;
 
     public RustWorm(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -131,38 +137,31 @@ public class RustWorm extends Monster {
         target = getTarget();
         switch (phase()) {
             case BURIED -> {
+                if (hideTicks > 0) hideTicks--;
                 if (target == null) return;
                 Vec3 to = target.position().subtract(position());
                 double dist = Math.sqrt(to.x * to.x + to.z * to.z);
+                if (hideTicks > 0) {
+                    // recién escondido: no sale aunque sigas encima; se aparta bajo el polvo y vuelve después
+                    if (dist < 7.0) burrow(sl, dist < 1e-3 ? 1 : -to.x / dist, dist < 1e-3 ? 0 : -to.z / dist, 0.22);
+                    return;
+                }
                 if (dist < 2.0) {
                     setPhase(Phase.EMERGING);
                     playSound(FerraSounds.WORM_EMERGE.get(), 2.0F, 0.95F + random.nextFloat() * 0.1F);
                     burst(sl, 60);
                     return;
                 }
-                // avanza bajo el polvo, a ras del suelo, dejando rastro
-                double step = Math.min(0.32, dist);
-                double nx = getX() + to.x / dist * step, nz = getZ() + to.z / dist * step;
-                int top = sl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(nx), Mth.floor(nz));
-                setPos(nx, top, nz);
-                // rastro de polvo y tierra que salta por donde va (el usuario: "debería soltar partículas por donde se
-                // está moviendo"); el cliente además echa sus propias partículas (ver tick)
-                BlockState below = sl.getBlockState(BlockPos.containing(nx, top - 1, nz));
-                if (!below.isAir()) {
-                    sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, below), nx, top + 0.15, nz, 10, 0.45, 0.15, 0.45, 0.12);
-                    if (tickCount % 3 == 0)
-                        sl.sendParticles(new BlockParticleOption(ParticleTypes.DUST_PILLAR, below), nx, top + 0.05, nz, 6, 0.35, 0.0, 0.35, 0.1);
-                }
-                if (tickCount % 14 == 0) playSound(FerraSounds.WORM_DIG.get(), 1.3F, 0.9F + random.nextFloat() * 0.2F);
+                burrow(sl, to.x / dist, to.z / dist, Math.min(0.32, dist));
             }
             case EMERGING -> {
                 if (phaseTick() == EMERGE_TICKS / 2) {
                     // mordisco al salir: a lo que tenga encima
                     for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(1.2, 0.5, 1.2), x -> x != this)) {
-                        if (doHurtTarget(e)) e.push(0, 0.7, 0);
+                        if (doHurtTarget(e)) { e.push(0, 0.7, 0); bit = true; attackCooldown = 25; }
                     }
                 }
-                if (phaseTick() >= EMERGE_TICKS) { setPhase(Phase.OUT); outTicks = 100 + random.nextInt(60); }
+                if (phaseTick() >= EMERGE_TICKS) { setPhase(Phase.OUT); outTicks = bit ? AFTER_BITE_TICKS : 100 + random.nextInt(60); }
             }
             case OUT -> {
                 if (target != null) {
@@ -171,7 +170,7 @@ public class RustWorm extends Monster {
                     yBodyRot = getYRot();
                     if (--attackCooldown <= 0 && distanceToSqr(target) < 12.0) {
                         swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                        doHurtTarget(target);
+                        if (doHurtTarget(target)) { bit = true; outTicks = Math.min(outTicks, AFTER_BITE_TICKS); }
                         attackCooldown = 25;
                     }
                 }
@@ -182,9 +181,24 @@ public class RustWorm extends Monster {
             }
             case DIVING -> {
                 if (phaseTick() % 3 == 0) burst(sl, 10);
-                if (phaseTick() >= DIVE_TICKS) setPhase(Phase.BURIED);
+                if (phaseTick() >= DIVE_TICKS) { setPhase(Phase.BURIED); bit = false; hideTicks = 60 + random.nextInt(40); }
             }
         }
+    }
+
+    /** Avanza bajo el polvo, a ras del suelo, dejando rastro (el usuario: "debería soltar partículas por donde se está
+     *  moviendo"); el cliente además echa sus propias partículas (ver tick). */
+    private void burrow(ServerLevel sl, double dirX, double dirZ, double step) {
+        double nx = getX() + dirX * step, nz = getZ() + dirZ * step;
+        int top = sl.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mth.floor(nx), Mth.floor(nz));
+        setPos(nx, top, nz);
+        BlockState below = sl.getBlockState(BlockPos.containing(nx, top - 1, nz));
+        if (!below.isAir()) {
+            sl.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, below), nx, top + 0.15, nz, 10, 0.45, 0.15, 0.45, 0.12);
+            if (tickCount % 3 == 0)
+                sl.sendParticles(new BlockParticleOption(ParticleTypes.DUST_PILLAR, below), nx, top + 0.05, nz, 6, 0.35, 0.0, 0.35, 0.1);
+        }
+        if (tickCount % 14 == 0) playSound(FerraSounds.WORM_DIG.get(), 1.3F, 0.9F + random.nextFloat() * 0.2F);
     }
 
     private void burst(ServerLevel sl, int n) {

@@ -1083,3 +1083,10 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
     rastreador a menos de 80 bloques y hay menos de 8 a 160 (unas dos manadas alrededor del jugador). El resto de la
     manada sale en el mismo tick (`FerraMobs.stalkerPackAllowed`: los recién nacidos tienen `tickCount == 0`).
   - Gusanos: 1 de cada 5 intentos (antes 1 de 3) y nunca otro a menos de 80 bloques (antes 64).
+- Gusano de óxido: muerde y se esconde (el usuario: "si te mantienes cerca de él una vez sale se queda más tiempo afuera,
+  creo que lo correcto sería que te golpee y se esconda"):
+  - En cuanto acierta un mordisco (al salir o ya fuera) se queda fuera solo medio segundo más y se mete. Si falla, sigue
+    fuera como antes (5–8 s) y se mete al acabar o si te alejas.
+  - Al meterse espera 3–5 s enterrado sin poder salir (`hideTicks`); mientras tanto se aparta bajo el polvo hasta unos
+    7 bloques de ti y después vuelve a por ti. Antes, si seguías encima, volvía a salir al momento.
+  - El movimiento enterrado (con su rastro de partículas) pasó a `RustWorm.burrow`.
