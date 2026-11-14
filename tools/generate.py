@@ -2139,7 +2139,7 @@ def build_warp():
         "ignis": {"type": ("Volcanic moon", "Luna volcánica"),
                   "desc": ("A moon of blackstone and basalt orbiting the gas giant.", "Una luna de piedra negra y basalto que orbita el gigante gaseoso."),
                   "air": ("None", "Ninguno"), "temp": ("Hot", "Caliente"), "hazards": ("No air, lava", "Sin aire, lava"),
-                  "armor": ("Impact Armor", "Impact Armor"),
+                  "armor": ("Thermal Suit", "Traje térmico"),   # desde 0.7.64 el calor y la lava son del traje térmico
                   "resources": ("Gold, gilded blackstone, copper and huge ochrum and veridium veins",
                                 "Oro, piedra negra dorada, cobre y vetas enormes de ocrum y veridio")},
         "thalassa": {"type": ("Ocean moon", "Luna oceánica"),
@@ -4464,8 +4464,9 @@ logoFile="logo.png"
 logoBlur=false
 displayURL="https://github.com/Antme08s/planetary_expansion"
 description=\'\'\'
-Landable planets for Create: Cosmonautics: Mars, Venus, Thalassa, Ignis and the Ice World,
-each with its own dimension, terrain, weather, creatures and dangers.
+Landable worlds for Create: Cosmonautics, each with its own dimension, terrain, weather, creatures and dangers:
+Mars, Venus, Thalassa, Ignis and the Ice World around the Sun, and Cerulea with its moons Velo and Ferra
+around Amber, a second star reached with the Stellar Warp Drive.
 Planet suits with upgrade templates (Impact, Glacial, Hazard, Sea Diver and Thermal), survival kits,
 and ship machines: Warp Drive with Navigation Console, Gravity Generator and Inertial Dampener.
 \'\'\'

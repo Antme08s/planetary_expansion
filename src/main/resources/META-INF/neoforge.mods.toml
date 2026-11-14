@@ -14,8 +14,9 @@ logoFile="logo.png"
 logoBlur=false
 displayURL="https://github.com/Antme08s/planetary_expansion"
 description='''
-Landable planets for Create: Cosmonautics: Mars, Venus, Thalassa, Ignis and the Ice World,
-each with its own dimension, terrain, weather, creatures and dangers.
+Landable worlds for Create: Cosmonautics, each with its own dimension, terrain, weather, creatures and dangers:
+Mars, Venus, Thalassa, Ignis and the Ice World around the Sun, and Cerulea with its moons Velo and Ferra
+around Amber, a second star reached with the Stellar Warp Drive.
 Planet suits with upgrade templates (Impact, Glacial, Hazard, Sea Diver and Thermal), survival kits,
 and ship machines: Warp Drive with Navigation Console, Gravity Generator and Inertial Dampener.
 '''
