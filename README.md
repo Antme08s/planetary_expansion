@@ -898,3 +898,6 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   slime, escama → tinte cian, lámpara de bulbo (4 bulbos + vidrio), bloque de escamas luminosas (luz 12), daga de
   colmillo (colmillo + piel rayada; 5 de daño, 2,4 golpes/s), flechas de colmillo ×4 (colmillo + palo + pluma; 3 de
   daño). `#planetary_expansion:fangs` acepta los dos colmillos. Texturas: `tools/designs/cerulea_items.py`.
+- Arreglos tras la primera prueba: la punta de la cola del corredor quedaba suelta (estaba bajada en el diseño y además
+  girada con la cola; ahora va al final de la cola en su marco sin girar). El saltarín no podía subir bloques (salto de
+  0,36): ahora salta normal (1,25 bloques) cuando choca y hace saltitos bajos (0,3) solo al caminar en llano.

@@ -38,8 +38,7 @@ public class Hopper extends Animal {
     }
 
     public static AttributeSupplier.Builder attributes() {
-        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 5.0).add(Attributes.MOVEMENT_SPEED, 0.3)
-                .add(Attributes.JUMP_STRENGTH, 0.36);
+        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 5.0).add(Attributes.MOVEMENT_SPEED, 0.3);
     }
 
     @Override
@@ -66,8 +65,11 @@ public class Hopper extends Animal {
         if (hopCooldown > 0) hopCooldown--;
         Vec3 v = getDeltaMovement();
         boolean moving = !getNavigation().isDone() || v.horizontalDistanceSqr() > 0.0004;
-        if (moving && onGround() && hopCooldown == 0 && !isInWater()) {
-            jumpFromGround();
+        // saltitos bajos al caminar; para subir un bloque usa el salto normal (JumpControl, 1,25 bloques). 1.0.3: antes
+        // el salto era de 0,36 y no le alcanzaba para subir bloques
+        if (moving && onGround() && hopCooldown == 0 && !isInWater() && !horizontalCollision) {
+            setDeltaMovement(v.x, 0.3, v.z);
+            hasImpulse = true;
             playSound(SoundEvents.RABBIT_JUMP, 0.3F, 1.2F);
             hopCooldown = 6 + random.nextInt(5);
         }

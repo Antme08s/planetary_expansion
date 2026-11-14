@@ -425,7 +425,8 @@ def runner():
         Box("jaw", [-1.6, 12.8, -20.2], [1.6, 13.9, -15.2], fur_h, rot=(8, 0, 0), origin=[0, 13.9, -15.2]),
         Box("head", [-1.5, 13.6, -20.6], [-0.9, 14.7, -20.0], fang), Box("head", [0.9, 13.6, -20.6], [1.5, 14.7, -20.0], fang),
         Box("tail", [-0.9, 13.6, 7], [0.9, 15.2, 16], fur, rot=(22, 0, 0), origin=[0, 14.5, 7]),
-        Box("tail", [-1.3, 9.6, 14.4], [1.3, 12.2, 18.6], crest, rot=(22, 0, 0), origin=[0, 14.5, 7]),
+        # 1.0.3: la punta va al final de la cola en su marco sin girar (antes estaba bajada y además girada: quedaba suelta)
+        Box("tail", [-1.3, 13.1, 15.2], [1.3, 15.7, 19.4], crest, rot=(22, 0, 0), origin=[0, 14.5, 7]),
     ]
     for z, h in ((-7.5, 3.0), (-5, 3.6), (-2.5, 3.2), (0, 2.6), (2.5, 2.0)):
         B.append(Box("body", [-0.7, 15.6, z], [0.7, 15.6 + h, z + 2.2], crest, rot=(-35, 0, 0), origin=[0, 16, z + 1.1]))
