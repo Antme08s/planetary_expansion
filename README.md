@@ -1040,3 +1040,7 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   - Sonidos propios sintetizados (`tools/designs/ferra_sounds.py tools/designs/mobs/sounds_ferra`, `ferra/mobs/FerraSounds`):
     gusano (excavar, salir, rechinar, morder, herido, muerte, enterrarse) y rastreador (chasquidos de sonar, escuchar,
     grito de alerta, mordisco, herido, muerte). Archivos en `sounds/ferra/<criatura>/`.
+- Sonidos más "monstruo" (el usuario: "se sienten extraños, como algo no natural"): `ferra_sounds.creature` sustituye las
+  ondas de sierra limpias por una garganta: pulsos irregulares (jitter y shimmer), duplicación de periodo (voz rota),
+  pulsos sueltos graves (fry), aire, 2–4 voces desafinadas (bicho grande), filtro de vocal, saturación y eco de cueva;
+  sub-graves en el rugido y la muerte del gusano. El grito del rastreador arranca en gruñido y se rompe en alarido.
