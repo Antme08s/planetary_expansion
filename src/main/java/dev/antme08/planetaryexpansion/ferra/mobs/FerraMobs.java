@@ -95,16 +95,27 @@ public final class FerraMobs {
     /** Ferra es hostil: salen de día y de noche (no dependen de la luz), pero con límites para que no se amontonen. */
     private static void spawnPlacements(RegisterSpawnPlacementsEvent event) {
         var op = RegisterSpawnPlacementsEvent.Operation.REPLACE;
-        // gusano: enemigo normal, no común; nunca otro a menos de 64 bloques
+        // gusano: enemigo normal, no común; 1 de cada 5 intentos y nunca otro a menos de 80 bloques
+        // (el usuario, 1.0.3: "creo que también podrías bajarles un poco")
         event.register(RUST_WORM.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inFerra(level) && level.getBlockState(pos.below()).isSolid()
-                        && (reason != MobSpawnType.NATURAL || (random.nextInt(3) == 0
-                        && level.getEntitiesOfClass(RustWorm.class, new AABB(pos).inflate(64)).isEmpty())), op);
-        // rastreadores: en manada; como mucho unos 8 en 48 bloques
+                        && (reason != MobSpawnType.NATURAL || (random.nextInt(5) == 0
+                        && level.getEntitiesOfClass(RustWorm.class, new AABB(pos).inflate(80)).isEmpty())), op);
+        // rastreadores (el usuario: "aparecen muchos rastreadores"): una manada solo empieza si no hay otra a menos de
+        // 80 bloques y hay menos de 8 rastreadores a 160 (unas dos manadas alrededor del jugador), y solo 1 de cada 4
+        // intentos; el resto de la manada sale en el mismo tick (los recién nacidos aún no han hecho tick)
         event.register(BLIND_STALKER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inFerra(level) && level.getBlockState(pos.below()).isSolid()
-                        && (reason != MobSpawnType.NATURAL
-                        || level.getEntitiesOfClass(BlindStalker.class, new AABB(pos).inflate(48)).size() < 8), op);
+                        && (reason != MobSpawnType.NATURAL || stalkerPackAllowed(level, pos, random)), op);
+    }
+
+    static boolean stalkerPackAllowed(net.minecraft.world.level.LevelAccessor level, net.minecraft.core.BlockPos pos,
+                                      net.minecraft.util.RandomSource random) {
+        var near = level.getEntitiesOfClass(BlindStalker.class, new AABB(pos).inflate(80));
+        if (!near.isEmpty())   // completar la manada que está saliendo ahora mismo
+            return near.size() < 4 && near.stream().allMatch(s -> s.tickCount == 0);
+        return random.nextInt(4) == 0
+                && level.getEntitiesOfClass(BlindStalker.class, new AABB(pos).inflate(160)).size() < 8;
     }
 
     // ------------------------------------------------------------------ ruido

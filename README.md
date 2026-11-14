@@ -1076,3 +1076,10 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
     Cosmonautics ya no tiene (`rocketnautics:titanium_ore`).
   - Revisado que las demás features del mod no se salgan de la zona: cráteres (≤ 11 bloques), árboles de Cerúlea
     (≤ 10), pilares, agujas, chimeneas y bolsas de nitrógeno (≤ 12) están dentro de los 16 permitidos.
+- Prueba del usuario tras el arreglo: todo funciona (sin errores de chunks ni congelones en Ferra; Velo, Cerúlea y el
+  motor estelar bien). Falta solo probar la molienda del helio-3. Pidió menos monstruos en Ferra ("aparecen muchos
+  rastreadores"; los gusanos "se sienten más repartidos, pero también podrías bajarles un poco"):
+  - Rastreadores: manadas de 2–4 (antes 3–5). Una manada nueva solo empieza en 1 de cada 4 intentos, si no hay otro
+    rastreador a menos de 80 bloques y hay menos de 8 a 160 (unas dos manadas alrededor del jugador). El resto de la
+    manada sale en el mismo tick (`FerraMobs.stalkerPackAllowed`: los recién nacidos tienen `tickCount == 0`).
+  - Gusanos: 1 de cada 5 intentos (antes 1 de 3) y nunca otro a menos de 80 bloques (antes 64).

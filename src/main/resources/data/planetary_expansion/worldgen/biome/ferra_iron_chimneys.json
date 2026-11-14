@@ -23,8 +23,8 @@
       {
         "type": "planetary_expansion:blind_stalker",
         "weight": 10,
-        "minCount": 3,
-        "maxCount": 5
+        "minCount": 2,
+        "maxCount": 4
       }
     ],
     "underground_water_creature": [],

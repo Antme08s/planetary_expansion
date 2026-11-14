@@ -4357,7 +4357,7 @@ def build_ferra():
     rust = {"options": {"type": "minecraft:ash"}, "probability": 0.004}
     # criaturas (el usuario): el gusano en las zonas despejadas, los rastreadores en las chimeneas y los cañones
     worms = spawners(monster=[(rl("rust_worm"), 10, 1, 1)])
-    packs = spawners(monster=[(rl("blind_stalker"), 10, 3, 5)])
+    packs = spawners(monster=[(rl("blind_stalker"), 10, 2, 4)])
     biome("ferra_rust_plains", feats=features(underground_ores=ores_f, surface_structures=[pillars_few]), particle=rust, spawn=worms, **common)
     biome("ferra_canyons", feats=features(underground_ores=ores_f), spawn=packs, **common)
     biome("ferra_copper_pools", feats=features(lakes=[pools], underground_ores=ores_f), spawn=worms, **common)
