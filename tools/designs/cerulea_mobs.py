@@ -251,6 +251,7 @@ def glider():
     eye = mat("eye", (210, 240, 110), noise=0.0, emissive=True)
     pupil = mat("pupil", (10, 14, 20), noise=0.0)
     claw = mat("claw", (40, 48, 64), noise=0.04)
+    leg = mat("leg", (96, 122, 160), noise=0.05)
     B = [
         Box("body", [-2.5, 4, -6], [2.5, 7.5, 6], scales),
         Box("head", [-2, 4.3, -11], [2, 8, -6], scales),
@@ -271,10 +272,17 @@ def glider():
         Box("wing_l", [13.4, 5.7, 5.4], [14.2, 6.6, 7.0], claw, rot=(0, 8, -6), origin=[2.5, 6.25, 4.9]),
         Box("wing_l", [13.8, 5.7, 4.6], [15.0, 6.6, 5.4], claw, rot=(0, 8, -6), origin=[2.5, 6.25, 4.9]),
     ]
+    # 1.0.3: cuatro patas cortas hasta el suelo (antes el cuerpo quedaba a 4 px del suelo y no había con qué caminar);
+    # al planear se recogen hacia atrás
+    for k, z in ((0, -4.0), (1, 3.6)):
+        side += [Box(f"leg_l{k}", [2.0, 1.2, z - 0.8], [3.4, 5.0, z + 0.8], leg),
+                 Box(f"leg_l{k}", [1.8, 0, z - 1.6], [3.8, 1.2, z + 0.9], leg),
+                 Box(f"leg_l{k}", [2.0, 0, z - 2.2], [3.6, 0.7, z - 1.6], claw)]
     out = mirror_x(side)
     for b in out:
         b.group = b.group.replace("wing_l", "wing_r")
-    piv = {"body": [0, 6, 0], "head": [0, 6, -6], "tail": [0, 5.6, 5.5], "wing_l": [2.5, 6.25, 0], "wing_r": [-2.5, 6.25, 0]}
+    piv = {"body": [0, 6, 0], "head": [0, 6, -6], "tail": [0, 5.6, 5.5], "wing_l": [2.5, 6.25, 0], "wing_r": [-2.5, 6.25, 0],
+           "leg_l0": [2.7, 5, -4], "leg_r0": [-2.7, 5, -4], "leg_l1": [2.7, 5, 3.6], "leg_r1": [-2.7, 5, 3.6]}
     return "glider", B + side + out, 128, piv
 
 
@@ -400,13 +408,13 @@ def ribbonfin(variant="azure"):
         Box("tail", [-0.8, 3.2, 3], [0.8, 5.8, 6], body),
         Box("tail", [-0.25, 2.0, 5.5], [0.25, 7.0, 8.6], fin),
         Box("body", [-0.25, 7.0, -3.0], [0.25, 8.8, 3.0], fin),
-        Box("body", [-0.2, 7.0, 2.6], [0.2, 8.0, 6.5], fin, rot=(-6, 0, 0), origin=[0, 7.5, 2.8]),
+        Box("tail", [-0.2, 5.6, 3.0], [0.2, 7.0, 5.0], fin),   # 1.0.3: la aleta del lomo baja hasta la cola, sin cintas sueltas
     ]
     side = [
         Box("body", [1.2, 4.9, -5.8], [1.4, 5.9, -4.8], eye), Box("body", [1.3, 5.2, -5.6], [1.5, 5.7, -5.1], pupil),
         Box("body", [1.2, 3.6, -5.3], [1.4, 4.3, -4.6], eye), Box("body", [1.3, 3.8, -5.15], [1.5, 4.15, -4.8], pupil),
         Box("body", [1.4, 3.4, -3.0], [1.6, 4.8, -1.0], fin, rot=(0, 25, 10), origin=[1.5, 4, -3]),
-        Box("body", [0.4, 1.0, -1.5], [0.6, 2.0, 3.5], fin, rot=(10, 0, 0), origin=[0.5, 2.0, -1.5]),
+        Box("body", [0.2, 1.2, -1.0], [0.5, 2.0, 1.5], fin),   # aleta del vientre pegada al cuerpo
     ]
     piv = {"body": [0, 4.5, 0], "tail": [0, 4.5, 3]}
     return ("ribbonfin" if variant == "azure" else "ribbonfin_mire"), B + side + mirror_x(side), 64, piv

@@ -914,3 +914,7 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   comparten el texel del borde y ganaba la última pintada (el vientre). `cerulea_mobs.paint` pinta ahora primero cada
   texel con la cara que contiene su centro y luego rellena solo los vacíos. Afecta a las texturas de todas las criaturas
   de Cerúlea (solo en los bordes).
+- Planeador en el suelo: no tenía patas (el cuerpo quedaba a 4 px del suelo, "flotando") ni animación de caminar.
+  Ahora tiene cuatro patas cortas que llegan al suelo y caminan en diagonal como un lagarto; al planear se recogen.
+- Pez de cinta: quitadas las cintas sueltas de atrás y de abajo; la aleta del lomo baja hasta la cola y la del vientre
+  va pegada al cuerpo.

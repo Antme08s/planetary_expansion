@@ -139,6 +139,13 @@ public final class CeruleaMobsClient {
         }
         add(m.part("tail"), s > 0.5F ? 0.1F : 0, Mth.sin(age * (s > 0.5F ? 0.2F : 0.1F)) * 0.25F, 0);
         look(m, hy, hp, 0.6F);
+        // 1.0.3: patas que caminan como un lagarto (en diagonal); al planear se recogen hacia atrás
+        float walk = Mth.cos(ls * 0.9F) * 1.0F * la * (1F - s);
+        add(m.part("leg_l0"), walk + 1.3F * s, 0, 0);
+        add(m.part("leg_r1"), walk + 1.3F * s, 0, 0);
+        add(m.part("leg_r0"), -walk + 1.3F * s, 0, 0);
+        add(m.part("leg_l1"), -walk + 1.3F * s, 0, 0);
+        add(m.part("body"), 0, Mth.sin(ls * 0.9F) * 0.08F * la * (1F - s), 0);
     }
 
     /** Acechador: patas en diagonal, cola que se mueve, mandíbula que se abre al atacar. */
