@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "ingredient": {
+    "item": "planetary_expansion:ribbonfin"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_ribbonfin"
+  },
+  "experience": 0.35,
+  "cookingtime": 600
+}

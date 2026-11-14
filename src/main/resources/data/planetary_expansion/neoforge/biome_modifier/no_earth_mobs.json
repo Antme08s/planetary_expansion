@@ -9,7 +9,14 @@
       "planetary_expansion:king_crab",
       "planetary_expansion:abyssal_stalker",
       "planetary_expansion:magma_snail",
-      "planetary_expansion:magma_titan"
+      "planetary_expansion:magma_titan",
+      "planetary_expansion:grazer",
+      "planetary_expansion:hopper",
+      "planetary_expansion:glider",
+      "planetary_expansion:lurker",
+      "planetary_expansion:croaker",
+      "planetary_expansion:ribbonfin",
+      "planetary_expansion:runner"
     ]
   }
 }

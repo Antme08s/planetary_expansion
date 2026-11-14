@@ -15,7 +15,14 @@
     "misc": [],
     "monster": [],
     "underground_water_creature": [],
-    "water_ambient": [],
+    "water_ambient": [
+      {
+        "type": "planetary_expansion:ribbonfin",
+        "weight": 20,
+        "minCount": 4,
+        "maxCount": 8
+      }
+    ],
     "water_creature": []
   },
   "spawn_costs": {},

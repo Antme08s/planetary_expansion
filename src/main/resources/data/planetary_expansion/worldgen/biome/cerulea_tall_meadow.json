@@ -11,7 +11,26 @@
   "spawners": {
     "ambient": [],
     "axolotls": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "planetary_expansion:grazer",
+        "weight": 12,
+        "minCount": 3,
+        "maxCount": 6
+      },
+      {
+        "type": "planetary_expansion:hopper",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "planetary_expansion:runner",
+        "weight": 3,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
     "misc": [],
     "monster": [],
     "underground_water_creature": [],

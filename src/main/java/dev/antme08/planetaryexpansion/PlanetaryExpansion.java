@@ -70,6 +70,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.creatures.Creatures.register(modBus); // 0.7.61: criaturas de Thalassa
         dev.antme08.planetaryexpansion.creatures.IgnisCreatures.register(modBus); // 0.7.64: caracoles de magma
         dev.antme08.planetaryexpansion.cerulea.CeruleaBlocks.register(modBus); // 1.0.3: Cerúlea, el planeta de Ámbar
+        dev.antme08.planetaryexpansion.cerulea.mobs.CeruleaMobs.register(modBus); // 1.0.3: criaturas de Cerúlea
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientStormEffects.register();
             modBus.addListener(dev.antme08.planetaryexpansion.client.ArmorModels::onRegisterReloadListeners);
@@ -83,6 +84,7 @@ public final class PlanetaryExpansion {
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThalassaAmbience.class); // 0.7.58
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.DeepSpaceSound.class); // 1.0.3
             dev.antme08.planetaryexpansion.creatures.client.CreaturesClient.register(modBus); // 0.7.61
+            dev.antme08.planetaryexpansion.cerulea.mobs.client.CeruleaMobsClient.register(modBus); // 1.0.3
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThermalLavaVision.class); // 0.7.64
         }
 

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "F",
+    "P"
+  ],
+  "key": {
+    "F": {
+      "tag": "planetary_expansion:fangs"
+    },
+    "P": {
+      "item": "planetary_expansion:striped_pelt"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:fang_dagger",
+    "count": 1
+  }
+}

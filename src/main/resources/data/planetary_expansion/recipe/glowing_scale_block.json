@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "planetary_expansion:glowing_scale"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:glowing_scale_block",
+    "count": 1
+  }
+}

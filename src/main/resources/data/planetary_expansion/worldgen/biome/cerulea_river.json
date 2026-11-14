@@ -11,11 +11,25 @@
   "spawners": {
     "ambient": [],
     "axolotls": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "planetary_expansion:croaker",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
     "misc": [],
     "monster": [],
     "underground_water_creature": [],
-    "water_ambient": [],
+    "water_ambient": [
+      {
+        "type": "planetary_expansion:ribbonfin",
+        "weight": 15,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ],
     "water_creature": []
   },
   "spawn_costs": {},

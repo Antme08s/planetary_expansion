@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "planetary_expansion:hopper_meat"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_hopper_meat"
+  },
+  "experience": 0.35,
+  "cookingtime": 200
+}

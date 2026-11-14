@@ -47,6 +47,7 @@
     "planetary_expansion:warp_drive_part",
     "planetary_expansion:warp_drive_input",
     "planetary_expansion:nav_console",
-    "planetary_expansion:nav_console_part"
+    "planetary_expansion:nav_console_part",
+    "planetary_expansion:glowing_scale_block"
   ]
 }

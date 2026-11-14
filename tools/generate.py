@@ -1394,6 +1394,7 @@ def build_moon_fix():
 # Sin mobs de la Tierra en los planetas
 # ==========================================================================
 PLANET_MOBS = ["lantern_fish", "vent_crab", "king_crab", "abyssal_stalker", "magma_snail", "magma_titan"]
+CERULEA_MOBS = ["grazer", "hopper", "glider", "lurker", "croaker", "ribbonfin", "runner"]   # 1.0.3
 
 
 def build_no_earth_mobs():
@@ -1405,7 +1406,7 @@ def build_no_earth_mobs():
         "type": "neoforge:remove_spawns",
         "biomes": f"#{NS}:planet_biomes",
         # 0.7.61: todo menos las criaturas propias de los planetas (las de Thalassa)
-        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS]},
+        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS]},
     })
 
 
@@ -2715,6 +2716,154 @@ CERULEA_BIOMES = ["cerulea_tall_meadow", "cerulea_short_meadow", "cerulea_giant_
                   "cerulea_river", "cerulea_shore", "cerulea_ocean"]
 
 
+def cerulea_spawns(b):
+    """1.0.3: criaturas de Cerúlea por bioma (los demás spawns los quita no_earth_mobs)."""
+    c = lambda m, w, a, z: (rl(m), w, a, z)  # noqa: E731
+    table = {
+        "cerulea_tall_meadow": dict(creature=[c("grazer", 12, 3, 6), c("hopper", 10, 2, 4), c("runner", 3, 2, 4)]),
+        "cerulea_short_meadow": dict(creature=[c("grazer", 14, 3, 6), c("hopper", 12, 2, 4), c("runner", 2, 2, 3)]),
+        "cerulea_grove": dict(creature=[c("hopper", 8, 2, 3), c("grazer", 4, 2, 4), c("runner", 4, 2, 4)]),
+        "cerulea_giant_forest": dict(creature=[c("glider", 14, 1, 2), c("hopper", 4, 2, 3), c("runner", 3, 2, 3)]),
+        "cerulea_swamp": dict(creature=[c("croaker", 12, 2, 3)], monster=[c("lurker", 100, 1, 1)]),
+        "cerulea_river": dict(water_ambient=[c("ribbonfin", 15, 3, 6)], creature=[c("croaker", 3, 1, 2)]),
+        "cerulea_ocean": dict(water_ambient=[c("ribbonfin", 20, 4, 8)]),
+        "cerulea_shore": dict(),
+    }
+    return spawners(**table.get(b, {}))
+
+
+def build_cerulea_creatures():
+    """1.0.3: criaturas de Cerúlea (modelos de tools/designs/cerulea_mobs.py y objetos de tools/designs/cerulea_items.py,
+    salida en tools/designs/mobs y tools/designs/mobs/items_cerulea): nombres, huevos, botín, recetas y etiquetas."""
+    mobs = os.path.join(DESIGNS, "mobs")
+    items_dir = os.path.join(mobs, "items_cerulea")
+    for m in CERULEA_MOBS:
+        write_bytes(f"assets/{NS}/mob_models/{m}.json", open(os.path.join(mobs, f"{m}.json"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}.png", open(os.path.join(mobs, f"{m}.png"), "rb").read())
+        g = os.path.join(mobs, f"{m}_glow.png")
+        if os.path.exists(g):
+            write_bytes(f"assets/{NS}/textures/entity/{m}_glow.png", open(g, "rb").read())
+    write_bytes(f"assets/{NS}/textures/entity/ribbonfin_mire.png", open(os.path.join(mobs, "ribbonfin_mire.png"), "rb").read())
+    write_bytes(f"assets/{NS}/textures/entity/projectiles/fang_arrow.png", open(os.path.join(items_dir, "entity_fang_arrow.png"), "rb").read())
+    names = {
+        "grazer_meat": ("Raw Grazer Meat", "Carne de pastoreador cruda"), "cooked_grazer_meat": ("Grazer Steak", "Filete de pastoreador"),
+        "cerulean_leather": ("Cerulean Leather", "Cuero cerúleo"), "antenna_bulb": ("Antenna Bulb", "Bulbo de antena"),
+        "hopper_meat": ("Raw Hopper", "Carne de saltarín cruda"), "cooked_hopper_meat": ("Cooked Hopper", "Saltarín cocinado"),
+        "hopper_foot": ("Hopper Foot", "Pata de saltarín"), "glider_membrane": ("Glider Membrane", "Membrana de planeador"),
+        "glowing_scale": ("Glowing Scale", "Escama luminosa"), "lurker_fang": ("Lurker Fang", "Colmillo de acechador"),
+        "runner_fang": ("Runner Fang", "Colmillo de corredor"), "striped_pelt": ("Striped Pelt", "Piel rayada"),
+        "fang_dagger": ("Fang Dagger", "Daga de colmillo"), "fang_arrow": ("Fang Arrow", "Flecha de colmillo"),
+        "croaker_slime": ("Croaker Slime", "Baba de croador"), "croaker_legs": ("Raw Croaker Legs", "Ancas de croador"),
+        "cooked_croaker_legs": ("Cooked Croaker Legs", "Ancas de croador cocinadas"),
+        "ribbonfin": ("Raw Ribbonfin", "Pez de cinta crudo"), "cooked_ribbonfin": ("Cooked Ribbonfin", "Pez de cinta cocinado"),
+        "ribbonfin_bucket": ("Bucket of Ribbonfin", "Cubeta con pez de cinta"), "croaker_bucket": ("Bucket of Croaker", "Cubeta con croador"),
+    }
+    for item, (en, es) in names.items():
+        write_bytes(f"assets/{NS}/textures/item/{item}.png", open(os.path.join(items_dir, f"item_{item}.png"), "rb").read())
+        parent = "minecraft:item/handheld" if item == "fang_dagger" else "minecraft:item/generated"
+        write(f"assets/{NS}/models/item/{item}.json", {"parent": parent, "textures": {"layer0": rl(f"item/{item}")}})
+        LANG_EN[f"item.{NS}.{item}"] = en
+        LANG_ES[f"item.{NS}.{item}"] = es
+    for block, (en, es) in {"bulb_lamp": ("Bulb Lamp", "Lámpara de bulbo"),
+                            "glowing_scale_block": ("Block of Glowing Scales", "Bloque de escamas luminosas")}.items():
+        write_bytes(f"assets/{NS}/textures/block/{block}.png", open(os.path.join(items_dir, f"block_{block}.png"), "rb").read())
+        write(f"assets/{NS}/blockstates/{block}.json", {"variants": {"": {"model": rl(f"block/{block}")}}})
+        write(f"assets/{NS}/models/block/{block}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{block}")}})
+        write(f"assets/{NS}/models/item/{block}.json", {"parent": rl(f"block/{block}")})
+        LANG_EN[f"block.{NS}.{block}"] = en
+        LANG_ES[f"block.{NS}.{block}"] = es
+        data(f"loot_table/blocks/{block}", {"type": "minecraft:block", "pools": [{"rolls": 1, "entries": [
+            {"type": "minecraft:item", "name": rl(block)}], "conditions": [{"condition": "minecraft:survives_explosion"}]}]})
+    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl("glowing_scale_block"))
+    mob_names = {"grazer": ("Grazer", "Pastoreador"), "hopper": ("Hopper", "Saltarín"), "glider": ("Glider", "Planeador"),
+                 "lurker": ("Lurker", "Acechador"), "croaker": ("Croaker", "Croador"), "ribbonfin": ("Ribbonfin", "Pez de cinta"),
+                 "runner": ("Runner", "Corredor")}
+    for m, (en, es) in mob_names.items():
+        LANG_EN[f"entity.{NS}.{m}"] = en
+        LANG_ES[f"entity.{NS}.{m}"] = es
+        write(f"assets/{NS}/models/item/{m}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
+        LANG_EN[f"item.{NS}.{m}_spawn_egg"] = f"{en} Spawn Egg"
+        LANG_ES[f"item.{NS}.{m}_spawn_egg"] = f"Huevo generador de {es.lower()}"
+    LANG_EN[f"entity.{NS}.fang_arrow"] = "Fang Arrow"
+    LANG_ES[f"entity.{NS}.fang_arrow"] = "Flecha de colmillo"
+
+    # botín (domado, el corredor no suelta nada: lo decide Runner.shouldDropLoot)
+    def drop(item, lo, hi, chance=None, smelt=False, looting=1.0):
+        fns = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}}]
+        if looting:
+            fns.append({"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                        "count": {"type": "minecraft:uniform", "min": 0, "max": looting}})
+        if smelt:
+            fns.append({"function": "minecraft:furnace_smelt", "conditions": [{"condition": "minecraft:entity_properties",
+                        "entity": "this", "predicate": {"flags": {"is_on_fire": True}}}]})
+        pool = {"rolls": 1, "entries": [{"type": "minecraft:item", "name": item, "functions": fns}]}
+        if chance is not None:
+            pool["conditions"] = [{"condition": "minecraft:random_chance_with_enchanted_bonus", "enchantment": "minecraft:looting",
+                                   "unenchanted_chance": chance, "enchanted_chance": {"type": "minecraft:linear", "base": chance + 0.05,
+                                                                                    "per_level_above_first": 0.05}}]
+        return pool
+    loot = {
+        "grazer": [drop(rl("grazer_meat"), 1, 3, smelt=True), drop(rl("cerulean_leather"), 0, 2), drop(rl("antenna_bulb"), 1, 1, 0.2, looting=0)],
+        "hopper": [drop(rl("hopper_meat"), 1, 1, smelt=True, looting=0), drop(rl("hopper_foot"), 1, 1, 0.1, looting=0)],
+        "glider": [drop(rl("glider_membrane"), 1, 2)],
+        "lurker": [drop(rl("glowing_scale"), 1, 3), drop(rl("lurker_fang"), 0, 1)],
+        "runner": [drop(rl("runner_fang"), 0, 2), drop(rl("striped_pelt"), 0, 1)],
+        "croaker": [drop(rl("croaker_slime"), 0, 2), drop(rl("croaker_legs"), 0, 1, smelt=True)],
+        "ribbonfin": [drop(rl("ribbonfin"), 1, 1, smelt=True, looting=0), drop("minecraft:bone_meal", 1, 1, 0.05, looting=0)],
+    }
+    for m, pools in loot.items():
+        data(f"loot_table/entities/{m}", {"type": "minecraft:entity", "pools": pools})
+
+    # recetas
+    def cook(raw, cooked, xp=0.35):
+        for kind, t, suffix in (("smelting", 200, ""), ("smoking", 100, "_from_smoking"), ("campfire_cooking", 600, "_from_campfire")):
+            data(f"recipe/{cooked}{suffix}", {"type": f"minecraft:{kind}", "ingredient": {"item": rl(raw)},
+                                              "result": {"id": rl(cooked)}, "experience": xp, "cookingtime": t})
+    cook("grazer_meat", "cooked_grazer_meat")
+    cook("hopper_meat", "cooked_hopper_meat")
+    cook("croaker_legs", "cooked_croaker_legs")
+    cook("ribbonfin", "cooked_ribbonfin")
+
+    def ing(v):
+        return {"tag": v[1:]} if v.startswith("#") else {"item": v}
+
+    def shaped(name, pattern, key, result, count=1, cat="misc"):
+        data(f"recipe/{name}", {"type": "minecraft:crafting_shaped", "category": cat, "pattern": pattern,
+                                "key": {k: ing(v) for k, v in key.items()}, "result": {"id": result, "count": count}})
+
+    def shapeless(name, items, result, count=1):
+        data(f"recipe/{name}", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                "ingredients": [ing(i) for i in items], "result": {"id": result, "count": count}})
+    shaped("bulb_lamp", [" B ", "BGB", " B "], {"B": rl("antenna_bulb"), "G": "minecraft:glass"}, rl("bulb_lamp"), cat="building")
+    shaped("glowing_scale_block", ["SS", "SS"], {"S": rl("glowing_scale")}, rl("glowing_scale_block"), cat="building")
+    shapeless("glowing_scale_from_block", [rl("glowing_scale_block")], rl("glowing_scale"), 4)
+    shapeless("cyan_dye_from_glowing_scale", [rl("glowing_scale")], "minecraft:cyan_dye", 1)
+    shapeless("leather_from_cerulean_leather", [rl("cerulean_leather")], "minecraft:leather", 1)
+    shapeless("leather_from_striped_pelt", [rl("striped_pelt")], "minecraft:leather", 1)
+    shapeless("slime_ball_from_croaker_slime", [rl("croaker_slime")], "minecraft:slime_ball", 1)
+    shaped("fang_dagger", ["F", "P"], {"F": f"#{NS}:fangs", "P": rl("striped_pelt")}, rl("fang_dagger"), cat="equipment")
+    shaped("fang_arrow", ["F", "S", "E"], {"F": f"#{NS}:fangs", "S": "minecraft:stick", "E": "minecraft:feather"},
+           rl("fang_arrow"), 4, cat="equipment")
+
+    # etiquetas
+    for f in ("runner_fang", "lurker_fang"):
+        tag_add(f"data/{NS}/tags/item/fangs.json", rl(f))
+    tag_add("data/minecraft/tags/item/arrows.json", rl("fang_arrow"))
+    tag_add("data/minecraft/tags/item/swords.json", rl("fang_dagger"))
+    for f in ("grazer_meat", "cooked_grazer_meat", "hopper_meat", "cooked_hopper_meat"):
+        tag_add("data/minecraft/tags/item/meat.json", rl(f))
+    for f in ("ribbonfin", "cooked_ribbonfin"):
+        tag_add("data/minecraft/tags/item/fishes.json", rl(f))
+    for f in ("croaker_slime",):
+        tag_add("data/c/tags/item/slime_balls.json", rl(f))
+    for f in ("cerulean_leather", "striped_pelt"):
+        tag_add("data/c/tags/item/leathers.json", rl(f))
+    for m in ("lurker", "croaker"):
+        tag_add("data/minecraft/tags/entity_type/can_breathe_under_water.json", rl(m))
+    tag_add("data/minecraft/tags/entity_type/arrows.json", rl("fang_arrow"))
+    tag_add("data/minecraft/tags/entity_type/impact_projectiles.json", rl("fang_arrow"))
+
+
 def build_cerulea():
     P = "cerulea"
     B = lambda n: rl(n)          # noqa: E731
@@ -3281,7 +3430,7 @@ def build_cerulea():
         wc, wf = water.get(b, (rgb(36, 128, 160), rgb(10, 36, 52)))
         biome(b, temperature=0.7, downfall=0.6, precipitation=True, sky=sky[b], fog=rgb(240, 214, 168), water=wc, water_fog=wf,
               carvers=["minecraft:cave", "minecraft:cave_extra_underground", "minecraft:canyon"],
-              feats=features(underground_ores=ore_list, vegetal_decoration=veg[b]))
+              feats=features(underground_ores=ore_list, vegetal_decoration=veg[b]), spawn=cerulea_spawns(b))
     for b, en, es in (("cerulea_tall_meadow", "Tall Meadow", "Pradera de pasto alto"), ("cerulea_short_meadow", "Short Meadow", "Pradera de pasto bajo"),
                       ("cerulea_giant_forest", "Giant Forest", "Bosque gigante"), ("cerulea_grove", "Duskwood Grove", "Bosque violeta"),
                       ("cerulea_swamp", "Mire", "Pantano"), ("cerulea_river", "River", "Río"), ("cerulea_shore", "Shore", "Costa"),
@@ -3490,6 +3639,7 @@ if __name__ == "__main__":
     build_structures()
     build_thalassa_creatures()
     build_ignis_creatures()
+    build_cerulea_creatures()   # 1.0.3
     build_amber_system()
     build_meta()
     n = sum(len(f) for _, _, f in os.walk(OUT))

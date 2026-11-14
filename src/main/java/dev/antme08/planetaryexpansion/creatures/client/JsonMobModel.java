@@ -38,9 +38,11 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
     private final Map<String, ModelPart> groups = new HashMap<>();
     private final Animator<T> animator;
 
-    private JsonMobModel(ModelPart root, Animator<T> animator) {
+    private JsonMobModel(ModelPart root, Animator<T> animator, java.util.Collection<String> names) {
         this.root = root;
         this.animator = animator;
+        for (String name : names)   // 1.0.3: todos los grupos del JSON (cuello, orejas, alas…)
+            if (root.hasChild(name)) groups.put(name, root.getChild(name));
         for (String name : new String[]{"body", "head", "jaw", "tail", "lure", "legs", "claw_r", "claw_l", "eyes", "spines", "shell"})
             if (root.hasChild(name)) groups.put(name, root.getChild(name));
         for (int i = 0; i < 8; i++) {   // 0.7.65: patas sueltas (leg_l0…, leg_r0…), cada una gira desde la cadera
@@ -57,6 +59,7 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
     public static <T extends Entity> JsonMobModel<T> load(ResourceManager resources, String name, Animator<T> animator) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "mob_models/" + name + ".json");
         MeshDefinition mesh = new MeshDefinition();
+        java.util.List<String> names = new java.util.ArrayList<>();
         int texW = 64, texH = 64;
         try (Reader r = new InputStreamReader(resources.getResourceOrThrow(id).open(), StandardCharsets.UTF_8)) {
             JsonObject json = JsonParser.parseReader(r).getAsJsonObject();
@@ -66,6 +69,7 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
             PartDefinition rootDef = mesh.getRoot();
             for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("parts").entrySet()) {
                 JsonObject partJson = e.getValue().getAsJsonObject();
+                names.add(e.getKey());
                 JsonArray piv = partJson.getAsJsonArray("pivot");
                 PartDefinition part = rootDef.addOrReplaceChild(e.getKey(), CubeListBuilder.create(),
                         PartPose.offset(piv.get(0).getAsFloat(), piv.get(1).getAsFloat(), piv.get(2).getAsFloat()));
@@ -89,7 +93,7 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
         } catch (Exception ex) {
             PlanetaryExpansion.LOGGER.error("[Criaturas] No se pudo cargar el modelo {}", id, ex);
         }
-        return new JsonMobModel<>(LayerDefinition.create(mesh, texW, texH).bakeRoot(), animator);
+        return new JsonMobModel<>(LayerDefinition.create(mesh, texW, texH).bakeRoot(), animator, names);
     }
 
     @Override

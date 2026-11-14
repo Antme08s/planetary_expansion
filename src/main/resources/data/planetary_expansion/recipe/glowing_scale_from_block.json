@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:glowing_scale_block"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:glowing_scale",
+    "count": 4
+  }
+}

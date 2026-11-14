@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:croaker_slime"
+    }
+  ],
+  "result": {
+    "id": "minecraft:slime_ball",
+    "count": 1
+  }
+}

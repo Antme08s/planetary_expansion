@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smoking",
+  "ingredient": {
+    "item": "planetary_expansion:croaker_legs"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_croaker_legs"
+  },
+  "experience": 0.35,
+  "cookingtime": 100
+}

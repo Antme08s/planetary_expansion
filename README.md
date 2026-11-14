@@ -876,3 +876,25 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   centro, nervio y sombra entre pétalos) y las hojas pegadas al tallo; con mods que dan volumen a los sprites ya no hay
   píxeles sueltos.
 - **Hojas sin huecos:** `cerulea_assets.fill_holes` rellena los pocos píxeles transparentes de las hojas y del arbusto.
+### Criaturas de Cerúlea
+- **Java:** `cerulea/mobs/` — `CeruleaMobs` (registro, spawn, pestaña, poción de salto con la pata de saltarín),
+  `Grazer`, `Hopper`, `Glider`, `Lurker`, `Croaker`, `Ribbonfin`, `Runner`, `FangArrow`/`FangArrowItem`, `Predators`
+  (miedo a la luz); cliente en `cerulea/mobs/client/CeruleaMobsClient` (usa `CreatureRenderer` y `JsonMobModel`, que
+  ahora carga todos los grupos del JSON).
+- **Pastoreador:** manadas en las praderas; pasta (pasto cerúleo → tierra), estampida si atacas a uno o ve corredores,
+  se cría con raíz cerúlea; antenas que brillan de noche.
+- **Saltarín:** a saltos; huye si corres o te acercas sin agacharte; bayas azules para atraerlo y criarlo.
+- **Planeador:** en las copas del bosque gigante; planea de árbol en árbol (busca hojas más bajas a 8–24 bloques),
+  trepa troncos como las arañas (`onClimbable`), huye planeando; sin daño por caída; membranas plegadas/abiertas.
+- **Acechador:** monstruo nocturno del pantano (raro: nunca dos a menos de 32 bloques ni más de 3 en 96); acecha quieto,
+  salta y muerde; teme a la luz; de día desaparece si no hay nadie cerca.
+- **Croador:** nenúfares y orillas del pantano; croa de noche con el saco inflado; cubeta.
+- **Pez de cinta:** cardúmenes en ríos (más el verde rayado) y mar (más el azul); cubeta que guarda el color.
+- **Corredor:** manadas en praderas y bosques; acecha agachado, se queda quieto y salta; de día solo caza animales y al
+  jugador que se acerca demasiado le da un golpe y se aleja; de noche caza jugadores; teme a la luz; se doma solo de
+  día tirándole carne de pastoreador y alejándose (3–5 veces); domado sigue, se sienta y no suelta nada.
+- **Luz:** luz de bloque ≥ 10 o un jugador con un bloque que dé esa luz en la mano.
+- **Objetos y recetas:** carnes y pescado (horno, ahumador, fogata), cuero cerúleo y piel rayada → cuero, baba → bola de
+  slime, escama → tinte cian, lámpara de bulbo (4 bulbos + vidrio), bloque de escamas luminosas (luz 12), daga de
+  colmillo (colmillo + piel rayada; 5 de daño, 2,4 golpes/s), flechas de colmillo ×4 (colmillo + palo + pluma; 3 de
+  daño). `#planetary_expansion:fangs` acepta los dos colmillos. Texturas: `tools/designs/cerulea_items.py`.
