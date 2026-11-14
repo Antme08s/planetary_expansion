@@ -1,0 +1,8 @@
+{
+  "type": "planetary_expansion:cerulea_sea_plants",
+  "config": {
+    "kind": "seagrass",
+    "tries": 24,
+    "radius": 5
+  }
+}

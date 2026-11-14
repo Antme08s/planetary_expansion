@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "planetary_expansion:block/ribbon_kelp_plant"
+  },
+  "render_type": "minecraft:cutout"
+}

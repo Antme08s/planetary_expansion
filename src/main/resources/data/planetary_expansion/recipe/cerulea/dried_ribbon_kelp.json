@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "planetary_expansion:ribbon_kelp"
+  },
+  "result": {
+    "id": "planetary_expansion:dried_ribbon_kelp"
+  },
+  "experience": 0.1,
+  "cookingtime": 200
+}

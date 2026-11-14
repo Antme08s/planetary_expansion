@@ -70,7 +70,9 @@
     [],
     [
       "planetary_expansion:cerulea/reeds_few",
-      "planetary_expansion:cerulea/short_grass_few"
+      "planetary_expansion:cerulea/short_grass_few",
+      "planetary_expansion:cerulea/sea_seagrass_river",
+      "planetary_expansion:cerulea/sea_tubes_river"
     ],
     []
   ]

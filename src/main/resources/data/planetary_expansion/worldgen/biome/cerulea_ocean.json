@@ -61,7 +61,13 @@
     ],
     [],
     [],
-    [],
+    [
+      "planetary_expansion:cerulea/sea_seagrass",
+      "planetary_expansion:cerulea/sea_kelp",
+      "planetary_expansion:cerulea/sea_pearl",
+      "planetary_expansion:cerulea/sea_tubes",
+      "planetary_expansion:cerulea/sea_fan"
+    ],
     []
   ]
 }

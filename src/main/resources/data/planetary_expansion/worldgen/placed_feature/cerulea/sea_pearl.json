@@ -1,0 +1,11 @@
+{
+  "feature": "planetary_expansion:cerulea/sea_pearl",
+  "placement": [
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

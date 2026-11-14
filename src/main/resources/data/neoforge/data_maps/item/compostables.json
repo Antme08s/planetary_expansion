@@ -1,0 +1,25 @@
+{
+  "values": {
+    "planetary_expansion:ribbon_kelp": {
+      "chance": 0.3
+    },
+    "planetary_expansion:dried_ribbon_kelp": {
+      "chance": 0.3
+    },
+    "planetary_expansion:dried_ribbon_kelp_block": {
+      "chance": 0.5
+    },
+    "planetary_expansion:cerulean_seagrass": {
+      "chance": 0.3
+    },
+    "planetary_expansion:glow_pearls": {
+      "chance": 0.3
+    },
+    "planetary_expansion:glow_tubes": {
+      "chance": 0.65
+    },
+    "planetary_expansion:azure_fan": {
+      "chance": 0.65
+    }
+  }
+}

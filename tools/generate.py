@@ -55,6 +55,17 @@ def tag_add(rel, value):
     write(rel, {"replace": False, "values": values})
 
 
+def datamap_add(rel, values):
+    """Añade valores a un data map de NeoForge (sin borrar los que ya estaban; 1.0.3)."""
+    path = os.path.join(OUT, rel)
+    cur = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            cur = json.load(f).get("values", {})
+    cur.update(values)
+    write(rel, {"values": cur})
+
+
 def data(rel, obj):
     write(f"data/{NS}/{rel}.json", obj)
 
@@ -2647,7 +2658,7 @@ def build_ignis_creatures():
                                "result": {"id": rl("magma_lamp"), "count": 1}})
     # combustible: blaze burner de Create en modo sobrecalentado (como el blaze cake) y horno (como 4 varas de blaze)
     write("data/create/data_maps/item/superheated_blaze_burner_fuels.json", {"values": {rl("magma_core"): {"burn_time": 3200}}})
-    write("data/neoforge/data_maps/item/furnace_fuels.json", {"values": {rl("magma_core"): {"burn_time": 9600}}})
+    datamap_add("data/neoforge/data_maps/item/furnace_fuels.json", {rl("magma_core"): {"burn_time": 9600}})
 
 
 
@@ -3186,6 +3197,74 @@ def build_cerulea():
     name_("block", "azure_lily_pad", "Azure Lily Pad", "Nenúfar azul")
     drop_self("azure_lily_pad")
 
+    # --------------------------------------------------------------- plantas del mar (cerulea_sea_plants.py)
+    for n in ("ribbon_kelp", "ribbon_kelp_plant", "cerulean_seagrass", "glow_tubes", "azure_fan"):
+        model(n, "minecraft:block/cross", {"cross": n}, "minecraft:cutout")
+    bstate("ribbon_kelp", {f"age={a}": {"model": rl("block/ribbon_kelp")} for a in range(26)})
+    bstate("ribbon_kelp_plant", {"": {"model": rl("block/ribbon_kelp_plant")}})
+    for n in ("pearl_weed", "pearl_weed_lit", "pearl_weed_plant", "pearl_weed_plant_lit"):
+        model(n, "minecraft:block/cross", {"cross": n}, "minecraft:cutout")
+    bstate("pearl_weed", {f"age={a},berries={b}": {"model": rl("block/pearl_weed" + ("_lit" if b == "true" else ""))}
+                          for a in range(26) for b in ("false", "true")})
+    bstate("pearl_weed_plant", {f"berries={b}": {"model": rl("block/pearl_weed_plant" + ("_lit" if b == "true" else ""))}
+                                for b in ("false", "true")})
+    bstate("cerulean_seagrass", {"": {"model": rl("block/cerulean_seagrass")}})
+    model("tall_cerulean_seagrass_bottom", "minecraft:block/cross", {"cross": "tall_cerulean_seagrass_bottom"}, "minecraft:cutout")
+    model("tall_cerulean_seagrass_top", "minecraft:block/cross", {"cross": "tall_cerulean_seagrass_top"}, "minecraft:cutout")
+    bstate("tall_cerulean_seagrass", {"half=lower": {"model": rl("block/tall_cerulean_seagrass_bottom")},
+                                      "half=upper": {"model": rl("block/tall_cerulean_seagrass_top")}})
+    for n in ("glow_tubes", "azure_fan"):
+        bstate(n, {f"waterlogged={w}": {"model": rl(f"block/{n}")} for w in ("false", "true")})
+        item_sprite(n, f"block/{n}")
+        drop_self(n)
+    model("dried_ribbon_kelp_block", "minecraft:block/cube_bottom_top", {"top": "dried_ribbon_kelp_block_top",
+          "bottom": "dried_ribbon_kelp_block_top", "side": "dried_ribbon_kelp_block_side"})
+    bstate("dried_ribbon_kelp_block", {"": {"model": rl("block/dried_ribbon_kelp_block")}})
+    item_block("dried_ribbon_kelp_block")
+    drop_self("dried_ribbon_kelp_block")
+    item_sprite("ribbon_kelp", "block/ribbon_kelp")
+    item_sprite("cerulean_seagrass", "block/cerulean_seagrass")
+    item_sprite("glow_pearls", "item/glow_pearls")
+    item_sprite("dried_ribbon_kelp", "item/dried_ribbon_kelp")
+    for n, en, es in (("ribbon_kelp", "Ribbon Kelp", "Alga de cinta"), ("ribbon_kelp_plant", "Ribbon Kelp Plant", "Planta de alga de cinta"),
+                      ("pearl_weed", "Pearl Weed", "Alga de perlas"), ("pearl_weed_plant", "Pearl Weed Plant", "Planta de alga de perlas"),
+                      ("cerulean_seagrass", "Cerulean Seagrass", "Pasto marino cerúleo"),
+                      ("tall_cerulean_seagrass", "Tall Cerulean Seagrass", "Pasto marino cerúleo alto"),
+                      ("glow_tubes", "Glow Tubes", "Tubos luminosos"), ("azure_fan", "Azure Fan", "Abanico azul"),
+                      ("dried_ribbon_kelp_block", "Dried Ribbon Kelp Block", "Bloque de alga de cinta seca")):
+        name_("block", n, en, es)
+    name_("item", "glow_pearls", "Glow Pearls", "Perlas luminosas")
+    name_("item", "dried_ribbon_kelp", "Dried Ribbon Kelp", "Alga de cinta seca")
+    for n in ("ribbon_kelp", "ribbon_kelp_plant"):
+        loot(n, [pool({"type": "minecraft:item", "name": B("ribbon_kelp")}, SURVIVES)])
+    for n in ("pearl_weed", "pearl_weed_plant"):
+        loot(n, [pool({"type": "minecraft:item", "name": B("glow_pearls")},
+                      [{"condition": "minecraft:block_state_property", "block": B(n), "properties": {"berries": "true"}}])])
+    loot("cerulean_seagrass", [pool({"type": "minecraft:item", "name": B("cerulean_seagrass")}, [SHEARS])])
+    loot("tall_cerulean_seagrass", [pool({"type": "minecraft:item", "name": B("cerulean_seagrass"), "functions": [
+        {"function": "minecraft:set_count", "count": 2}]}, [SHEARS, {"condition": "minecraft:block_state_property",
+                                                                  "block": B("tall_cerulean_seagrass"), "properties": {"half": "lower"}}])])
+    for kind, t, suf in (("smelting", 200, ""), ("smoking", 100, "_from_smoking"), ("campfire_cooking", 600, "_from_campfire")):
+        data(f"recipe/cerulea/dried_ribbon_kelp{suf}", {"type": f"minecraft:{kind}", "ingredient": {"item": B("ribbon_kelp")},
+                                                       "result": {"id": B("dried_ribbon_kelp")}, "experience": 0.1, "cookingtime": t})
+    data("recipe/cerulea/dried_ribbon_kelp_block", {"type": "minecraft:crafting_shaped", "category": "building",
+                                                   "pattern": ["###", "###", "###"], "key": {"#": {"item": B("dried_ribbon_kelp")}},
+                                                   "result": {"id": B("dried_ribbon_kelp_block")}})
+    data("recipe/cerulea/dried_ribbon_kelp_from_block", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                                        "ingredients": [{"item": B("dried_ribbon_kelp_block")}],
+                                                        "result": {"id": B("dried_ribbon_kelp"), "count": 9}})
+    data("recipe/cerulea/glow_ink_sac_from_glow_pearls", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                                         "ingredients": [{"item": B("glow_pearls")}, {"item": B("glow_pearls")}],
+                                                         "result": {"id": "minecraft:glow_ink_sac"}})
+    datamap_add("data/neoforge/data_maps/item/furnace_fuels.json", {B("dried_ribbon_kelp_block"): {"burn_time": 4001}})
+    datamap_add("data/neoforge/data_maps/item/compostables.json", {
+        B("ribbon_kelp"): {"chance": 0.3}, B("dried_ribbon_kelp"): {"chance": 0.3}, B("dried_ribbon_kelp_block"): {"chance": 0.5},
+        B("cerulean_seagrass"): {"chance": 0.3}, B("glow_pearls"): {"chance": 0.3}, B("glow_tubes"): {"chance": 0.65},
+        B("azure_fan"): {"chance": 0.65}})
+    tag_add("data/minecraft/tags/block/mineable/hoe.json", B("dried_ribbon_kelp_block"))
+    for n in ("ribbon_kelp", "ribbon_kelp_plant", "pearl_weed", "pearl_weed_plant"):
+        tag_add("data/minecraft/tags/block/sword_efficient.json", B(n))
+
     # --------------------------------------------------------------- comestibles
     for k in (0, 1):
         model(f"blueberry_bush_stage{k}", "minecraft:block/cross", {"cross": f"blueberry_bush_stage{k}"}, "minecraft:cutout")
@@ -3432,15 +3511,29 @@ def build_cerulea():
            "cerulea_grove": rgb(114, 172, 200), "cerulea_swamp": rgb(112, 160, 176), "cerulea_river": rgb(120, 178, 204),
            "cerulea_shore": rgb(126, 184, 206), "cerulea_ocean": rgb(118, 176, 206)}
     water = {"cerulea_swamp": (rgb(44, 112, 104), rgb(16, 40, 40)), "cerulea_ocean": (rgb(28, 96, 150), rgb(8, 30, 56))}
+    def sea(name, kind, count, tries, radius, chance=None):
+        cf = configured(f"sea_{name}", {"type": B("cerulea_sea_plants"), "config": {"kind": kind, "tries": tries, "radius": radius}})
+        mods = [{"type": "minecraft:count", "count": count}] if count > 1 else []
+        if chance:
+            mods.append({"type": "minecraft:rarity_filter", "chance": chance})
+        placed(f"sea_{name}", cf, mods + [{"type": "minecraft:in_square"}, {"type": "minecraft:biome"}])
+        return rl(f"{P}/sea_{name}")
+    sea_grass = sea("seagrass", "seagrass", 5, 40, 7)
+    sea_kelp = sea("kelp", "kelp", 4, 10, 6)
+    sea_pearl = sea("pearl", "pearl", 1, 6, 4)
+    sea_tubes = sea("tubes", "tubes", 2, 5, 4)
+    sea_fan = sea("fan", "fan", 2, 4, 4)
+    sea_grass_river = sea("seagrass_river", "seagrass", 2, 24, 5)
+    sea_tubes_river = sea("tubes_river", "tubes", 1, 4, 3, chance=3)
     veg = {
         "cerulea_tall_meadow": [t_meadow, tall_grass, short_grass_few, flowers, glowblooms, berries, wild_roots, bushes],
         "cerulea_short_meadow": [t_meadow, short_grass, flowers, glowblooms, berries, wild_roots, bushes],
         "cerulea_giant_forest": [t_giant, short_grass, tall_grass_few, flowers, glowblooms],
         "cerulea_grove": [t_grove, short_grass, flowers, glowblooms, berries],
         "cerulea_swamp": [t_swamp, short_grass, glowcaps, reeds, lilies, glowblooms],
-        "cerulea_river": [reeds_few, short_grass_few],
+        "cerulea_river": [reeds_few, short_grass_few, sea_grass_river, sea_tubes_river],
         "cerulea_shore": [reeds_few],
-        "cerulea_ocean": [],
+        "cerulea_ocean": [sea_grass, sea_kelp, sea_pearl, sea_tubes, sea_fan],
     }
     for b in CERULEA_BIOMES:
         wc, wf = water.get(b, (rgb(36, 128, 160), rgb(10, 36, 52)))

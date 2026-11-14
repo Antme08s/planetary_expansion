@@ -918,3 +918,18 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   Ahora tiene cuatro patas cortas que llegan al suelo y caminan en diagonal como un lagarto; al planear se recogen.
 - Pez de cinta: quitadas las cintas sueltas de atrás y de abajo; la aleta del lomo baja hasta la cola y la del vientre
   va pegada al cuerpo.
+### Plantas del mar de Cerúlea
+- Texturas: `tools/designs/cerulea_sea_plants.py` (segunda versión con más detalle; escribe en `tools/designs/cerulea/{block,item}`
+  y una vista previa 3D bajo el agua). Java: `cerulea/CeruleaSea` (bloques, objetos, pestaña y `SeaPlantsFeature`).
+- **Alga de cinta** (`RibbonKelp`/`RibbonKelpPlant`, subclases del kelp): crece en columna; suelta alga de cinta;
+  horno/ahumador/fogata → alga de cinta seca (comida rápida); 9 → bloque de alga de cinta seca (combustible 4001,
+  data map `neoforge:furnace_fuels`, ahora con `datamap_add` que no borra lo anterior).
+- **Alga de perlas** (idea del usuario, "como las bayas luminosas pero marinas"): kelp con `berries`; luz 14 con
+  perlas; clic derecho cosecha 1–2 perlas luminosas; vuelven a salir solas (tick aleatorio 1/10). Las perlas se comen,
+  se plantan (`ItemNameBlockItem`) y 2 → saco de tinta luminosa. El tallo no suelta nada.
+- **Pasto marino cerúleo** bajo y alto: solo con tijeras (el alto da 2); harina de hueso hace el alto.
+- **Tubos luminosos** (luz 10) y **abanico azul**: `SeaDecor`, dentro o fuera del agua, sueltan el propio bloque.
+- **Generación** (`planetary_expansion:cerulea_sea_plants`, config `kind`/`tries`/`radius`; fondo con el heightmap
+  OCEAN_FLOOR, solo en agua): mar con praderas de pasto, algas de cinta (2–8 si hay hondura), algas de perlas (35 % de
+  trozos con perlas), tubos y abanicos; ríos con pasto y algún tubo. Solo en chunks nuevos.
+- Compostables (data map) para todas.

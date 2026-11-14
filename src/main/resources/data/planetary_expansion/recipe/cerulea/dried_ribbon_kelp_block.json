@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:dried_ribbon_kelp"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:dried_ribbon_kelp_block"
+  }
+}

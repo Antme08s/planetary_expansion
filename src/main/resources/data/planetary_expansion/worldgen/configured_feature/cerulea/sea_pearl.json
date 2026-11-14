@@ -1,0 +1,8 @@
+{
+  "type": "planetary_expansion:cerulea_sea_plants",
+  "config": {
+    "kind": "pearl",
+    "tries": 6,
+    "radius": 4
+  }
+}

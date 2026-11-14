@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "waterlogged=false": {
+      "model": "planetary_expansion:block/glow_tubes"
+    },
+    "waterlogged=true": {
+      "model": "planetary_expansion:block/glow_tubes"
+    }
+  }
+}

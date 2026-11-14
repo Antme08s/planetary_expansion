@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:dried_ribbon_kelp_block"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:dried_ribbon_kelp",
+    "count": 9
+  }
+}

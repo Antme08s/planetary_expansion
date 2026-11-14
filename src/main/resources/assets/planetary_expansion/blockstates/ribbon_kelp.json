@@ -1,0 +1,82 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=1": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=2": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=3": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=4": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=5": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=6": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=7": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=8": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=9": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=10": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=11": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=12": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=13": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=14": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=15": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=16": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=17": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=18": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=19": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=20": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=21": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=22": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=23": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=24": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    },
+    "age=25": {
+      "model": "planetary_expansion:block/ribbon_kelp"
+    }
+  }
+}
