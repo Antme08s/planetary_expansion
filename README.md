@@ -1090,3 +1090,4 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   - Al meterse espera 3–5 s enterrado sin poder salir (`hideTicks`); mientras tanto se aparta bajo el polvo hasta unos
     7 bloques de ti y después vuelve a por ti. Antes, si seguías encima, volvía a salir al momento.
   - El movimiento enterrado (con su rastro de partículas) pasó a `RustWorm.burrow`.
+  - Si falla el mordisco se queda fuera 3–6 s (antes 5–8; el usuario: "está algo exagerado").

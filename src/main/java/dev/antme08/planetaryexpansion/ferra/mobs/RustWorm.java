@@ -161,7 +161,7 @@ public class RustWorm extends Monster {
                         if (doHurtTarget(e)) { e.push(0, 0.7, 0); bit = true; attackCooldown = 25; }
                     }
                 }
-                if (phaseTick() >= EMERGE_TICKS) { setPhase(Phase.OUT); outTicks = bit ? AFTER_BITE_TICKS : 100 + random.nextInt(60); }
+                if (phaseTick() >= EMERGE_TICKS) { setPhase(Phase.OUT); outTicks = bit ? AFTER_BITE_TICKS : 60 + random.nextInt(61); }   // si falla: 3–6 s fuera (el usuario)
             }
             case OUT -> {
                 if (target != null) {
