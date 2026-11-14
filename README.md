@@ -910,3 +910,7 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   burbujas, ruido filtrado; nada copiado) en `tools/designs/mobs/sounds_cerulea/<criatura>/<sonido><n>.ogg` más un
   `preview.mp3`. `generate.py` los copia a `sounds/cerulea/` y escribe `sounds.json` con subtítulos;
   `cerulea/mobs/CeruleaSounds` registra los 23 eventos. El pez de cinta sigue con los del salmón.
+- Línea clara en el lomo del corredor: con medidas fraccionarias (cuerpo de 6,8 de ancho) dos caras de una caja
+  comparten el texel del borde y ganaba la última pintada (el vientre). `cerulea_mobs.paint` pinta ahora primero cada
+  texel con la cara que contiene su centro y luego rellena solo los vacíos. Afecta a las texturas de todas las criaturas
+  de Cerúlea (solo en los bordes).

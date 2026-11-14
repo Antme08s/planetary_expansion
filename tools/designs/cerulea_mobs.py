@@ -60,7 +60,18 @@ def paint(boxes, tex_w, tex_h, seed):
     img = Image.new("RGBA", (tex_w, tex_h), (0, 0, 0, 0))
     glow = Image.new("RGBA", (tex_w, tex_h), (0, 0, 0, 0))
     px, gx = img.load(), glow.load()
-    for b in boxes:
+    # 1.0.3: con medidas fraccionarias dos caras comparten un texel del borde; antes ganaba la última cara pintada (en
+    # el corredor, el vientre claro se colaba como una línea en el lomo). Ahora primero se pinta cada texel con la cara
+    # que contiene su centro y después, solo los que queden vacíos, con la cara más cercana.
+    owner = {}
+    for pass_ in (0, 1):
+        for b in boxes:
+            _paint_box(b, px, gx, tex_w, tex_h, rnd, owner, pass_)
+    return img, glow
+
+
+def _paint_box(b, px, gx, tex_w, tex_h, rnd, owner, pass_):
+    if True:
         m = b.mat
         R = T.rot_matrix(b.rot)
         org = np.array(b.origin, float)
@@ -74,8 +85,15 @@ def paint(boxes, tex_w, tex_h, seed):
             fh = max(1, int(math.ceil(rv + rh)) - v0)
             for j in range(fh):
                 for i in range(fw):
-                    s = min(1.0, max(0.0, (u0 + i + 0.5 - ru) / max(rw, 1e-6)))
-                    t = min(1.0, max(0.0, (v0 + j + 0.5 - rv) / max(rh, 1e-6)))
+                    x_, y_ = u0 + i, v0 + j
+                    s_raw = (u0 + i + 0.5 - ru) / max(rw, 1e-6)
+                    t_raw = (v0 + j + 0.5 - rv) / max(rh, 1e-6)
+                    inside = 0.0 <= s_raw <= 1.0 and 0.0 <= t_raw <= 1.0
+                    if (pass_ == 0 and not inside) or (pass_ == 1 and (x_, y_) in owner):
+                        continue
+                    owner[(x_, y_)] = True
+                    s = min(1.0, max(0.0, s_raw))
+                    t = min(1.0, max(0.0, t_raw))
                     p = R @ (o + s * A + t * B - org) + org
                     c = list(m["base"])
                     if m.get("belly") is not None:
@@ -90,12 +108,10 @@ def paint(boxes, tex_w, tex_h, seed):
                         c = [x * (1.04 if n[1] > 0.5 else 1.0) for x in c]
                         e = m.get("noise", 0.05)
                         c = [x * (1 + rnd.uniform(-e, e)) for x in c]
-                    x_, y_ = u0 + i, v0 + j
                     if 0 <= x_ < tex_w and 0 <= y_ < tex_h:
                         px[x_, y_] = clamp(c) + (255,)
                         if lit:
                             gx[x_, y_] = clamp(c) + (255,)
-    return img, glow
 
 
 def mat(name, base, belly=None, noise=0.05, fn=None, emissive=False, belly_y=None):
