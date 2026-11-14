@@ -11,14 +11,14 @@
       ],
       "conditions": [
         {
-          "condition": "minecraft:random_chance_with_enchanted_bonus",
+          "condition": "minecraft:table_bonus",
           "enchantment": "minecraft:fortune",
-          "unenchanted_chance": 0.6,
-          "enchanted_chance": {
-            "type": "minecraft:linear",
-            "base": 0.7,
-            "per_level_above_first": 0.1
-          }
+          "chances": [
+            0.6,
+            0.7,
+            0.8,
+            0.9
+          ]
         }
       ]
     }

@@ -2590,9 +2590,10 @@ def build_suit_progression():
     def gen(name, block_tables, dim, item, chance, fortune=0.05):
         data(f"loot_table/gameplay/planet_materials/{name}", {"type": "minecraft:block", "pools": [{
             "rolls": 1, "entries": [{"type": "minecraft:item", "name": rl(item)}],
-            "conditions": [{"condition": "minecraft:random_chance_with_enchanted_bonus", "enchantment": "minecraft:fortune",
-                            "unenchanted_chance": chance,
-                            "enchanted_chance": {"type": "minecraft:linear", "base": chance + fortune, "per_level_above_first": fortune}}]}]})
+            # table_bonus lee la Fortuna de la herramienta; random_chance_with_enchanted_bonus pide
+            # la entidad atacante, que el botín de bloques no tiene (aviso al cargar y Fortuna ignorada)
+            "conditions": [{"condition": "minecraft:table_bonus", "enchantment": "minecraft:fortune",
+                            "chances": [round(chance + k * fortune, 4) for k in range(4)]}]}]})
         mods = []
         for i, table in enumerate(block_tables):
             mid = f"{name}_{i}"
@@ -4329,7 +4330,11 @@ def build_ferra():
     pools = placed("copper_pools", configured("copper_pool", {"type": "minecraft:lake", "config": {
         "fluid": {"type": "minecraft:simple_state_provider", "state": {"Name": "minecraft:water", "Properties": {"level": "0"}}},
         "barrier": {"type": "minecraft:simple_state_provider", "state": {"Name": B("ferra_verdigris")}}}}),
-        [{"type": "minecraft:rarity_filter", "chance": 2}] + SURF)
+        # el lago ocupa 16x16 bloques desde su origen y mira el bioma de cada columna (para helarse);
+        # si el origen cae al fondo del chunk se sale de la zona que se puede leer al generar
+        # ("Requested chunk unavailable during world generation"). Lo centramos: origen 8 bloques atrás.
+        [{"type": "minecraft:rarity_filter", "chance": 2}, {"type": "minecraft:in_square"},
+         {"type": "minecraft:random_offset", "xz_spread": -8, "y_spread": 0}] + SURF[1:])
 
     def ore(name, block_id, size, count, lo, hi, shape="minecraft:uniform"):
         cf = configured(f"ore_{name}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": 0.0,

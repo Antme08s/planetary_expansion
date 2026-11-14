@@ -1056,3 +1056,23 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   `ridges` del router de ruido; no existe un campo `weirdness`. Se había puesto ahí el ruido de los cañones (Ferra) y el de
   los campos de cristal (Velo); Minecraft lo ignoraba, la rareza valía siempre 0 y en Ferra todo era bioma de cañón (en
   Velo no salían nunca campos de cristal). Ahora va en `ridges`.
+- Errores de chunks en Ferra y revisión de los registros (el usuario: "hay errores de chunks nuevos en ferra"):
+  - Causa: las charcas de cobre (`ferra/copper_pool`, un `minecraft:lake` de agua). El lago ocupa 16×16 bloques desde su
+    origen y, por ser de agua, mira el bioma de cada columna para ver si se hiela. Con el origen en cualquier punto del
+    chunk (`in_square`), esas consultas llegaban a chunks que no se pueden leer durante la generación ("Requested chunk
+    unavailable during world generation") y el chunk se quedaba a medias. Además, en el último registro el servidor se
+    congeló más de 90 s: otro mod (burnt) pidió un bloque de uno de esos chunks rotos y el servidor se quedó esperándolo.
+  - Arreglo: después de `in_square` el origen se mueve 8 bloques hacia atrás (`random_offset` −8), así el lago queda
+    centrado y todo lo que mira cae dentro de la zona permitida.
+  - Los chunks que fallaron no se guardaron ("Not saving partially generated broken chunk"); se vuelven a generar al
+    volver a cargarlos.
+  - Botín de materiales de los planetas (`gameplay/planet_materials/*`): la condición `random_chance_with_enchanted_bonus`
+    pide la entidad atacante, que el botín de bloques no tiene. Avisaba al cargar y la Fortuna no hacía nada. Ahora es
+    `table_bonus` con Fortuna (10/15/20/25 % para el cristal criogénico, etc.).
+  - Otros planetas: en los registros solo había errores de generación en Ferra. Los demás avisos con nuestras dimensiones
+    vienen de otras cosas: Shaolib no puede guardar su copia de chunks (archivo bloqueado en Windows, pasa también en la
+    Tierra), un mundo viejo (test 27, ya borrado) tenía archivos de región dañados en Cerúlea ("External chunk path ... is
+    not file", "Chunk found in invalid location") y la instancia 2 cargó el 2 de noviembre bloques de titanio que
+    Cosmonautics ya no tiene (`rocketnautics:titanium_ore`).
+  - Revisado que las demás features del mod no se salgan de la zona: cráteres (≤ 11 bloques), árboles de Cerúlea
+    (≤ 10), pilares, agujas, chimeneas y bolsas de nitrógeno (≤ 12) están dentro de los 16 permitidos.
