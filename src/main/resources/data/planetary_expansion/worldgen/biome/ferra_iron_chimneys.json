@@ -19,7 +19,14 @@
     "axolotls": [],
     "creature": [],
     "misc": [],
-    "monster": [],
+    "monster": [
+      {
+        "type": "planetary_expansion:blind_stalker",
+        "weight": 10,
+        "minCount": 3,
+        "maxCount": 5
+      }
+    ],
     "underground_water_creature": [],
     "water_ambient": [],
     "water_creature": []

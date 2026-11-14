@@ -76,6 +76,11 @@ public class AbyssalStalker extends Monster {
         goalSelector.addGoal(4, new RandomSwimmingGoal(this, 0.8, 40));
     }
 
+    /** 1.0.3: marca a un jugador como ruidoso (minar en Ferra, para el gusano y los rastreadores). */
+    public static void markLoud(net.minecraft.world.entity.player.Player p, long now) {
+        if (p != null) LOUD.put(p.getUUID(), now);
+    }
+
     /** ¿Hace ruido este jugador? (en silencio si va agachado o casi quieto y no ha minado ni golpeado hace poco) */
     public static boolean noisy(Player p, long now) {
         if (p.isCreative() || p.isSpectator()) return false;

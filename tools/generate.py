@@ -1417,7 +1417,7 @@ def build_no_earth_mobs():
         "type": "neoforge:remove_spawns",
         "biomes": f"#{NS}:planet_biomes",
         # 0.7.61: todo menos las criaturas propias de los planetas (las de Thalassa)
-        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS]},
+        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS + ["rust_worm", "blind_stalker"]]},
     })
 
 
@@ -4309,10 +4309,13 @@ def build_ferra():
     common = dict(temperature=0.8, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(84, 186, 156),
                   water_fog=rgb(30, 90, 74), carvers=carvers)
     rust = {"options": {"type": "minecraft:ash"}, "probability": 0.004}
-    biome("ferra_rust_plains", feats=features(underground_ores=ores_f, surface_structures=[pillars_few]), particle=rust, **common)
-    biome("ferra_canyons", feats=features(underground_ores=ores_f), **common)
-    biome("ferra_copper_pools", feats=features(lakes=[pools], underground_ores=ores_f), **common)
-    biome("ferra_iron_chimneys", feats=features(underground_ores=ores_f, surface_structures=[pillars]), particle=rust, **common)
+    # criaturas (el usuario): el gusano en las zonas despejadas, los rastreadores en las chimeneas y los cañones
+    worms = spawners(monster=[(rl("rust_worm"), 10, 1, 1)])
+    packs = spawners(monster=[(rl("blind_stalker"), 10, 3, 5)])
+    biome("ferra_rust_plains", feats=features(underground_ores=ores_f, surface_structures=[pillars_few]), particle=rust, spawn=worms, **common)
+    biome("ferra_canyons", feats=features(underground_ores=ores_f), spawn=packs, **common)
+    biome("ferra_copper_pools", feats=features(lakes=[pools], underground_ores=ores_f), spawn=worms, **common)
+    biome("ferra_iron_chimneys", feats=features(underground_ores=ores_f, surface_structures=[pillars]), particle=rust, spawn=packs, **common)
     name("ferra_rust_plains", "Rust Plains", "Llanuras de óxido")
     name("ferra_canyons", "Rust Canyons", "Cañones de óxido")
     name("ferra_copper_pools", "Copper Pools", "Charcas de cobre")
@@ -4353,6 +4356,31 @@ def build_ferra():
                                       color(84, 170, 140, biomes=["ferra_copper_pools"], ocean=True),
                                       color(120, 66, 46, biomes=["ferra_iron_chimneys"])]},
     })
+    # modelos y texturas de las criaturas (tools/designs/ferra_mobs.py tools/designs/mobs)
+    mobs = os.path.join(DESIGNS, "mobs")
+    for m, en, es in (("rust_worm", "Rust Worm", "Gusano de óxido"), ("blind_stalker", "Blind Stalker", "Rastreador ciego")):
+        write_bytes(f"assets/{NS}/mob_models/{m}.json", open(os.path.join(mobs, f"{m}.json"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}.png", open(os.path.join(mobs, f"{m}.png"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}_glow.png", open(os.path.join(mobs, f"{m}_glow.png"), "rb").read())
+        LANG_EN[f"entity.{NS}.{m}"] = en
+        LANG_ES[f"entity.{NS}.{m}"] = es
+        write(f"assets/{NS}/models/item/{m}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
+        LANG_EN[f"item.{NS}.{m}_spawn_egg"] = f"{en} Spawn Egg"
+        LANG_ES[f"item.{NS}.{m}_spawn_egg"] = f"Huevo generador de {es.lower()}"
+
+    def drop(item, lo, hi, chance=None):
+        fns = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}},
+               {"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                "count": {"type": "minecraft:uniform", "min": 0, "max": 1}}]
+        p = {"rolls": 1, "entries": [{"type": "minecraft:item", "name": item, "functions": fns}]}
+        if chance is not None:
+            p["conditions"] = [{"condition": "minecraft:killed_by_player"}, {"condition": "minecraft:random_chance", "chance": chance}]
+        return p
+    data("loot_table/entities/rust_worm", {"type": "minecraft:entity", "pools": [
+        drop("minecraft:raw_iron", 2, 4), drop("rocketnautics:raw_titanium", 0, 2), drop("minecraft:raw_copper", 0, 2)]})
+    data("loot_table/entities/blind_stalker", {"type": "minecraft:entity", "pools": [
+        drop("minecraft:bone", 0, 2), drop("minecraft:echo_shard", 1, 1, chance=0.05)]})
+
     LANG_EN[f"hologram.{NS}.body.{P}"] = "Ferra"
     LANG_ES[f"hologram.{NS}.body.{P}"] = "Ferra"
     LANG_EN[f"storm.{NS}.ferra_dust_storm"] = "Rust storm"

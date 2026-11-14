@@ -75,6 +75,7 @@ public class CreatureRenderer<T extends Mob> extends MobRenderer<T, JsonMobModel
         @Override
         public void render(PoseStack pose, MultiBufferSource buffers, int light, T entity, float limbSwing, float limbSwingAmount,
                            float partialTick, float age, float headYaw, float headPitch) {
+            if (entity.isInvisible()) return;   // 1.0.3: el gusano enterrado (invisible) no deja sus fosas brillando en el aire
             float a = (float) Mth.clamp(strength == null ? 1.0 : strength.applyAsDouble(entity), 0.0, 1.0);
             if (a <= 0.01F) return;
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(tex)), 0xF000F0, OverlayTexture.NO_OVERLAY,

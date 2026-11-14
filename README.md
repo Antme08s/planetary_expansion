@@ -1007,3 +1007,19 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   la mitad de las veces, más viento); `StormType.isDust()` agrupa las dos para el daño, las partículas y el sonido.
   El logro "Lijado por la arena" vale en las dos y el mensaje de muerte ya no dice "marciana".
 - Aire fino no respirable, gravedad 2,4, órbita de Cerúlea en 16,7 h empezando en el lado contrario a Velo.
+### Monstruos de Ferra
+- Plan del usuario: "monstruos gusanos de tierra" y "cuadrúpedos que cacen en manada, ciegos como el Warden, que cacen
+  por ruido". El gusano, enemigo normal pero no común, en las zonas despejadas (llanuras de óxido y charcas); los
+  rastreadores en las chimeneas de hierro y los cañones. Modelos: `tools/designs/ferra_mobs.py tools/designs/mobs`.
+- `ferra/mobs/RustWorm` (gusano de óxido, ~5 bloques, 40 de vida, 6 de armadura, 8 de daño): fases BURIED →
+  EMERGING → OUT → DIVING. Enterrado es invisible e intocable; si nota pasos a menos de 20 bloques (jugador en el suelo
+  que camina, corre, mina o pelea; agachado o quieto no) avanza bajo el polvo con rastro de partículas y temblor, a 2
+  bloques sale mordiendo lo que tenga encima, se queda fuera 5–8 s mordiendo y se vuelve a enterrar. El cliente lo
+  dibuja casi de pie (70°) con la mitad de atrás enterrada, subiendo y bajando al salir y meterse; los anillos ondulan.
+  Spawn: 1/3 de los intentos y nunca otro a menos de 64 bloques; de día y de noche.
+- `ferra/mobs/BlindStalker` (rastreador ciego, 24 de vida, 6 de daño): oye a los jugadores ruidosos a menos de 24 bloques
+  (`AbyssalStalker.noisy`) y avisa a la manada (16 bloques); sin presa va a mirar los ruidos recientes de Ferra (bloques
+  rotos, impactos de proyectiles: una bola de nieve lejos los distrae); se olvida tras 5 s de silencio salvo a 2,5
+  bloques. Manadas de 3–5, como mucho ~8 en 48 bloques. Sonidos de Warden más agudos. Brillan más cazando.
+- Botín: gusano 2–4 hierro crudo, 0–2 titanio crudo, 0–2 cobre crudo; rastreador 0–2 huesos y 5 % fragmento de eco.
+- La capa de brillo de `CreatureRenderer` ya no se dibuja en entidades invisibles (el gusano enterrado).

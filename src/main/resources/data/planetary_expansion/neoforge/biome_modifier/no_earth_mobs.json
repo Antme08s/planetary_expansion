@@ -17,7 +17,9 @@
       "planetary_expansion:croaker",
       "planetary_expansion:ribbonfin",
       "planetary_expansion:runner",
-      "planetary_expansion:ironjaw"
+      "planetary_expansion:ironjaw",
+      "planetary_expansion:rust_worm",
+      "planetary_expansion:blind_stalker"
     ]
   }
 }
