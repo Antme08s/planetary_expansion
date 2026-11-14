@@ -1,6 +1,5 @@
 package dev.antme08.planetaryexpansion.ferra.mobs;
 
-import dev.antme08.planetaryexpansion.creatures.AbyssalStalker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -79,7 +78,7 @@ public class BlindStalker extends Monster {
             double best = HEAR_RANGE * HEAR_RANGE;
             for (Player p : level().players()) {
                 double d = p.distanceToSqr(this);
-                if (d < best && p.isAlive() && AbyssalStalker.noisy(p, now)) { best = d; heard = p; }
+                if (d < best && p.isAlive() && FerraMobs.heard(p, now)) { best = d; heard = p; }
             }
             if (heard != null) {
                 if (target != heard) {

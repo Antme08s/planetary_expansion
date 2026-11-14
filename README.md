@@ -1026,3 +1026,8 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
 - Arreglo: el gusano y los rastreadores se ahogaban (Cosmonautics deja sin respirar a todo en Ferra, que no tiene aire
   respirable). `FerraMobs.breathe` (LivingBreatheEvent, prioridad HIGH, como los caracoles de Ignis) les deja respirar
   salvo bajo el agua.
+- Arreglo del oído: solo detectaban poner bloques. Se miraba la velocidad del jugador en el servidor, que casi siempre es
+  0. Ahora `FerraMobs` escucha todas las vibraciones de Minecraft (`VanillaGameEvent`, las mismas del Warden y los sensores
+  de sculk: pasos, saltos, caídas, poner/romper bloques, golpes, comer, puertas…) y guarda la última de cada jugador
+  (`FerraMobs.heard`, 1,5 s). Agachado, los pasos no cuentan (`GameEventTags.IGNORE_VIBRATIONS_SNEAKING`, como el Warden).
+  Los proyectiles que caen siguen sirviendo para distraer a la manada.

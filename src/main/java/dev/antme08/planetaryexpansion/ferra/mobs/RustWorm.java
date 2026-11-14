@@ -1,6 +1,5 @@
 package dev.antme08.planetaryexpansion.ferra.mobs;
 
-import dev.antme08.planetaryexpansion.creatures.AbyssalStalker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -106,7 +105,7 @@ public class RustWorm extends Monster {
             double best = HEAR_RANGE * HEAR_RANGE;
             for (Player p : sl.players()) {
                 double d = p.distanceToSqr(this);
-                if (d < best && p.isAlive() && p.onGround() && AbyssalStalker.noisy(p, now)) { best = d; heard = p; }
+                if (d < best && p.isAlive() && FerraMobs.heard(p, now)) { best = d; heard = p; }
             }
             if (heard != null) { setTarget(heard); quietTicks = 0; }
             else if (target != null && (quietTicks += 5) > 100) { setTarget(null); quietTicks = 0; }

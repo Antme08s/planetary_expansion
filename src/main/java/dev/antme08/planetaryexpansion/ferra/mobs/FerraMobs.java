@@ -64,6 +64,7 @@ public final class FerraMobs {
         modBus.addListener(FerraMobs::creativeTab);
         NeoForge.EVENT_BUS.addListener(FerraMobs::onBreak);
         NeoForge.EVENT_BUS.addListener(FerraMobs::onProjectile);
+        NeoForge.EVENT_BUS.addListener(FerraMobs::onGameEvent);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, FerraMobs::breathe);
     }
 
@@ -124,6 +125,37 @@ public final class FerraMobs {
             if (n.pos().distanceToSqr(from) < range * range) return n;
         }
         return null;
+    }
+
+    /** Última vibración de cada jugador en Ferra (ticks del juego). */
+    static final java.util.Map<java.util.UUID, Long> HEARD = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * ¿Se oye a este jugador ahora? Sí si en los últimos 1,5 s hizo una vibración: pasos, saltos, poner o romper bloques,
+     * golpear, comer, abrir puertas… (agachado, los pasos no cuentan, como con el Warden). Antes se miraba la velocidad
+     * del jugador en el servidor, que casi siempre vale 0: solo se le oía al poner bloques.
+     */
+    public static boolean heard(net.minecraft.world.entity.player.Player p, long now) {
+        if (p.isCreative() || p.isSpectator()) return false;
+        Long t = HEARD.get(p.getUUID());
+        return t != null && now - t < 30;
+    }
+
+    /** Todas las vibraciones de Minecraft (las mismas que oyen el Warden y los sensores de sculk). */
+    private static void onGameEvent(net.neoforged.neoforge.event.VanillaGameEvent event) {
+        Level level = event.getLevel();
+        if (level.isClientSide || !inFerra(level)) return;
+        net.minecraft.world.entity.Entity cause = event.getCause();
+        var ev = event.getVanillaEvent();
+        long now = level.getGameTime();
+        if (cause instanceof net.minecraft.world.entity.player.Player p) {
+            if (p.isCreative() || p.isSpectator()) return;
+            if (p.isSteppingCarefully() && ev.is(net.minecraft.tags.GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) return;
+            HEARD.put(p.getUUID(), now);
+            noise(event.getEventPosition(), now);
+        } else if (cause instanceof net.minecraft.world.entity.projectile.Projectile) {
+            noise(event.getEventPosition(), now);       // una bola de nieve o una flecha que cae: distrae a la manada
+        }
     }
 
     private static void onBreak(BlockEvent.BreakEvent event) {
