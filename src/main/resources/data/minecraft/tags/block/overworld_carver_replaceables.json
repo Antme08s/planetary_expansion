@@ -9,6 +9,9 @@
     "planetary_expansion:cerulean_mud",
     "planetary_expansion:cerulean_sand",
     "planetary_expansion:velo_rock",
-    "planetary_expansion:velo_dust"
+    "planetary_expansion:velo_dust",
+    "planetary_expansion:ferra_rock",
+    "planetary_expansion:ferra_dust",
+    "planetary_expansion:ferra_ochre"
   ]
 }

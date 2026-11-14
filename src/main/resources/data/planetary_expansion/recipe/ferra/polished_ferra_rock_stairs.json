@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:polished_ferra_rock"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:polished_ferra_rock_stairs",
+    "count": 4
+  }
+}

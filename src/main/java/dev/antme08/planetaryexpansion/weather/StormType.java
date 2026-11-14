@@ -58,7 +58,25 @@ public enum StormType {
             2.0,
             0.004,
             0.30f,              // fuerte: 30 %
-            new float[]{0.55f, 0.55f, 0.22f}, 40f);    // amarillo verdoso; se ve hasta 40 bloques
+            new float[]{0.55f, 0.55f, 0.22f}, 40f),    // amarillo verdoso; se ve hasta 40 bloques
+    /**
+     * Ferra (1.0.3, el usuario: "tormentas como en Marte" y "una luna hostil"): tormentas de polvo de óxido como las de
+     * Marte, pero más frecuentes, con más viento y fuertes la mitad de las veces.
+     */
+    FERRA_DUST_STORM("ferra", "Rust storm",
+            12_000, 30_000,     // calma: medio día a día y cuarto
+            3_600, 9_600,       // duración: 3 a 8 minutos
+            600,
+            15.0,
+            7.0,
+            0.014,
+            0.50f,              // fuerte: 50 %
+            new float[]{0.72f, 0.32f, 0.16f}, 14f);   // rojo óxido; se ve hasta 14 bloques
+
+    /** Tormentas de polvo (Marte y Ferra): golpes de piedras, partículas de arena. */
+    public boolean isDust() {
+        return this == DUST_STORM || this == FERRA_DUST_STORM;
+    }
 
     public final ResourceKey<Level> dimension;
     public final String displayName;

@@ -13,6 +13,8 @@
     "planetary_expansion:deep_cerulean_crystal_ore",
     "planetary_expansion:velo_gold_ore",
     "planetary_expansion:velo_diamond_ore",
-    "planetary_expansion:velo_crystal_ore"
+    "planetary_expansion:velo_crystal_ore",
+    "planetary_expansion:ferra_gold_ore",
+    "planetary_expansion:ferra_redstone_ore"
   ]
 }

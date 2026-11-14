@@ -1,0 +1,57 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 7354922,
+    "fog_color": 9850418,
+    "water_color": 5552796,
+    "water_fog_color": 1989194,
+    "particle": {
+      "options": {
+        "type": "minecraft:ash"
+      },
+      "probability": 0.004
+    }
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "planetary_expansion:ferra/crater",
+      "minecraft:cave",
+      "minecraft:cave_extra_underground"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:ferra/rust_pillars"
+    ],
+    [],
+    [
+      "planetary_expansion:ferra/ore_iron",
+      "planetary_expansion:ferra/ore_iron_vein",
+      "planetary_expansion:ferra/ore_titanium",
+      "planetary_expansion:ferra/ore_copper",
+      "planetary_expansion:ferra/ore_redstone",
+      "planetary_expansion:ferra/ore_gold"
+    ],
+    [],
+    [],
+    [],
+    []
+  ]
+}

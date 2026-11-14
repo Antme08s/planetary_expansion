@@ -11,6 +11,9 @@
     "planetary_expansion:mirewood_slab",
     "planetary_expansion:velo_rock_slab",
     "planetary_expansion:velo_rock_brick_slab",
-    "planetary_expansion:polished_velo_rock_slab"
+    "planetary_expansion:polished_velo_rock_slab",
+    "planetary_expansion:ferra_rock_slab",
+    "planetary_expansion:ferra_rock_brick_slab",
+    "planetary_expansion:polished_ferra_rock_slab"
   ]
 }

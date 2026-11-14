@@ -1,0 +1,22 @@
+{
+  "dimension": "planetary_expansion:ferra",
+  "priority": 1000,
+  "universal_drag": 0.002,
+  "base_gravity": [
+    0.0,
+    -2.4,
+    0.0
+  ],
+  "pressure_function": [
+    {
+      "altitude": 64.0,
+      "value": 0.1,
+      "slope": 0.0
+    },
+    {
+      "altitude": 1500.0,
+      "value": 0.0,
+      "slope": 0.0
+    }
+  ]
+}

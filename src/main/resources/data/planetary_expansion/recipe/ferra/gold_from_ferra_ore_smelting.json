@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "planetary_expansion:ferra_gold_ore"
+  },
+  "result": {
+    "id": "minecraft:gold_ingot"
+  },
+  "experience": 1.0,
+  "cookingtime": 200
+}

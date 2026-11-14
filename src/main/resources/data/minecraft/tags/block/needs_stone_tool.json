@@ -10,6 +10,10 @@
     "planetary_expansion:cerulean_zinc_ore",
     "planetary_expansion:deep_cerulean_zinc_ore",
     "planetary_expansion:velo_iron_ore",
-    "planetary_expansion:velo_titanium_ore"
+    "planetary_expansion:velo_titanium_ore",
+    "planetary_expansion:ferra_iron_ore",
+    "planetary_expansion:ferra_copper_ore",
+    "planetary_expansion:ferra_titanium_ore",
+    "planetary_expansion:ferra_iron_vein"
   ]
 }

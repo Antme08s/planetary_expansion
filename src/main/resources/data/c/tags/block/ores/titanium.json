@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "planetary_expansion:velo_titanium_ore"
+    "planetary_expansion:velo_titanium_ore",
+    "planetary_expansion:ferra_titanium_ore"
   ]
 }

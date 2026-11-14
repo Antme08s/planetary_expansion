@@ -1469,10 +1469,11 @@ def build_weather_data():
         "exhaustion": 0.1,
         "scaling": "never",
     })
-    LANG_EN[f"death.attack.{NS}.dust_storm"] = "%1$s was shredded by a Martian dust storm"
-    LANG_EN[f"death.attack.{NS}.dust_storm.player"] = "%1$s was shredded by a Martian dust storm while fighting %2$s"
-    LANG_ES[f"death.attack.{NS}.dust_storm"] = "%1$s fue triturado por una tormenta de arena marciana"
-    LANG_ES[f"death.attack.{NS}.dust_storm.player"] = "%1$s fue triturado por una tormenta de arena marciana mientras peleaba con %2$s"
+    # 1.0.3: también en Ferra, así que sin "marciana"
+    LANG_EN[f"death.attack.{NS}.dust_storm"] = "%1$s was shredded by a dust storm"
+    LANG_EN[f"death.attack.{NS}.dust_storm.player"] = "%1$s was shredded by a dust storm while fighting %2$s"
+    LANG_ES[f"death.attack.{NS}.dust_storm"] = "%1$s fue triturado por una tormenta de arena"
+    LANG_ES[f"death.attack.{NS}.dust_storm.player"] = "%1$s fue triturado por una tormenta de arena mientras peleaba con %2$s"
 
     # Nombres de los cuerpos celestes en la mesa holográfica (clave = nombre del archivo de universe_planets)
     for body, en, es in [
@@ -2221,7 +2222,7 @@ def build_advancements():
         ("red_dust", "space_race", "minecraft:red_sand", "task", {"mars": dim(f"{NS}:mars")}, None, 0,
          "Red Dust", "Set foot on Mars", "Polvo rojo", "Pisa Marte"),
         ("sandblasted", "red_dust", "minecraft:sand", "task", {"survived": IMPOSSIBLE}, None, 0,
-         "Sandblasted", "Live through a Martian dust storm", "Lijado por la arena", "Sobrevive a una tormenta de arena en Marte"),
+         "Sandblasted", "Live through a dust storm (Mars or Ferra)", "Lijado por la arena", "Sobrevive a una tormenta de arena (Marte o Ferra)"),
         ("rich_veins", "red_dust", "minecraft:raw_iron", "task", {"mined": IMPOSSIBLE}, None, 0,
          "Rich Veins", "Mine an ore on another planet", "Vetas ricas", "Mina un mineral en otro planeta"),
         ("under_the_clouds", "space_race", "minecraft:magma_block", "task", {"venus": dim(f"{NS}:venus")}, None, 0,
@@ -4056,6 +4057,320 @@ def build_velo():
         LANG_ES[f"{n}body.{P}.{field}"] = es
 
 
+# ==========================================================================
+# FERRA — luna de óxido de Cerúlea (1.0.3). Ideas del usuario: tormentas como en Marte, una luna hostil y que
+# "aparezca demasiado hierro, titanio, cobre, redstone y oro". Texturas: tools/designs/ferra_textures.py --export
+# tools/designs/ferra  →  ferra/block
+# ==========================================================================
+FERRA_TEX = os.path.join(DESIGNS, "ferra")
+
+
+def build_ferra():
+    P = "ferra"
+    B = rl
+    for f in sorted(os.listdir(os.path.join(FERRA_TEX, "block"))):
+        write_bytes(f"assets/{NS}/textures/block/{f}", open(os.path.join(FERRA_TEX, "block", f), "rb").read())
+
+    def lang(kind, n, en, es):
+        LANG_EN[f"{kind}.{NS}.{n}"] = en
+        LANG_ES[f"{kind}.{NS}.{n}"] = es
+
+    def model(n, parent, textures):
+        write(f"assets/{NS}/models/block/{n}.json", {"parent": parent, "textures": {k: rl(f"block/{v}") for k, v in textures.items()}})
+
+    def bstate(n, variants):
+        write(f"assets/{NS}/blockstates/{n}.json", {"variants": variants})
+
+    def item_block(n):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": rl(f"block/{n}")})
+
+    def loot(n, pools):
+        data(f"loot_table/blocks/{n}", {"type": "minecraft:block", "pools": pools, "random_sequence": rl(f"blocks/{n}")})
+
+    def pool(entry, conditions=None):
+        p = {"rolls": 1.0, "bonus_rolls": 0.0, "entries": [entry]}
+        if conditions:
+            p["conditions"] = conditions
+        return p
+
+    SURVIVES = [{"condition": "minecraft:survives_explosion"}]
+    SILK = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+
+    def cube(n, en, es):
+        model(n, "minecraft:block/cube_all", {"all": n})
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        lang("block", n, en, es)
+
+    def tag(kind, tagname, values):
+        for v in values:
+            tag_add(f"data/{tagname.split(':')[0]}/tags/{kind}/{tagname.split(':')[1]}.json", v)
+
+    # --------------------------------------------------------------- bloques
+    for n, en, es in (("ferra_dust", "Rust Dust", "Polvo de óxido"), ("ferra_rock", "Ferra Rock", "Roca de Ferra"),
+                      ("ferra_rock_bricks", "Ferra Rock Bricks", "Ladrillos de roca de Ferra"),
+                      ("polished_ferra_rock", "Polished Ferra Rock", "Roca de Ferra pulida"),
+                      ("ferra_ochre", "Ochre Rock", "Roca ocre"), ("ferra_verdigris", "Copper Patina", "Pátina de cobre")):
+        cube(n, en, es)
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, SURVIVES)])
+    cube("ferra_iron_vein", "Iron Vein", "Veta de hierro")
+    loot("ferra_iron_vein", [pool({"type": "minecraft:alternatives", "children": [
+        {"type": "minecraft:item", "name": B("ferra_iron_vein"), "conditions": [SILK]},
+        {"type": "minecraft:item", "name": "minecraft:raw_iron", "functions": [
+            {"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 3, "max": 6}},
+            {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:ore_drops"},
+            {"function": "minecraft:explosion_decay"}]}]})])
+    FORES = {"iron": ("minecraft:raw_iron", None, "Iron", "hierro"), "copper": ("minecraft:raw_copper", (2, 5), "Copper", "cobre"),
+             "gold": ("minecraft:raw_gold", None, "Gold", "oro"), "redstone": ("minecraft:redstone", (4, 5), "Redstone", "redstone"),
+             "titanium": ("rocketnautics:raw_titanium", None, "Titanium", "titanio")}
+    for o, (item, count, en, es) in FORES.items():
+        n = f"ferra_{o}_ore"
+        if o == "redstone":
+            model(n, "minecraft:block/cube_all", {"all": n})
+            write(f"assets/{NS}/models/block/{n}_on.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{n}")}})
+            bstate(n, {"lit=false": {"model": rl(f"block/{n}")}, "lit=true": {"model": rl(f"block/{n}_on")}})
+            item_block(n)
+            lang("block", n, f"Ferra {en} Ore", f"Mena de {es} en roca de Ferra")
+        else:
+            cube(n, f"Ferra {en} Ore", f"Mena de {es} en roca de Ferra")
+        fns = []
+        if count:
+            fns.append({"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": count[0], "max": count[1]}})
+        fns.append({"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune",
+                    "formula": "minecraft:uniform_bonus_count" if o == "redstone" else "minecraft:ore_drops",
+                    **({"parameters": {"bonusMultiplier": 1}} if o == "redstone" else {})})
+        fns.append({"function": "minecraft:explosion_decay"})
+        loot(n, [pool({"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": B(n), "conditions": [SILK]}, {"type": "minecraft:item", "name": item, "functions": fns}]})])
+    FACING_Y = {"east": 0, "south": 90, "west": 180, "north": 270}
+    shapes = {"straight": "", "inner_left": "_inner", "inner_right": "_inner", "outer_left": "_outer", "outer_right": "_outer"}
+    stair_ids, slab_ids = [], []
+    for prefix, base, en, es in (("ferra_rock", "ferra_rock", "Ferra Rock", "de roca de Ferra"),
+                                 ("ferra_rock_brick", "ferra_rock_bricks", "Ferra Rock Brick", "de ladrillos de roca de Ferra"),
+                                 ("polished_ferra_rock", "polished_ferra_rock", "Polished Ferra Rock", "de roca de Ferra pulida")):
+        st_, sl_ = f"{prefix}_stairs", f"{prefix}_slab"
+        tx = {"bottom": base, "top": base, "side": base}
+        model(st_, "minecraft:block/stairs", tx)
+        model(st_ + "_inner", "minecraft:block/inner_stairs", tx)
+        model(st_ + "_outer", "minecraft:block/outer_stairs", tx)
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half in ("bottom", "top"):
+                for shape, suffix in shapes.items():
+                    y = y0
+                    if shape in ("inner_left", "outer_left") and half == "bottom":
+                        y += 270
+                    if shape in ("inner_right", "outer_right") and half == "top":
+                        y += 90
+                    v = {"model": rl(f"block/{st_}{suffix}")}
+                    if half == "top":
+                        v["x"] = 180
+                    if y % 360:
+                        v["y"] = y % 360
+                    if "x" in v or "y" in v:
+                        v["uvlock"] = True
+                    var[f"facing={facing},half={half},shape={shape}"] = v
+        bstate(st_, var)
+        item_block(st_)
+        lang("block", st_, f"{en} Stairs", f"Escaleras {es}")
+        loot(st_, [pool({"type": "minecraft:item", "name": B(st_)}, SURVIVES)])
+        model(sl_, "minecraft:block/slab", tx)
+        model(sl_ + "_top", "minecraft:block/slab_top", tx)
+        bstate(sl_, {"type=bottom": {"model": rl(f"block/{sl_}")}, "type=top": {"model": rl(f"block/{sl_}_top")},
+                     "type=double": {"model": rl(f"block/{base}")}})
+        item_block(sl_)
+        lang("block", sl_, f"{en} Slab", f"Losa {es}")
+        loot(sl_, [pool({"type": "minecraft:item", "name": B(sl_), "functions": [
+            {"function": "minecraft:set_count", "count": 2.0, "add": False,
+             "conditions": [{"condition": "minecraft:block_state_property", "block": B(sl_), "properties": {"type": "double"}}]},
+            {"function": "minecraft:explosion_decay"}]})])
+        data(f"recipe/ferra/{st_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["#  ", "## ", "###"],
+                                     "key": {"#": {"item": B(base)}}, "result": {"id": B(st_), "count": 4}})
+        data(f"recipe/ferra/{sl_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["###"],
+                                     "key": {"#": {"item": B(base)}}, "result": {"id": B(sl_), "count": 6}})
+        for out, cnt in ((st_, 1), (sl_, 2)):
+            data(f"recipe/ferra/{out}_from_{base}_stonecutting", {"type": "minecraft:stonecutting",
+                 "ingredient": {"item": B(base)}, "result": {"id": B(out), "count": cnt}})
+        stair_ids.append(B(st_))
+        slab_ids.append(B(sl_))
+    for out, ing in (("polished_ferra_rock", "ferra_rock"), ("ferra_rock_bricks", "polished_ferra_rock")):
+        data(f"recipe/ferra/{out}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                     "key": {"#": {"item": B(ing)}}, "result": {"id": B(out), "count": 4}})
+        data(f"recipe/ferra/{out}_stonecutting", {"type": "minecraft:stonecutting", "ingredient": {"item": B("ferra_rock")},
+                                                  "result": {"id": B(out), "count": 1}})
+    for o, item, xp in (("iron", "minecraft:iron_ingot", 0.7), ("copper", "minecraft:copper_ingot", 0.7),
+                        ("gold", "minecraft:gold_ingot", 1.0), ("redstone", "minecraft:redstone", 0.7)):
+        for k, t in (("smelting", 200), ("blasting", 100)):
+            data(f"recipe/ferra/{o}_from_ferra_ore_{k}", {"type": f"minecraft:{k}", "category": "misc",
+                 "ingredient": {"item": B(f"ferra_{o}_ore")}, "result": {"id": item}, "experience": xp, "cookingtime": t})
+
+    ores = [B(f"ferra_{o}_ore") for o in FORES] + [B("ferra_iron_vein")]
+    rocks = [B("ferra_rock"), B("ferra_rock_bricks"), B("polished_ferra_rock"), B("ferra_ochre"), B("ferra_verdigris")]
+    tag("block", "minecraft:mineable/shovel", [B("ferra_dust")])
+    tag("block", "minecraft:sand", [B("ferra_dust")])
+    tag("block", "minecraft:mineable/pickaxe", rocks + ores + stair_ids + slab_ids)
+    tag("block", "minecraft:needs_stone_tool", [B("ferra_iron_ore"), B("ferra_copper_ore"), B("ferra_titanium_ore"), B("ferra_iron_vein")])
+    tag("block", "minecraft:needs_iron_tool", [B("ferra_gold_ore"), B("ferra_redstone_ore")])
+    tag("block", "minecraft:base_stone_overworld", [B("ferra_rock")])
+    tag("block", "minecraft:overworld_carver_replaceables", [B("ferra_rock"), B("ferra_dust"), B("ferra_ochre")])
+    for kind_ in ("block", "item"):
+        tag(kind_, "minecraft:stairs", stair_ids)
+        tag(kind_, "minecraft:slabs", slab_ids)
+        for o in ("iron", "copper", "gold", "redstone"):
+            tag(kind_, f"minecraft:{o}_ores", [B(f"ferra_{o}_ore")])
+        for o in FORES:
+            tag(kind_, f"c:ores/{o}", [B(f"ferra_{o}_ore")])
+            tag(kind_, "c:ores", [B(f"ferra_{o}_ore")])
+    tag("item", "minecraft:stone_crafting_materials", [B("ferra_rock")])
+    tag("item", "minecraft:stone_tool_materials", [B("ferra_rock")])
+    data("tags/block/ferra_carvable", {"values": [B("ferra_dust"), B("ferra_rock"), B("ferra_ochre")] + ores})
+
+    # --------------------------------------------------------------- terreno
+    # meseta a 76 con lomas, cortada por cañones de ~30 bloques donde el ruido "canyon" pasa cerca de 0 (el mismo
+    # ruido decide el bioma de cañón: rareza ±0,17). Charcas en las zonas bajas ("regions" < -0,3).
+    def noise(n, first, amps):
+        data(f"worldgen/noise/{P}/{n}", {"firstOctave": first, "amplitudes": amps})
+        return rl(f"{P}/{n}")
+    hills, detail = noise("hills", -8, [1.0, 1.0, 0.5]), noise("detail", -5, [1.0, 0.5])
+    regions, canyon = noise("regions", -10, [1.0, 1.0]), noise("canyon", -9, [1.0, 0.6])
+    n2 = lambda n: {"type": "minecraft:noise", "noise": n, "xz_scale": 1.0, "y_scale": 0.0}           # noqa: E731
+    base_h = 76
+    cut = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:add", "argument1": 3.0, "argument2": {
+        "type": "minecraft:mul", "argument1": {"type": "minecraft:abs", "argument": n2(canyon)}, "argument2": -18.0}}}
+    density = {"type": "minecraft:add",
+               "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": -64, "to_y": 320,
+                             "from_value": (base_h + 64) / 16.0, "to_value": (base_h - 320) / 16.0},
+               "argument2": {"type": "minecraft:add",
+                             "argument1": {"type": "minecraft:add",
+                                           "argument1": {"type": "minecraft:mul", "argument1": n2(hills), "argument2": 8 / 16.0},
+                                           "argument2": {"type": "minecraft:mul", "argument1": n2(detail), "argument2": 3 / 16.0}},
+                             "argument2": {"type": "minecraft:mul", "argument1": cut, "argument2": -30 / 16.0}}}
+    zero = 0.0
+    router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
+              "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
+              "ridges": zero, "weirdness": n2(canyon), "initial_density_without_jaggedness": density,
+              "final_density": {"type": "minecraft:interpolated", "argument": density},
+              "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
+    dust, ochre = {"Name": B("ferra_dust")}, {"Name": B("ferra_ochre")}
+    surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
+        cond(STEEP, put(ochre)),
+        cond(biome_is("ferra_copper_pools"), cond(ON_FLOOR, cond(noise_band("minecraft:surface", 0.25, 2.0),
+                                                                  put({"Name": B("ferra_verdigris")})))),
+        cond(ON_FLOOR, put(dust)),
+        cond(UNDER_FLOOR, put(dust)))),
+        cond(biome_is("ferra_canyons"), cond(floor(offset=34), put(ochre))))
+    noise_settings(P, router, default_block={"Name": B("ferra_rock")}, default_fluid={"Name": "minecraft:air"},
+                   sea_level=-64, aquifers=False, surface_rule=surface, spawn_target=[
+                       {"temperature": FULL, "humidity": FULL, "continentalness": WIDE, "erosion": FULL, "weirdness": FULL,
+                        "depth": 0.0, "offset": 0.0}])
+    data(f"worldgen/configured_carver/{P}/crater", {"type": "rocketnautics:crater", "config": {
+        "probability": 0.015, "y": {"below_top": 0}, "yScale": 1.0, "lava_level": {"above_bottom": 0},
+        "replaceable": f"#{NS}:ferra_carvable",
+        "radius": {"type": "rocketnautics:config_biased_to_bottom", "bias": 5, "inner": 3.0, "min_inclusive": 4.0, "max_exclusive": 48.0},
+        "heightOffsetFactor": {"type": "minecraft:uniform", "min_inclusive": 0.4, "max_exclusive": 0.6},
+        "horizontalRadiusFactor": {"type": "minecraft:uniform", "min_inclusive": 1.0, "max_exclusive": 1.3}}})
+    carvers = [rl(f"{P}/crater"), "minecraft:cave", "minecraft:cave_extra_underground"]
+
+    def configured(name, obj):
+        data(f"worldgen/configured_feature/{P}/{name}", obj)
+        return rl(f"{P}/{name}")
+
+    def placed(name, feature, placement):
+        data(f"worldgen/placed_feature/{P}/{name}", {"feature": feature, "placement": placement})
+        return rl(f"{P}/{name}")
+
+    SURF = [{"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}]
+    pillars = placed("rust_pillars", configured("rust_pillar", {"type": B("ferra_rust_pillar"), "config": {}}),
+                     [{"type": "minecraft:count", "count": {"type": "minecraft:weighted_list", "distribution": [
+                         {"data": 1, "weight": 3}, {"data": 2, "weight": 2}, {"data": 3, "weight": 1}]}}] + SURF)
+    pillars_few = placed("rust_pillars_few", rl(f"{P}/rust_pillar"), [{"type": "minecraft:rarity_filter", "chance": 6}] + SURF)
+    pools = placed("copper_pools", configured("copper_pool", {"type": "minecraft:lake", "config": {
+        "fluid": {"type": "minecraft:simple_state_provider", "state": {"Name": "minecraft:water", "Properties": {"level": "0"}}},
+        "barrier": {"type": "minecraft:simple_state_provider", "state": {"Name": B("ferra_verdigris")}}}}),
+        [{"type": "minecraft:rarity_filter", "chance": 2}] + SURF)
+
+    def ore(name, block_id, size, count, lo, hi, shape="minecraft:uniform"):
+        cf = configured(f"ore_{name}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": 0.0,
+            "targets": [{"target": {"predicate_type": "minecraft:tag_match", "tag": f"{NS}:ferra_ore_replaceable"},
+                         "state": {"Name": B(block_id)}}]}})
+        return placed(f"ore_{name}", cf, [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+                                          {"type": "minecraft:height_range", "height": {"type": shape, "min_inclusive": {"absolute": lo},
+                                                                                        "max_inclusive": {"absolute": hi}}},
+                                          {"type": "minecraft:biome"}])
+    data("tags/block/ferra_ore_replaceable", {"values": [B("ferra_rock"), B("ferra_ochre")]})
+    # el usuario: "que aparezca demasiado hierro, titanio, cobre, redstone y oro" (varias veces lo de la Tierra)
+    ores_f = [ore("iron", "ferra_iron_ore", 14, 40, -64, 140), ore("iron_vein", "ferra_iron_vein", 22, 5, -64, 100),
+              ore("titanium", "ferra_titanium_ore", 10, 22, -64, 110), ore("copper", "ferra_copper_ore", 16, 28, -64, 140),
+              ore("redstone", "ferra_redstone_ore", 10, 18, -64, 60, "minecraft:trapezoid"),
+              ore("gold", "ferra_gold_ore", 10, 14, -64, 80, "minecraft:trapezoid")]
+
+    sky, fog = rgb(112, 58, 42), rgb(150, 78, 50)
+    common = dict(temperature=0.8, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(84, 186, 156),
+                  water_fog=rgb(30, 90, 74), carvers=carvers)
+    rust = {"options": {"type": "minecraft:ash"}, "probability": 0.004}
+    biome("ferra_rust_plains", feats=features(underground_ores=ores_f, surface_structures=[pillars_few]), particle=rust, **common)
+    biome("ferra_canyons", feats=features(underground_ores=ores_f), **common)
+    biome("ferra_copper_pools", feats=features(lakes=[pools], underground_ores=ores_f), **common)
+    biome("ferra_iron_chimneys", feats=features(underground_ores=ores_f, surface_structures=[pillars]), particle=rust, **common)
+    name("ferra_rust_plains", "Rust Plains", "Llanuras de óxido")
+    name("ferra_canyons", "Rust Canyons", "Cañones de óxido")
+    name("ferra_copper_pools", "Copper Pools", "Charcas de cobre")
+    name("ferra_iron_chimneys", "Iron Chimneys", "Chimeneas de hierro")
+    out_c = [-2.0, -0.17], [0.17, 2.0]
+    pts = [point("ferra_canyons", continentalness=WIDE, weirdness=[-0.17, 0.17], temperature=[-1.0, 1.0])]
+    for w in out_c:
+        pts += [point("ferra_copper_pools", continentalness=[-2.0, -0.3], weirdness=w, temperature=[-1.0, 1.0]),
+                point("ferra_rust_plains", continentalness=[-0.3, 0.35], weirdness=w, temperature=[-1.0, 1.0]),
+                point("ferra_iron_chimneys", continentalness=[0.35, 2.0], weirdness=w, temperature=[-1.0, 1.0])]
+    dimension(P, pts)
+    dimension_type(P, effects="minecraft:overworld")
+    dimension_physics(P, universal_drag=0.002, base_gravity=[0.0, -2.4, 0.0],
+                      pressure_function=[{"altitude": 64.0, "value": 0.1, "slope": 0.0},
+                                         {"altitude": 1500.0, "value": 0.0, "slope": 0.0}])
+
+    data(f"universe_planets/{P}", {
+        "name": P,
+        "parent": "cerulea",
+        "priority": 1000,
+        "acceleration_at_surface": 2.4,
+        "radius": 900000.0,
+        # más lejos que Velo (16,7 h) y empezando en el lado contrario
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": -1.0, "y": 0.0, "z": 0.0}, "period_seconds": 60000.0},
+        "rotation": {"type": "tidal_lock", "rotations_per_orbit": -1.0},
+        "planet_extras": {"light_source_name": "amber"},
+        "dimension_data": {
+            "linked_dimension": rl(P), "allowed_transfer": "all", "dimension_transfer_height": 20000,
+            "atmosphere_composition": {"21000": ["low_density", "drowning"]},
+            "render_universe_in_dimension": True, "dimension_day_time_controller_name": "amber",
+            "apply_gravity_correction_to_entities_in_dimension": True, "entity_drag_multiplier": drag_curve(1500, 4000),
+        },
+        "planet_atmosphere": {"enabled": True, "radius": 1.08, "intensity": 0.45, "densityFalloff": 7.0,
+                              "scatteringStrength": 0.05, "wavelengths": [450.0, 600.0, 700.0]},
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 180, "fallback_green": 90, "fallback_blue": 48,
+                           "colors": [color(196, 98, 52, biomes=["ferra_rust_plains"]), color(150, 70, 40, biomes=["ferra_canyons"], priority=5),
+                                      color(84, 170, 140, biomes=["ferra_copper_pools"], ocean=True),
+                                      color(120, 66, 46, biomes=["ferra_iron_chimneys"])]},
+    })
+    LANG_EN[f"hologram.{NS}.body.{P}"] = "Ferra"
+    LANG_ES[f"hologram.{NS}.body.{P}"] = "Ferra"
+    LANG_EN[f"storm.{NS}.ferra_dust_storm"] = "Rust storm"
+    LANG_ES[f"storm.{NS}.ferra_dust_storm"] = "Tormenta de óxido"
+    n = f"nav.{NS}."
+    for field, (en, es) in {
+            "type": ("Moon of Cerulea", "Luna de Cerúlea"),
+            "desc": ("A hostile rust moon of canyons, iron chimneys and green copper pools, swept by frequent rust storms.",
+                     "Una luna hostil de óxido: cañones, chimeneas de hierro y charcas verdes de cobre, azotada por tormentas de óxido."),
+            "air": ("Thin, not breathable", "Fina, no respirable"), "temp": ("Cold", "Fría"),
+            "hazards": ("Frequent rust storms", "Tormentas de óxido frecuentes"),
+            "armor": ("Impact (against the storms)", "De impacto (contra las tormentas)"),
+            "resources": ("Huge amounts of iron, titanium, copper, redstone and gold",
+                          "Muchísimo hierro, titanio, cobre, redstone y oro")}.items():
+        LANG_EN[f"{n}body.{P}.{field}"] = en
+        LANG_ES[f"{n}body.{P}.{field}"] = es
+
+
 def build_meta():
     # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
     write_bytes("logo.png", open(os.path.join(DESIGNS, "logo.png"), "rb").read())
@@ -4161,6 +4476,7 @@ if __name__ == "__main__":
     build_moon_fix()
     build_cerulea()          # 1.0.3: antes de no_earth_mobs (la etiqueta de biomas del mod)
     build_velo()             # 1.0.3: luna de cristal de Cerúlea
+    build_ferra()            # 1.0.3: luna de óxido de Cerúlea
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

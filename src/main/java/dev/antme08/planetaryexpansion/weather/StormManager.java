@@ -138,7 +138,7 @@ public final class StormManager {
         net.minecraft.server.level.ServerLevel level = server.getLevel(type.dimension);
         if (level == null) return;
         String id = switch (type) {
-            case DUST_STORM -> "sandblasted";
+            case DUST_STORM, FERRA_DUST_STORM -> "sandblasted";
             case ACID_RAIN -> "acid_test";
             case BLIZZARD, THALASSA_BLIZZARD -> severe ? "whiteout" : null;
         };
@@ -246,7 +246,7 @@ public final class StormManager {
             boolean severe = severe(type);
             if (type == StormType.ACID_RAIN) {
                 continue; // la lluvia ácida la gestiona VenusHazards (armadura primero, luego vida)
-            } else if (type == StormType.DUST_STORM) {
+            } else if (type.isDust()) {
                 dustHit(level, player, intensity, severe);
             } else {
                 freeze(player, intensity, severe);

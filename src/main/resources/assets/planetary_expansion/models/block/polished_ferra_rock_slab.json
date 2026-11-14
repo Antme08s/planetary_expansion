@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "planetary_expansion:block/polished_ferra_rock",
+    "top": "planetary_expansion:block/polished_ferra_rock",
+    "side": "planetary_expansion:block/polished_ferra_rock"
+  }
+}

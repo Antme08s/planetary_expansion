@@ -11,6 +11,9 @@
     "planetary_expansion:mirewood_stairs",
     "planetary_expansion:velo_rock_stairs",
     "planetary_expansion:velo_rock_brick_stairs",
-    "planetary_expansion:polished_velo_rock_stairs"
+    "planetary_expansion:polished_velo_rock_stairs",
+    "planetary_expansion:ferra_rock_stairs",
+    "planetary_expansion:ferra_rock_brick_stairs",
+    "planetary_expansion:polished_ferra_rock_stairs"
   ]
 }

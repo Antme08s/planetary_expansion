@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:ferra_rock"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:ferra_rock_slab",
+    "count": 6
+  }
+}

@@ -990,3 +990,20 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
 - Órbita: alrededor de Cerúlea, 8 h (como la Luna), acoplamiento de marea, luz y día de Ámbar; cielo negro con
   estrellas de día (`AirlessStarsMixin`) y el universo de Cosmonautics (`UniverseSky`). Colores en el mapa y en el
   holograma de la consola.
+### Ferra, luna de óxido de Cerúlea
+- Ideas del usuario: tormentas como en Marte, "una luna hostil" y "que aparezca demasiado hierro, titanio, cobre,
+  redstone y oro". Texturas y vistas previas: `tools/designs/ferra_textures.py` (`--export tools/designs/ferra`).
+- Java `ferra/FerraBlocks`: polvo de óxido (cae), roca de Ferra, ladrillos y pulida (+ escaleras y losas), roca ocre
+  (estratos de los cañones), pátina de cobre (orillas de las charcas), veta de hierro (3–6 hierros crudos), menas de
+  hierro, cobre, oro, redstone (`RedStoneOreBlock`) y titanio (`rocketnautics:raw_titanium`). `ferra/RustPillarFeature`
+  (`ferra_rust_pillar`): chimeneas de 6–17 bloques en franjas de roca y ocre con vetas y menas de hierro y titanio.
+- Terreno (`build_ferra`): meseta a 76 con lomas; cañones de ~30 bloques de paredes rectas donde el ruido `ferra/canyon`
+  pasa cerca de 0 (el mismo ruido da el bioma de cañón); paredes ocres (regla STEEP y 34 bloques de ocre en los
+  cañones); charcas de agua verde con orilla de pátina (`minecraft:lake`) en las zonas bajas; pocos cráteres.
+  Biomas: llanuras de óxido, cañones de óxido, charcas de cobre, chimeneas de hierro.
+- Minerales (varias veces lo de la Tierra): hierro 40×14, vetas de hierro 5×22, titanio 22×10, cobre 28×16,
+  redstone 18×10 y oro 14×10 por chunk, en roca y ocre.
+- Tormentas: `StormType.FERRA_DUST_STORM` (como la de Marte, más frecuente: calma de medio día a día y cuarto, fuerte
+  la mitad de las veces, más viento); `StormType.isDust()` agrupa las dos para el daño, las partículas y el sonido.
+  El logro "Lijado por la arena" vale en las dos y el mensaje de muerte ya no dice "marciana".
+- Aire fino no respirable, gravedad 2,4, órbita de Cerúlea en 16,7 h empezando en el lado contrario a Velo.

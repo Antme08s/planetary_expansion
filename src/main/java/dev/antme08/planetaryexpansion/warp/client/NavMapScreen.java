@@ -59,7 +59,7 @@ public class NavMapScreen extends Screen {
             Map.entry("sol", 0xFFFFD75E), Map.entry("overworld", 0xFF4F8FE0), Map.entry("moon", 0xFFCACAD2),
             Map.entry("mars", 0xFFF07338), Map.entry("gas_giant", 0xFFE6B880), Map.entry("ice_world", 0xFFB3EBFF),
             Map.entry("ignis", 0xFFFF4D1A), Map.entry("thalassa", 0xFF8CD1FF), Map.entry("venus", 0xFFF2CC66),
-            Map.entry("cerulea", 0xFF4DB08A), Map.entry("velo", 0xFFE6ECF8), Map.entry("amber", 0xFFFFA64D));
+            Map.entry("cerulea", 0xFF4DB08A), Map.entry("velo", 0xFFE6ECF8), Map.entry("ferra", 0xFFC4622F), Map.entry("amber", 0xFFFFA64D));
 
     private final BlockPos console;
     private double zoom = -1;     // píxeles por metro

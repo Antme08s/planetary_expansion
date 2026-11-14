@@ -189,7 +189,7 @@ public final class ClientStormEffects {
 
     private static void spawnParticles(Minecraft mc, ClientLevel level, StormType type, double dx, double dz, double gust) {
         // Tormenta normal: algo menos de partículas que la fuerte.
-        int count = (int) ((type == StormType.DUST_STORM ? 110 : 130) * shown * (0.7f + 0.3f * shownFog));
+        int count = (int) ((type.isDust() ? 110 : 130) * shown * (0.7f + 0.3f * shownFog));
         ParticleStatus status = mc.options.particles().get();
         if (status == ParticleStatus.DECREASED) count /= 2;
         else if (status == ParticleStatus.MINIMAL) count /= 5;
@@ -212,7 +212,7 @@ public final class ClientStormEffects {
 
             ParticleOptions options;
             double vy;
-            if (type == StormType.DUST_STORM) {
+            if (type.isDust()) {
                 options = r.nextInt(3) == 0 ? SAND_DARK : SAND_LIGHT;
                 vy = (r.nextDouble() - 0.5) * 0.04;
             } else {
@@ -231,7 +231,7 @@ public final class ClientStormEffects {
         soundAge++;
         boolean lost = sound != null && soundAge > 40 && !mc.getSoundManager().isActive(sound);
         if (sound == null || sound.isStopped() || lost) {
-            sound = new StormWindSound(type == StormType.DUST_STORM ? 0.55f : 0.75f);
+            sound = new StormWindSound(type.isDust() ? 0.55f : 0.75f);
             soundAge = 0;
             mc.getSoundManager().play(sound);
         }
