@@ -64,6 +64,17 @@ public final class FerraMobs {
         modBus.addListener(FerraMobs::creativeTab);
         NeoForge.EVENT_BUS.addListener(FerraMobs::onBreak);
         NeoForge.EVENT_BUS.addListener(FerraMobs::onProjectile);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGH, FerraMobs::breathe);
+    }
+
+    /**
+     * Ferra no tiene aire respirable y Cosmonautics (prioridad HIGHEST) deja sin respirar a toda criatura que esté ahí:
+     * el gusano y los rastreadores se ahogaban. Son de Ferra: no necesitan aire (salvo bajo el agua).
+     */
+    private static void breathe(net.neoforged.neoforge.event.entity.living.LivingBreatheEvent event) {
+        if (event.canBreathe() || !(event.getEntity() instanceof RustWorm || event.getEntity() instanceof BlindStalker)) return;
+        if (event.getEntity().isEyeInFluid(net.minecraft.tags.FluidTags.WATER)) return;
+        event.setCanBreathe(true);
     }
 
     private static void attributes(EntityAttributeCreationEvent event) {

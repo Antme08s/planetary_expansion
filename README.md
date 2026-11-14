@@ -1023,3 +1023,6 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
   bloques. Manadas de 3–5, como mucho ~8 en 48 bloques. Sonidos de Warden más agudos. Brillan más cazando.
 - Botín: gusano 2–4 hierro crudo, 0–2 titanio crudo, 0–2 cobre crudo; rastreador 0–2 huesos y 5 % fragmento de eco.
 - La capa de brillo de `CreatureRenderer` ya no se dibuja en entidades invisibles (el gusano enterrado).
+- Arreglo: el gusano y los rastreadores se ahogaban (Cosmonautics deja sin respirar a todo en Ferra, que no tiene aire
+  respirable). `FerraMobs.breathe` (LivingBreatheEvent, prioridad HIGH, como los caracoles de Ignis) les deja respirar
+  salvo bajo el agua.
