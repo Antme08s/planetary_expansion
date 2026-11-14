@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:velo_rock_bricks"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:velo_rock_brick_stairs",
+    "count": 4
+  }
+}

@@ -3676,6 +3676,386 @@ def build_cerulea():
         LANG_ES[f"{n}body.{P}.{field}"] = es
 
 
+# ==========================================================================
+# VELO — luna de cristal de Cerúlea (1.0.3; el usuario la quiso "prácticamente vacía, solo polvo blanco y cristales
+# celestes"). Texturas: tools/designs/velo_textures.py --export tools/designs/velo  →  velo/block
+# ==========================================================================
+VELO_TEX = os.path.join(DESIGNS, "velo")
+VELO_BIOMES = ["velo_dust_plains", "velo_dunes", "velo_crystal_fields", "velo_craters"]
+
+
+def build_velo():
+    P = "velo"
+    B = rl
+    for f in sorted(os.listdir(os.path.join(VELO_TEX, "block"))):
+        write_bytes(f"assets/{NS}/textures/block/{f}", open(os.path.join(VELO_TEX, "block", f), "rb").read())
+
+    def lang(kind, n, en, es):
+        LANG_EN[f"{kind}.{NS}.{n}"] = en
+        LANG_ES[f"{kind}.{NS}.{n}"] = es
+
+    def model(n, parent, textures, render=None):
+        m = {"parent": parent, "textures": {k: (rl(f"block/{v}") if ":" not in v else v) for k, v in textures.items()}}
+        if render:
+            m["render_type"] = render
+        write(f"assets/{NS}/models/block/{n}.json", m)
+
+    def bstate(n, variants):
+        write(f"assets/{NS}/blockstates/{n}.json", {"variants": variants})
+
+    def item_block(n, m=None):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": rl(f"block/{m or n}")})
+
+    def loot(n, pools):
+        data(f"loot_table/blocks/{n}", {"type": "minecraft:block", "pools": pools, "random_sequence": rl(f"blocks/{n}")})
+
+    def pool(entry, conditions=None):
+        p = {"rolls": 1.0, "bonus_rolls": 0.0, "entries": [entry]}
+        if conditions:
+            p["conditions"] = conditions
+        return p
+
+    SURVIVES = [{"condition": "minecraft:survives_explosion"}]
+    SILK = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+
+    def drop_self(n):
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, SURVIVES)])
+
+    def cube(n, en, es, tex=None):
+        model(n, "minecraft:block/cube_all", {"all": tex or n})
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        lang("block", n, en, es)
+
+    def tag(kind, tagname, values):
+        for v in values:
+            tag_add(f"data/{tagname.split(':')[0]}/tags/{kind}/{tagname.split(':')[1]}.json", v)
+
+    # --------------------------------------------------------------- bloques
+    for n, en, es in (("velo_dust", "Velo Dust", "Polvo de Velo"), ("velo_rock", "Velo Rock", "Roca de Velo"),
+                      ("velo_rock_bricks", "Velo Rock Bricks", "Ladrillos de roca de Velo"),
+                      ("polished_velo_rock", "Polished Velo Rock", "Roca de Velo pulida"),
+                      ("cerulean_crystal_block", "Block of Cerulean Crystal", "Bloque de cristal cerúleo"),
+                      ("budding_cerulean_crystal", "Budding Cerulean Crystal", "Cristal cerúleo brotante")):
+        cube(n, en, es)
+    for n in ("velo_dust", "velo_rock", "velo_rock_bricks", "polished_velo_rock", "cerulean_crystal_block"):
+        drop_self(n)
+    loot("budding_cerulean_crystal", [])                                  # como la amatista brotante: no se recoge
+    # brotes y racimo (modelos de cruz orientados como la amatista)
+    FACING = {"up": {}, "down": {"x": 180}, "north": {"x": 90}, "south": {"x": 90, "y": 180},
+              "east": {"x": 90, "y": 90}, "west": {"x": 90, "y": 270}}
+    buds = [("small_cerulean_bud", "Small Cerulean Bud", "Brote de cristal cerúleo pequeño"),
+            ("medium_cerulean_bud", "Medium Cerulean Bud", "Brote de cristal cerúleo mediano"),
+            ("large_cerulean_bud", "Large Cerulean Bud", "Brote de cristal cerúleo grande"),
+            ("cerulean_crystal_cluster", "Cerulean Crystal Cluster", "Racimo de cristal cerúleo")]
+    for n, en, es in buds:
+        model(n, "minecraft:block/cross", {"cross": n}, "minecraft:cutout")
+        bstate(n, {f"facing={f},waterlogged={w}": {"model": rl(f"block/{n}"), **rot}
+                   for f, rot in FACING.items() for w in ("false", "true")})
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": "minecraft:item/amethyst_cluster", "textures": {"layer0": rl(f"block/{n}")}})
+        lang("block", n, en, es)
+    for n, _, _ in buds[:3]:
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, [SILK])])
+    crystal = B("cerulean_crystal")
+    loot("cerulean_crystal_cluster", [pool({"type": "minecraft:alternatives", "children": [
+        {"type": "minecraft:item", "name": B("cerulean_crystal_cluster"), "conditions": [SILK]},
+        {"type": "minecraft:item", "name": crystal, "conditions": [{"condition": "minecraft:match_tool",
+                                                                   "predicate": {"items": "#minecraft:cluster_max_harvestables"}}],
+         "functions": [{"function": "minecraft:set_count", "count": 4.0, "add": False},
+                       {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:ore_drops"}]},
+        {"type": "minecraft:item", "name": crystal, "functions": [{"function": "minecraft:set_count", "count": 2.0, "add": False},
+                                                                  {"function": "minecraft:explosion_decay"}]}]})])
+    # lámpara (como la de redstone: dos modelos según LIT)
+    model("cerulean_crystal_lamp", "minecraft:block/cube_all", {"all": "cerulean_crystal_lamp"})
+    model("cerulean_crystal_lamp_on", "minecraft:block/cube_all", {"all": "cerulean_crystal_lamp_on"})
+    bstate("cerulean_crystal_lamp", {"lit=false": {"model": rl("block/cerulean_crystal_lamp")},
+                                     "lit=true": {"model": rl("block/cerulean_crystal_lamp_on")}})
+    item_block("cerulean_crystal_lamp")
+    lang("block", "cerulean_crystal_lamp", "Cerulean Crystal Lamp", "Lámpara de cristal cerúleo")
+    drop_self("cerulean_crystal_lamp")
+    # minerales
+    VORES = {"iron": ("minecraft:raw_iron", None, "Iron", "hierro"), "gold": ("minecraft:raw_gold", None, "Gold", "oro"),
+             "diamond": ("minecraft:diamond", None, "Diamond", "diamante"),
+             "crystal": (crystal, (1, 2), "Cerulean Crystal", "cristal cerúleo"),
+             "titanium": ("rocketnautics:raw_titanium", None, "Titanium", "titanio")}
+    for o, (item, count, en, es) in VORES.items():
+        n = f"velo_{o}_ore"
+        cube(n, f"Velo {en} Ore", f"Mena de {es} en roca de Velo")
+        fns = []
+        if count:
+            fns.append({"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": count[0], "max": count[1]}})
+        fns += [{"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": "minecraft:ore_drops"},
+                {"function": "minecraft:explosion_decay"}]
+        loot(n, [pool({"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": B(n), "conditions": [SILK]}, {"type": "minecraft:item", "name": item, "functions": fns}]})])
+    # escaleras y losas
+    FACING_Y = {"east": 0, "south": 90, "west": 180, "north": 270}
+    shapes = {"straight": "", "inner_left": "_inner", "inner_right": "_inner", "outer_left": "_outer", "outer_right": "_outer"}
+    stair_ids, slab_ids = [], []
+    for prefix, base, en, es in (("velo_rock", "velo_rock", "Velo Rock", "de roca de Velo"),
+                                 ("velo_rock_brick", "velo_rock_bricks", "Velo Rock Brick", "de ladrillos de roca de Velo"),
+                                 ("polished_velo_rock", "polished_velo_rock", "Polished Velo Rock", "de roca de Velo pulida")):
+        st_, sl_ = f"{prefix}_stairs", f"{prefix}_slab"
+        tx = {"bottom": base, "top": base, "side": base}
+        model(st_, "minecraft:block/stairs", tx)
+        model(st_ + "_inner", "minecraft:block/inner_stairs", tx)
+        model(st_ + "_outer", "minecraft:block/outer_stairs", tx)
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half in ("bottom", "top"):
+                for shape, suffix in shapes.items():
+                    y = y0
+                    if shape in ("inner_left", "outer_left") and half == "bottom":
+                        y += 270
+                    if shape in ("inner_right", "outer_right") and half == "top":
+                        y += 90
+                    v = {"model": rl(f"block/{st_}{suffix}")}
+                    if half == "top":
+                        v["x"] = 180
+                    if y % 360:
+                        v["y"] = y % 360
+                    if "x" in v or "y" in v:
+                        v["uvlock"] = True
+                    var[f"facing={facing},half={half},shape={shape}"] = v
+        bstate(st_, var)
+        item_block(st_)
+        lang("block", st_, f"{en} Stairs", f"Escaleras {es}")
+        drop_self(st_)
+        model(sl_, "minecraft:block/slab", tx)
+        model(sl_ + "_top", "minecraft:block/slab_top", tx)
+        bstate(sl_, {"type=bottom": {"model": rl(f"block/{sl_}")}, "type=top": {"model": rl(f"block/{sl_}_top")},
+                     "type=double": {"model": rl(f"block/{base}")}})
+        item_block(sl_)
+        lang("block", sl_, f"{en} Slab", f"Losa {es}")
+        loot(sl_, [pool({"type": "minecraft:item", "name": B(sl_), "functions": [
+            {"function": "minecraft:set_count", "count": 2.0, "add": False,
+             "conditions": [{"condition": "minecraft:block_state_property", "block": B(sl_), "properties": {"type": "double"}}]},
+            {"function": "minecraft:explosion_decay"}]})])
+        data(f"recipe/velo/{st_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["#  ", "## ", "###"],
+                                    "key": {"#": {"item": B(base)}}, "result": {"id": B(st_), "count": 4}})
+        data(f"recipe/velo/{sl_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["###"],
+                                    "key": {"#": {"item": B(base)}}, "result": {"id": B(sl_), "count": 6}})
+        for out, cnt in ((st_, 1), (sl_, 2)):
+            data(f"recipe/velo/{out}_from_{base}_stonecutting", {"type": "minecraft:stonecutting",
+                 "ingredient": {"item": B(base)}, "result": {"id": B(out), "count": cnt}})
+        stair_ids.append(B(st_))
+        slab_ids.append(B(sl_))
+
+    # --------------------------------------------------------------- recetas
+    for out, ing in (("polished_velo_rock", "velo_rock"), ("velo_rock_bricks", "polished_velo_rock")):
+        data(f"recipe/velo/{out}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                    "key": {"#": {"item": B(ing)}}, "result": {"id": B(out), "count": 4}})
+        data(f"recipe/velo/{out}_stonecutting", {"type": "minecraft:stonecutting", "ingredient": {"item": B("velo_rock")},
+                                                 "result": {"id": B(out), "count": 1}})
+    data("recipe/velo/cerulean_crystal_block", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                                "key": {"#": {"item": crystal}}, "result": {"id": B("cerulean_crystal_block"), "count": 1}})
+    # idea del usuario: lámpara de cristal (roca pulida en las esquinas, 4 cristales y polvo de piedra luminosa)
+    data("recipe/velo/cerulean_crystal_lamp", {"type": "minecraft:crafting_shaped", "category": "redstone",
+                                               "pattern": ["PCP", "CGC", "PCP"],
+                                               "key": {"P": {"item": B("polished_velo_rock")}, "C": {"item": crystal},
+                                                       "G": {"item": "minecraft:glowstone_dust"}},
+                                               "result": {"id": B("cerulean_crystal_lamp"), "count": 1}})
+    for o, item in (("iron", "minecraft:iron_ingot"), ("gold", "minecraft:gold_ingot")):
+        for k, t in (("smelting", 200), ("blasting", 100)):
+            data(f"recipe/velo/{o}_ingot_from_velo_ore_{k}", {"type": f"minecraft:{k}", "category": "misc",
+                 "ingredient": {"item": B(f"velo_{o}_ore")}, "result": {"id": item}, "experience": 0.7 if o == "iron" else 1.0,
+                 "cookingtime": t})
+
+    # --------------------------------------------------------------- etiquetas
+    ores = [B(f"velo_{o}_ore") for o in VORES]
+    rocks = [B("velo_rock"), B("velo_rock_bricks"), B("polished_velo_rock")]
+    crystals = [B("cerulean_crystal_block"), B("budding_cerulean_crystal")] + [B(n) for n, _, _ in buds]
+    tag("block", "minecraft:mineable/shovel", [B("velo_dust")])
+    tag("block", "minecraft:sand", [B("velo_dust")])
+    tag("block", "minecraft:mineable/pickaxe", rocks + ores + crystals + stair_ids + slab_ids + [B("cerulean_crystal_lamp")])
+    tag("block", "minecraft:needs_stone_tool", [B("velo_iron_ore"), B("velo_titanium_ore")])
+    tag("block", "minecraft:needs_iron_tool", [B("velo_gold_ore"), B("velo_diamond_ore"), B("velo_crystal_ore")])
+    tag("block", "minecraft:base_stone_overworld", [B("velo_rock")])
+    tag("block", "minecraft:overworld_carver_replaceables", [B("velo_rock"), B("velo_dust")])
+    tag("block", "minecraft:crystal_sound_blocks", [B("cerulean_crystal_block"), B("budding_cerulean_crystal")])
+    for kind_ in ("block", "item"):
+        tag(kind_, "minecraft:stairs", stair_ids)
+        tag(kind_, "minecraft:slabs", slab_ids)
+        for o in ("iron", "gold", "diamond"):
+            tag(kind_, f"minecraft:{o}_ores", [B(f"velo_{o}_ore")])
+        for o in VORES:
+            tag(kind_, f"c:ores/{o}", [B(f"velo_{o}_ore")])
+            tag(kind_, "c:ores", [B(f"velo_{o}_ore")])
+    tag("item", "minecraft:stone_crafting_materials", [B("velo_rock")])
+    tag("item", "minecraft:stone_tool_materials", [B("velo_rock")])
+    data("tags/block/velo_carvable", {"values": [B("velo_dust"), B("velo_rock")] + ores})
+
+    # --------------------------------------------------------------- terreno
+    # relieve propio y sencillo: altura base 72 con lomas suaves (dos ruidos 2D). Los cráteres los hace el carver de
+    # Cosmonautics, como en Marte. Biomas: "regiones" (continentalidad) y "cristal" (rareza).
+    def noise(n, first, amps):
+        data(f"worldgen/noise/{P}/{n}", {"firstOctave": first, "amplitudes": amps})
+        return rl(f"{P}/{n}")
+    hills, detail = noise("hills", -8, [1.0, 1.0, 0.5]), noise("detail", -5, [1.0, 0.5])
+    regions, crystal_n = noise("regions", -10, [1.0, 1.0]), noise("crystal", -9, [1.0, 0.5])
+    n2 = lambda n: {"type": "minecraft:noise", "noise": n, "xz_scale": 1.0, "y_scale": 0.0}           # noqa: E731
+    base_h = 72
+    # densidad = (altura - y) / 16 + lomas: 10 bloques de lomas y 3 de detalle
+    density = {"type": "minecraft:add",
+               "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": -64, "to_y": 320,
+                             "from_value": (base_h + 64) / 16.0, "to_value": (base_h - 320) / 16.0},
+               "argument2": {"type": "minecraft:add",
+                             "argument1": {"type": "minecraft:mul", "argument1": n2(hills), "argument2": 10 / 16.0},
+                             "argument2": {"type": "minecraft:mul", "argument1": n2(detail), "argument2": 3 / 16.0}}}
+    zero = 0.0
+    router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
+              "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
+              "ridges": zero, "initial_density_without_jaggedness": density,
+              "final_density": {"type": "minecraft:interpolated", "argument": density},
+              "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
+    router["weirdness"] = n2(crystal_n)
+    dust = st_ = {"Name": B("velo_dust")}
+    surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
+        cond(ON_FLOOR, put(dust)),
+        cond(UNDER_FLOOR, put(dust)),
+        cond(floor(offset=3), put(dust)))))
+    noise_settings(P, router, default_block={"Name": B("velo_rock")}, default_fluid={"Name": "minecraft:air"},
+                   sea_level=-64, aquifers=False, surface_rule=surface, spawn_target=[
+                       {"temperature": FULL, "humidity": FULL, "continentalness": WIDE, "erosion": FULL, "weirdness": FULL,
+                        "depth": 0.0, "offset": 0.0}])
+
+    def crater_carver(name, probability):
+        data(f"worldgen/configured_carver/{P}/{name}", {"type": "rocketnautics:crater", "config": {
+            "probability": probability, "y": {"below_top": 0}, "yScale": 1.0, "lava_level": {"above_bottom": 0},
+            "replaceable": f"#{NS}:velo_carvable",
+            "radius": {"type": "rocketnautics:config_biased_to_bottom", "bias": 5, "inner": 3.0, "min_inclusive": 4.0, "max_exclusive": 72.0},
+            "heightOffsetFactor": {"type": "minecraft:uniform", "min_inclusive": 0.4, "max_exclusive": 0.6},
+            "horizontalRadiusFactor": {"type": "minecraft:uniform", "min_inclusive": 1.0, "max_exclusive": 1.3}}})
+        return rl(f"{P}/{name}")
+    craters_few, craters_many = crater_carver("crater", 0.025), crater_carver("crater_field", 0.12)
+
+    def configured(name, obj):
+        data(f"worldgen/configured_feature/{P}/{name}", obj)
+        return rl(f"{P}/{name}")
+
+    def placed(name, feature, placement):
+        data(f"worldgen/placed_feature/{P}/{name}", {"feature": feature, "placement": placement})
+        return rl(f"{P}/{name}")
+
+    def bud_state(n):
+        return {"Name": B(n), "Properties": {"facing": "up", "waterlogged": "false"}}
+
+    def geode(name, crack):
+        with open(os.path.join(VWG, "configured_feature", "amethyst_geode.json")) as fh:
+            g = json.load(fh)
+        bl = g["config"]["blocks"]
+        bl["inner_layer_provider"]["state"] = {"Name": B("cerulean_crystal_block")}
+        bl["alternate_inner_layer_provider"]["state"] = {"Name": B("budding_cerulean_crystal")}
+        bl["middle_layer_provider"]["state"] = {"Name": B("polished_velo_rock")}
+        bl["outer_layer_provider"]["state"] = {"Name": B("velo_rock")}
+        bl["inner_placements"] = [bud_state(n) for n, _, _ in buds]
+        g["config"]["crack"]["generate_crack_chance"] = crack
+        if crack >= 1.0:
+            g["config"]["crack"]["base_crack_size"] = 3.0   # geodas rotas de los cráteres: grieta grande
+        return configured(name, g)
+    geode_deep = placed("geode", geode("geode", 0.95), [
+        {"type": "minecraft:rarity_filter", "chance": 20}, {"type": "minecraft:in_square"},
+        {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform", "min_inclusive": {"above_bottom": 6},
+                                                      "max_inclusive": {"absolute": 40}}}, {"type": "minecraft:biome"}])
+    # geoda rota medio enterrada en la superficie (cráteres)
+    geode_surface = placed("geode_surface", geode("geode_broken", 1.0), [
+        {"type": "minecraft:rarity_filter", "chance": 3}, {"type": "minecraft:in_square"},
+        {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"},
+        {"type": "minecraft:random_offset", "xz_spread": 0, "y_spread": -4}, {"type": "minecraft:biome"}])
+    spires = placed("crystal_spires", configured("crystal_spire", {"type": B("velo_crystal_spire"), "config": {}}), [
+        {"type": "minecraft:count", "count": {"type": "minecraft:weighted_list", "distribution": [
+            {"data": 1, "weight": 3}, {"data": 2, "weight": 2}, {"data": 3, "weight": 1}]}},
+        {"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}])
+
+    def bud_patch(name, n, tries, count=None, chance=None):
+        cf = configured(name, {"type": "minecraft:random_patch", "config": {"tries": tries, "xz_spread": 7, "y_spread": 3, "feature": {
+            "feature": {"type": "minecraft:simple_block", "config": {"to_place": {"type": "minecraft:simple_state_provider",
+                                                                                  "state": bud_state(n)}}},
+            "placement": [{"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": [
+                {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+                {"type": "minecraft:matching_blocks", "offset": [0, -1, 0], "blocks": [B("velo_dust"), B("velo_rock")]}]}}]}}})
+        pl = ([{"type": "minecraft:rarity_filter", "chance": chance}] if chance else []) + \
+             ([{"type": "minecraft:count", "count": count}] if count else [])
+        return placed(name, cf, pl + [{"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"},
+                                      {"type": "minecraft:biome"}])
+    buds_field = [bud_patch("buds_small", "small_cerulean_bud", 24, count=2), bud_patch("buds_medium", "medium_cerulean_bud", 16, count=1),
+                  bud_patch("buds_large", "large_cerulean_bud", 10, chance=2), bud_patch("clusters", "cerulean_crystal_cluster", 8, chance=2)]
+    buds_rare = bud_patch("buds_rare", "small_cerulean_bud", 6, chance=6)
+
+    def ore(name, block_id, size, count, lo, hi, shape="minecraft:trapezoid"):
+        cf = configured(f"ore_{name}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": 0.0,
+            "targets": [{"target": {"predicate_type": "minecraft:block_match", "block": B("velo_rock")}, "state": {"Name": B(block_id)}}]}})
+        return placed(f"ore_{name}", cf, [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+                                          {"type": "minecraft:height_range", "height": {"type": shape, "min_inclusive": {"absolute": lo},
+                                                                                        "max_inclusive": {"absolute": hi}}},
+                                          {"type": "minecraft:biome"}])
+    ores_f = [ore("iron", "velo_iron_ore", 9, 18, -64, 64), ore("gold", "velo_gold_ore", 9, 5, -64, 32),
+              ore("diamond", "velo_diamond_ore", 6, 6, -64, 16), ore("crystal", "velo_crystal_ore", 5, 7, -40, 56),
+              ore("titanium", "velo_titanium_ore", 8, 10, -64, 64, "minecraft:uniform")]
+
+    sky, fog = 0, rgb(20, 22, 30)
+    common = dict(temperature=0.0, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(63, 118, 228),
+                  water_fog=rgb(5, 5, 51))
+    caves = ["minecraft:cave", "minecraft:cave_extra_underground"]
+    biome("velo_dust_plains", carvers=[craters_few] + caves,
+          feats=features(local_modifications=[geode_deep], underground_ores=ores_f, vegetal_decoration=[buds_rare]), **common)
+    biome("velo_dunes", carvers=[craters_few] + caves,
+          feats=features(local_modifications=[geode_deep], underground_ores=ores_f), **common)
+    biome("velo_crystal_fields", carvers=[craters_few] + caves,
+          feats=features(local_modifications=[geode_deep], underground_ores=ores_f, surface_structures=[spires],
+                         vegetal_decoration=buds_field), **common)
+    biome("velo_craters", carvers=[craters_many] + caves,
+          feats=features(local_modifications=[geode_deep], underground_ores=ores_f, surface_structures=[geode_surface],
+                         vegetal_decoration=[buds_rare]), **common)
+    name("velo_dust_plains", "Dust Plains", "Llanuras de polvo")
+    name("velo_dunes", "Dust Dunes", "Dunas de polvo")
+    name("velo_crystal_fields", "Crystal Fields", "Campos de cristal")
+    name("velo_craters", "Crater Fields", "Campos de cráteres")
+    pts = [point("velo_dunes", continentalness=[-2.0, -0.25], weirdness=[-2.0, 0.45], temperature=[-1.0, 1.0]),
+           point("velo_dust_plains", continentalness=[-0.25, 0.4], weirdness=[-2.0, 0.45], temperature=[-1.0, 1.0]),
+           point("velo_craters", continentalness=[0.4, 2.0], weirdness=[-2.0, 0.45], temperature=[-1.0, 1.0]),
+           point("velo_crystal_fields", continentalness=WIDE, weirdness=[0.45, 2.0], temperature=[-1.0, 1.0])]
+    dimension(P, pts)
+    dimension_type(P, effects="rocketnautics:moon")
+    dimension_physics(P, universal_drag=0.0, base_gravity=[0.0, -1.6, 0.0], base_pressure=0.0, magnetic_north=[0.0, 0.0, 0.0])
+
+    data(f"universe_planets/{P}", {
+        "name": P,
+        "parent": "cerulea",
+        "priority": 1000,
+        "acceleration_at_surface": 1.6,
+        "radius": 700000.0,
+        # como la Luna de la Tierra (8 h de órbita); Ferra irá más lejos y en otra dirección
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": 1.0, "y": 0.0, "z": 0.0}, "period_seconds": 28800.0},
+        "rotation": {"type": "tidal_lock", "rotations_per_orbit": -1.0},
+        "planet_extras": {"light_source_name": "amber"},
+        "dimension_data": {
+            "linked_dimension": rl(P), "allowed_transfer": "all", "dimension_transfer_height": 20000,
+            "atmosphere_composition": {"21000": ["low_density", "drowning"]},
+            "render_universe_in_dimension": True, "dimension_day_time_controller_name": "amber",
+            "apply_gravity_correction_to_entities_in_dimension": True, "entity_drag_multiplier": drag_curve(4000, 7000),
+        },
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 236, "fallback_green": 236, "fallback_blue": 244,
+                           "colors": [color(240, 240, 248, biomes=["velo_dust_plains"]), color(226, 226, 238, biomes=["velo_dunes"]),
+                                      color(120, 196, 245, biomes=["velo_crystal_fields"], priority=5),
+                                      color(200, 202, 216, biomes=["velo_craters"])]},
+    })
+    LANG_EN[f"hologram.{NS}.body.{P}"] = "Velo"
+    LANG_ES[f"hologram.{NS}.body.{P}"] = "Velo"
+    n = f"nav.{NS}."
+    for field, (en, es) in {
+            "type": ("Moon of Cerulea", "Luna de Cerúlea"),
+            "desc": ("A silent, almost empty moon: white dust to the horizon and fields of glowing cerulean crystal.",
+                     "Una luna silenciosa y casi vacía: polvo blanco hasta el horizonte y campos de cristal cerúleo que brilla."),
+            "air": ("None", "Ninguno"), "temp": ("Cold", "Fría"), "hazards": ("No air, low gravity", "Sin aire, gravedad baja"),
+            "armor": ("Space suit", "Traje espacial"),
+            "resources": ("Cerulean crystal, iron, gold, diamond and titanium", "Cristal cerúleo, hierro, oro, diamante y titanio")}.items():
+        LANG_EN[f"{n}body.{P}.{field}"] = en
+        LANG_ES[f"{n}body.{P}.{field}"] = es
+
+
 def build_meta():
     # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
     write_bytes("logo.png", open(os.path.join(DESIGNS, "logo.png"), "rb").read())
@@ -3780,6 +4160,7 @@ if __name__ == "__main__":
     build_venus_hazard_data()
     build_moon_fix()
     build_cerulea()          # 1.0.3: antes de no_earth_mobs (la etiqueta de biomas del mod)
+    build_velo()             # 1.0.3: luna de cristal de Cerúlea
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "PCP",
+    "CGC",
+    "PCP"
+  ],
+  "key": {
+    "P": {
+      "item": "planetary_expansion:polished_velo_rock"
+    },
+    "C": {
+      "item": "planetary_expansion:cerulean_crystal"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:cerulean_crystal_lamp",
+    "count": 1
+  }
+}

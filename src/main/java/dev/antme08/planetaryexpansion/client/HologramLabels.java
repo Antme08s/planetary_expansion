@@ -41,16 +41,18 @@ import java.util.Map;
 public final class HologramLabels {
     private HologramLabels() {}
 
-    static final Map<String, float[]> COLORS = Map.of(
-            "sol", new float[]{1.0f, 0.85f, 0.3f},
-            "overworld", new float[]{0.35f, 0.65f, 1.0f},
-            "moon", new float[]{0.8f, 0.8f, 0.85f},
-            "mars", new float[]{0.95f, 0.45f, 0.2f},
-            "gas_giant", new float[]{0.9f, 0.72f, 0.5f},
-            "ice_world", new float[]{0.7f, 0.92f, 1.0f},
-            "ignis", new float[]{1.0f, 0.3f, 0.1f},
-            "thalassa", new float[]{0.55f, 0.82f, 1.0f},
-            "venus", new float[]{0.95f, 0.8f, 0.4f});
+    static final Map<String, float[]> COLORS = Map.ofEntries(
+            Map.entry("sol", new float[]{1.0f, 0.85f, 0.3f}),
+            Map.entry("overworld", new float[]{0.35f, 0.65f, 1.0f}),
+            Map.entry("moon", new float[]{0.8f, 0.8f, 0.85f}),
+            Map.entry("mars", new float[]{0.95f, 0.45f, 0.2f}),
+            Map.entry("gas_giant", new float[]{0.9f, 0.72f, 0.5f}),
+            Map.entry("ice_world", new float[]{0.7f, 0.92f, 1.0f}),
+            Map.entry("ignis", new float[]{1.0f, 0.3f, 0.1f}),
+            Map.entry("thalassa", new float[]{0.55f, 0.82f, 1.0f}),
+            Map.entry("venus", new float[]{0.95f, 0.8f, 0.4f}),
+            Map.entry("cerulea", new float[]{0.3f, 0.7f, 0.55f}),
+            Map.entry("velo", new float[]{0.9f, 0.93f, 0.97f}));
     static final float[] DEFAULT_COLOR = {0.9f, 0.9f, 0.9f};
     private static final float[] YOU_COLOR = {0.0f, 1.0f, 0.8f}; // el mismo cian que el marcador de Cosmonautics
 

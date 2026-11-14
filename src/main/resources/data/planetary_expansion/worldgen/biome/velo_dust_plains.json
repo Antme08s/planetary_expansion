@@ -1,0 +1,52 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.0,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 0,
+    "fog_color": 1316382,
+    "water_color": 4159204,
+    "water_fog_color": 329011
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "planetary_expansion:velo/crater",
+      "minecraft:cave",
+      "minecraft:cave_extra_underground"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [
+      "planetary_expansion:velo/geode"
+    ],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:velo/ore_iron",
+      "planetary_expansion:velo/ore_gold",
+      "planetary_expansion:velo/ore_diamond",
+      "planetary_expansion:velo/ore_crystal",
+      "planetary_expansion:velo/ore_titanium"
+    ],
+    [],
+    [],
+    [
+      "planetary_expansion:velo/buds_rare"
+    ],
+    []
+  ]
+}

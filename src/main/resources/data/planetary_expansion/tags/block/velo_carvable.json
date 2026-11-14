@@ -1,0 +1,11 @@
+{
+  "values": [
+    "planetary_expansion:velo_dust",
+    "planetary_expansion:velo_rock",
+    "planetary_expansion:velo_iron_ore",
+    "planetary_expansion:velo_gold_ore",
+    "planetary_expansion:velo_diamond_ore",
+    "planetary_expansion:velo_crystal_ore",
+    "planetary_expansion:velo_titanium_ore"
+  ]
+}

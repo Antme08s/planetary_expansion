@@ -19,7 +19,8 @@ import java.util.Set;
 @Mixin(ClientLevel.class)
 public abstract class AirlessStarsMixin {
     private static final Set<ResourceLocation> AIRLESS = Set.of(
-            ResourceLocation.fromNamespaceAndPath("planetary_expansion", "ignis"));
+            ResourceLocation.fromNamespaceAndPath("planetary_expansion", "ignis"),
+            ResourceLocation.fromNamespaceAndPath("planetary_expansion", "velo"));   // 1.0.3
 
     @Inject(method = "getStarBrightness", at = @At("RETURN"), cancellable = true)
     private void planetaryExpansion$airlessStars(float partialTick, CallbackInfoReturnable<Float> cir) {

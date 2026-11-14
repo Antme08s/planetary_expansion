@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "planetary_expansion:block/cerulean_crystal_lamp"
+    },
+    "lit=true": {
+      "model": "planetary_expansion:block/cerulean_crystal_lamp_on"
+    }
+  }
+}

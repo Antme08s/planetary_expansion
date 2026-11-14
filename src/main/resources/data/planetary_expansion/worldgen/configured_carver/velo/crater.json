@@ -1,0 +1,31 @@
+{
+  "type": "rocketnautics:crater",
+  "config": {
+    "probability": 0.025,
+    "y": {
+      "below_top": 0
+    },
+    "yScale": 1.0,
+    "lava_level": {
+      "above_bottom": 0
+    },
+    "replaceable": "#planetary_expansion:velo_carvable",
+    "radius": {
+      "type": "rocketnautics:config_biased_to_bottom",
+      "bias": 5,
+      "inner": 3.0,
+      "min_inclusive": 4.0,
+      "max_exclusive": 72.0
+    },
+    "heightOffsetFactor": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 0.4,
+      "max_exclusive": 0.6
+    },
+    "horizontalRadiusFactor": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 1.0,
+      "max_exclusive": 1.3
+    }
+  }
+}

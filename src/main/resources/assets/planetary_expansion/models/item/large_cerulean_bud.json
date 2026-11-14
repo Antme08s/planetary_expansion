@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/amethyst_cluster",
+  "textures": {
+    "layer0": "planetary_expansion:block/large_cerulean_bud"
+  }
+}

@@ -55,9 +55,11 @@ public class NavMapScreen extends Screen {
     private static final String K = "nav." + PlanetaryExpansion.MODID + ".";
     private static final float TILT = 0.55f;
     private static final int PANEL_W = 196;
-    private static final Map<String, Integer> COLORS = Map.of(
-            "sol", 0xFFFFD75E, "overworld", 0xFF4F8FE0, "moon", 0xFFCACAD2, "mars", 0xFFF07338, "gas_giant", 0xFFE6B880,
-            "ice_world", 0xFFB3EBFF, "ignis", 0xFFFF4D1A, "thalassa", 0xFF8CD1FF, "venus", 0xFFF2CC66, "cerulea", 0xFF4DB08A);
+    private static final Map<String, Integer> COLORS = Map.ofEntries(
+            Map.entry("sol", 0xFFFFD75E), Map.entry("overworld", 0xFF4F8FE0), Map.entry("moon", 0xFFCACAD2),
+            Map.entry("mars", 0xFFF07338), Map.entry("gas_giant", 0xFFE6B880), Map.entry("ice_world", 0xFFB3EBFF),
+            Map.entry("ignis", 0xFFFF4D1A), Map.entry("thalassa", 0xFF8CD1FF), Map.entry("venus", 0xFFF2CC66),
+            Map.entry("cerulea", 0xFF4DB08A), Map.entry("velo", 0xFFE6ECF8), Map.entry("amber", 0xFFFFA64D));
 
     private final BlockPos console;
     private double zoom = -1;     // píxeles por metro

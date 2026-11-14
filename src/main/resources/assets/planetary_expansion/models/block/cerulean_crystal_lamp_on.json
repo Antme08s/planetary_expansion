@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "planetary_expansion:block/cerulean_crystal_lamp_on"
+  }
+}

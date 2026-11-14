@@ -10,6 +10,9 @@
     "planetary_expansion:cerulean_emerald_ore",
     "planetary_expansion:deep_cerulean_emerald_ore",
     "planetary_expansion:cerulean_crystal_ore",
-    "planetary_expansion:deep_cerulean_crystal_ore"
+    "planetary_expansion:deep_cerulean_crystal_ore",
+    "planetary_expansion:velo_gold_ore",
+    "planetary_expansion:velo_diamond_ore",
+    "planetary_expansion:velo_crystal_ore"
   ]
 }

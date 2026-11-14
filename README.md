@@ -969,3 +969,24 @@ Paquete `dev.antme08.planetaryexpansion.weather`.
 - Consola: "Salto interestelar (orbitar)" en el menú cuando el destino es de otro sistema, con el motivo si no se
   puede; la barra de estado dice "Motor estelar". Goggles: nombre "Motor de distorsión estelar" y aviso de sobrecarga.
 - Logro **Más allá del Sol** (desafío, 500 XP): saltar a otro sistema solar.
+### Velo, luna de cristal de Cerúlea
+- El usuario pidió dos lunas para Cerúlea; de cuatro propuestas eligió **Velo** (cristal) y **Ferra** (óxido, pendiente).
+  Pidió que Velo fuera "prácticamente vacía, solo polvo blanco y cristales celestes" y una lámpara de cristal.
+- Texturas y vistas previas: `tools/designs/velo_textures.py <salida>` (hoja de bloques y biomas en isométrico con
+  Cerúlea en el cielo); `--export tools/designs/velo` escribe las del juego en `velo/block`.
+- Java `velo/VeloBlocks`: polvo de Velo (cae), roca de Velo, ladrillos y pulida (+ escaleras y losas), bloque de cristal
+  cerúleo, cristal brotante (`BuddingCrystalBlock`, crece como la amatista: brote pequeño → mediano → grande → racimo, con
+  luz 2/4/6/8), lámpara de cristal (`RedstoneLampBlock`, luz 15 encendida), menas de hierro, oro, diamante, cristal
+  cerúleo y titanio (suelta `rocketnautics:raw_titanium`). `velo/CrystalSpireFeature` (`velo_crystal_spire`): agujas de
+  cristal de 5–14 de alto con racimo en la punta y brotes alrededor.
+- Botín: el racimo da 4 cristales cerúleos con pico (fortuna) o 2 sin él; los brotes solo con toque de seda; el brotante
+  no se recoge. Recetas: 4 cristales → bloque; lámpara `PCP/CGC/PCP` (roca pulida, cristal, polvo de piedra luminosa);
+  roca pulida y ladrillos; escaleras y losas (y cortapiedras); hierro y oro en horno/alto horno.
+- Terreno (`build_velo`): relieve propio sencillo (altura 72, lomas de 10 bloques y detalle de 3 con dos ruidos 2D),
+  4+ capas de polvo sobre la roca, cráteres con el carver de Cosmonautics (`rocketnautics:crater`, etiqueta
+  `velo_carvable`). Biomas: llanuras de polvo, dunas de polvo, campos de cristal (agujas, brotes y racimos) y campos de
+  cráteres (muchos cráteres y geodas rotas medio enterradas). Geodas de cristal bajo tierra en todos (la de la amatista
+  de Minecraft con nuestros bloques). Sin aire, sin criaturas, gravedad 1,6.
+- Órbita: alrededor de Cerúlea, 8 h (como la Luna), acoplamiento de marea, luz y día de Ámbar; cielo negro con
+  estrellas de día (`AirlessStarsMixin`) y el universo de Cosmonautics (`UniverseSky`). Colores en el mapa y en el
+  holograma de la consola.

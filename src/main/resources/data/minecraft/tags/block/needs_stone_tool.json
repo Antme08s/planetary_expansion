@@ -8,6 +8,8 @@
     "planetary_expansion:cerulean_lapis_ore",
     "planetary_expansion:deep_cerulean_lapis_ore",
     "planetary_expansion:cerulean_zinc_ore",
-    "planetary_expansion:deep_cerulean_zinc_ore"
+    "planetary_expansion:deep_cerulean_zinc_ore",
+    "planetary_expansion:velo_iron_ore",
+    "planetary_expansion:velo_titanium_ore"
   ]
 }

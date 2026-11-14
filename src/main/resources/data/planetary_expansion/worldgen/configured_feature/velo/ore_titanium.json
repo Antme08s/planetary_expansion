@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:ore",
+  "config": {
+    "size": 8,
+    "discard_chance_on_air_exposure": 0.0,
+    "targets": [
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "planetary_expansion:velo_rock"
+        },
+        "state": {
+          "Name": "planetary_expansion:velo_titanium_ore"
+        }
+      }
+    ]
+  }
+}

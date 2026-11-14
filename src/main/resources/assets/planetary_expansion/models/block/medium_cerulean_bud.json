@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "planetary_expansion:block/medium_cerulean_bud"
+  },
+  "render_type": "minecraft:cutout"
+}
