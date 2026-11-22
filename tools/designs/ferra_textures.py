@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import amber_planet_preview as AP  # noqa: E402
 import amber_textures as AT  # noqa: E402
+import calm_textures as CT  # noqa: E402
 import cerulea_food_ores as CF  # noqa: E402
 import velo_textures as VT  # noqa: E402
 
@@ -139,8 +140,8 @@ def polished(rng):
 def make_textures():
     rng = random.Random(5151)
     t = {}
-    t["ferra_dust"] = dust(rng)
-    t["ferra_rock"] = rock(rng)
+    t["ferra_dust"] = CT.calmed(dust, CT.ferra_dust, rng, 9105)
+    t["ferra_rock"] = CT.calmed(rock, CT.ferra_rock, rng, 9106)
     t["ferra_rock_bricks"] = bricks(rng)
     t["polished_ferra_rock"] = polished(rng)
     t["ferra_ochre"] = ochre(rng)

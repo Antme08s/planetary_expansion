@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import amber_textures as AT  # noqa: E402
+import calm_textures as CT  # noqa: E402
 import amber_plants_3d as P3  # noqa: E402
 
 T = 16
@@ -329,53 +330,167 @@ def deep_stone(rng):
 
 ORES = {
     # nombre: (colores del mineral, forma)
-    "coal": ([(36, 36, 40), (58, 58, 64), (20, 20, 24)], "chunks"),
+    "coal": ([(46, 46, 54), (110, 112, 128), (14, 14, 20)], "blobs"),
     "iron": ([(214, 176, 150), (236, 206, 182), (170, 132, 108)], "chunks"),
     "copper": ([(222, 124, 82), (126, 200, 160), (176, 90, 60)], "chunks"),
     "gold": ([(250, 214, 70), (255, 244, 150), (200, 150, 40)], "chunks"),
-    "redstone": ([(220, 30, 30), (255, 90, 80), (150, 10, 10)], "dots"),
-    "lapis": ([(40, 80, 200), (90, 140, 240), (24, 50, 140)], "dots"),
+    "redstone": ([(220, 30, 30), (255, 90, 80), (150, 10, 10)], "ruby"),
+    "lapis": ([(40, 80, 200), (90, 140, 240), (24, 50, 140)], "strands"),
     "diamond": ([(90, 230, 220), (200, 255, 250), (40, 160, 160)], "gems"),
-    "emerald": ([(40, 200, 90), (140, 255, 170), (20, 130, 60)], "gems"),
+    "emerald": ([(40, 200, 90), (140, 255, 170), (20, 130, 60)], "specks"),
     "zinc": ([(170, 190, 180), (220, 236, 228), (120, 140, 132)], "chunks"),
 }
 
 
+# Vetas de mineral (1.0.4): piezas dibujadas a mano (no copiadas de Minecraft). Tono por pixel:
+# 5 = brillo, 4 = luz (arriba-izquierda), 3 = medio, 2 = sombra, 1 = fondo (abajo-derecha). Al pintar, cada tono se
+# reparte en 7 colores de la paleta del mineral (con algo de variacion entre pixeles vecinos), y la piedra que rodea
+# a cada veta se oscurece para que parezca incrustada en un hueco. Cada bloque mezcla una veta grande, varias
+# medianas y unas motas minusculas, y cada mineral tiene su silueta y su composicion.
+PIECES = {
+    # grandes
+    "BK": [".4443.", "443333", "433332", "333322", ".32221"],
+    "BC": ["5433..", "443332", "433322", ".33222", "..2211"],
+    "BR": [".5433", "44333", "43332", ".3322", "..221"],
+    "BG": [".54.", "5433", "4332", ".322"],
+    "BE": [".22.", "2542", "2332", ".22."],
+    # medianas
+    "K1": ["4333.", "43332", ".3322", "..221"], "K2": [".4333", "43333", "33322", ".2221"],
+    "K3": ["433", "333", "322", ".21"], "K4": ["4333", "3332", ".322", ".211"],
+    "C1": [".543", "4333", "3322", ".211"], "C2": ["5433", "4332", ".222"], "C3": ["543", "432", "321"],
+    "C4": [".54", "433", "332", ".21"], "C5": ["5433.", "43332", ".3221"],
+    "R1": [".54.", "4333", "3322", ".21."], "R2": ["543", "433", "322"], "R3": ["54..", "4332", ".322"],
+    "R4": [".54", "433", "32."],
+    "L1": ["5443..", ".43332", "..3322"], "L2": ["..543", "54333", "43322", ".221."], "L3": ["543", "433", "322"],
+    "L4": ["54.", "433", ".32"],
+    "D1": ["54.", "433", ".32"], "D2": [".54", "433", "32."], "D3": ["54", "43"], "D4": ["5433", ".322"],
+    "D5": [".5.", "543", ".32"],
+    "E2": [".2.", "243", ".2."], "E3": ["54", "32"],
+    # motas
+    "t1": ["5"], "t2": ["43"], "t3": ["4", "2"], "t4": ["3"],
+}
+LAYOUTS = {
+    "blobs": [[("BK", 0, 1), ("K2", 9, 0), ("K3", 7, 6), ("K4", 11, 8), ("BC", 1, 9), ("C2", 9, 13), ("t1", 7, 2), ("t4", 15, 5), ("t4", 6, 15)],
+              [("BR", 1, 0), ("K4", 9, 1), ("K1", 10, 6), ("K3", 6, 6), ("BK", 0, 10), ("K2", 9, 11), ("t3", 7, 2), ("t1", 14, 3), ("t4", 3, 6)]],
+    "chunks": [[("BC", 0, 0), ("C3", 9, 1), ("C5", 10, 6), ("C1", 3, 7), ("C4", 0, 11), ("C2", 8, 12), ("t1", 7, 4), ("t2", 13, 12), ("t4", 14, 3)],
+               [("BR", 9, 0), ("C4", 1, 1), ("C3", 5, 5), ("C5", 8, 10), ("BC", 0, 10), ("C1", 12, 6), ("t2", 7, 14), ("t1", 14, 14), ("t4", 5, 1)]],
+    "ruby": [[("BR", 0, 0), ("R2", 8, 1), ("R3", 12, 5), ("R4", 6, 6), ("R1", 9, 9), ("R2", 1, 8), ("R3", 2, 13), ("t1", 13, 0), ("t4", 5, 11), ("t2", 13, 13)],
+             [("R1", 1, 1), ("BR", 8, 1), ("R4", 12, 8), ("R2", 5, 6), ("R3", 0, 7), ("R1", 7, 11), ("t1", 6, 0), ("t4", 14, 4), ("t2", 3, 12), ("t4", 13, 14)]],
+    "strands": [[("BC", 0, 0), ("L2", 9, 1), ("L3", 4, 6), ("L4", 11, 7), ("L1", 8, 11), ("L3", 0, 10), ("t1", 7, 4), ("t4", 15, 9), ("t2", 5, 14)],
+                [("L2", 0, 1), ("BC", 9, 2), ("L4", 5, 6), ("L3", 1, 8), ("L1", 9, 10), ("L4", 5, 12), ("t1", 7, 0), ("t4", 15, 9), ("t2", 12, 14)]],
+    "gems": [[("BG", 1, 0), ("D2", 8, 0), ("D5", 12, 2), ("D3", 5, 6), ("D4", 8, 6), ("D1", 0, 8), ("BG", 9, 10), ("D3", 3, 12), ("t1", 6, 3), ("t4", 14, 7), ("t2", 14, 13), ("t1", 6, 9)],
+             [("D5", 0, 0), ("BG", 6, 1), ("D1", 12, 0), ("D2", 1, 5), ("D4", 9, 7), ("BG", 0, 9), ("D3", 8, 12), ("D5", 12, 11), ("t1", 4, 8), ("t4", 14, 6), ("t2", 5, 14)]],
+    "specks": [[("BE", 1, 1), ("E2", 9, 0), ("E3", 10, 5), ("E2", 5, 7), ("BE", 0, 10), ("E3", 8, 11), ("E2", 12, 9), ("t1", 6, 3), ("t4", 14, 13), ("t1", 13, 2)],
+               [("E2", 0, 0), ("BE", 6, 0), ("E3", 13, 4), ("BE", 0, 6), ("E3", 8, 6), ("E2", 12, 8), ("BE", 9, 12), ("t1", 4, 13), ("t4", 14, 1), ("t1", 5, 5)]],
+}
+SHAPE_ALIAS = {"dots": "ruby"}
+ORE_SALT = {}      # variante de colocacion por mineral (se puede fijar a ojo si alguna queda mal repartida)
+
+
+def _mix(a, b, k):
+    return tuple(int(a[i] + (b[i] - a[i]) * k) for i in range(3))
+
+
+def ore_tones(base, light, dark):
+    base = shade(base, 0.86)
+    return (shade(dark, 0.5), shade(dark, 0.88), _mix(dark, base, 0.55), base, _mix(base, light, 0.3),
+            _mix(base, light, 0.6), _mix(base, light, 0.85))
+
+
+# Digito de la pieza -> posibles indices de la paleta de 7 tonos (el primero es el mas probable)
+_TONE_MAP = {"1": ((0, 1.0),), "2": ((1, 0.6), (2, 0.4)), "3": ((3, 0.6), (4, 0.2), (2, 0.2)),
+             "4": ((5, 0.4), (4, 0.6)), "5": ((6, 0.5), (5, 0.5))}
+
+
+def _compose(rng, key):
+    """Composicion irregular, como una veta de verdad: una veta grande hacia el centro (no siempre exacta), unas
+    medianas repartidas al azar con mas densidad cerca del centro (alguna pegada a otra, formando una masa) y unas
+    motas minusculas junto a las demas piezas. Sin simetria ni angulos fijos, para que no dibuje letras."""
+    names = sorted({n for lay in LAYOUTS[key] for n, _, _ in lay})
+    bigs = [n for n in names if n.startswith("B")]
+    tiny = [n for n in names if n.startswith("t")]
+    mids = [n for n in names if n not in bigs and n not in tiny]
+    n_mid = rng.choice((3, 4)) if key in ("ruby", "gems", "specks") else rng.choice((2, 3, 3))
+    occ, cells, placed = set(), {}, []
+
+    def shape_pts(name, ox, oy):
+        return {(ox + dx, oy + dy) for dy, row in enumerate(PIECES[name]) for dx, ch in enumerate(row) if ch != "."}
+
+    def put(name, tx, ty, margin, score=None):
+        rows = PIECES[name]
+        w, h = max(len(r) for r in rows), len(rows)
+        best = None
+        for _ in range(600):
+            ox, oy = rng.randint(0, T - w), rng.randint(0, T - h)
+            pts = shape_pts(name, ox, oy)
+            m = margin
+            if any((x + a, y + b) in occ for x, y in pts for a in range(-m, m + 1) for b in range(-m, m + 1)):
+                continue
+            c = (ox + w / 2, oy + h / 2)
+            sc = score(c, pts) if score else math.hypot(c[0] - tx, c[1] - ty)
+            if best is None or sc < best[0]:
+                best = (sc, ox, oy, pts)
+        if best is None:
+            return
+        _, ox, oy, pts = best
+        occ.update(pts)
+        placed.append(pts)
+        for dy, row in enumerate(PIECES[name]):
+            for dx, ch in enumerate(row):
+                if ch != ".":
+                    cells[(ox + dx, oy + dy)] = ch
+
+    put(rng.choice(bigs), 8 + rng.uniform(-2.2, 2.2), 8 + rng.uniform(-2.2, 2.2), 1)
+    pick = rng.sample(mids, min(n_mid, len(mids)))
+    big_c = (sum(x for x, _ in placed[0]) / len(placed[0]), sum(y for _, y in placed[0]) / len(placed[0]))
+    first = None
+    for k, name in enumerate(pick):
+        if k == 1 and first:                               # la segunda, hacia el lado contrario, para equilibrar
+            tx = 2 * big_c[0] - first[0] + rng.uniform(-3, 3)
+            ty = 2 * big_c[1] - first[1] + rng.uniform(-3, 3)
+        else:
+            tx, ty = rng.gauss(8, 4.4), rng.gauss(8, 4.4)
+        tx, ty = min(13.5, max(2.5, tx)), min(13.5, max(2.5, ty))
+        if k == 0:
+            first = (tx, ty)
+        put(name, tx, ty, 0 if k == 0 else 1)             # la primera mediana puede quedar pegada a la grande
+    def near_others(c, pts):                               # la mota: a 2-3 pixeles de alguna pieza, sin tocarla
+        d = min(min(abs(c[0] - x) + abs(c[1] - y) for x, y in p) for p in placed) if placed else 3
+        return abs(d - 3.0) + rng.random() * 0.8
+    put(rng.choice(tiny), 8, 8, 1, near_others)
+    return cells
+
+
 def ore(rng, stone_img, colors, shape):
-    """Vetas en grupitos con su luz arriba a la izquierda y una sombra oscura abajo a la derecha (como las de
-    Minecraft, pero con formas propias). Los grupitos que se salen por un borde entran por el contrario."""
+    """Mineral sobre la piedra del planeta, incrustado en un hueco de la roca."""
     img = stone_img.copy()
     px = img.load()
-    base, light, dark = colors
-    stone_dark = shade(px[8, 8][:3], 0.62)
-    if shape == "chunks":
-        shapes = [[(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1), (1, 2)], [(1, 0), (0, 1), (1, 1), (2, 1), (1, 2), (2, 2)],
-                  [(0, 0), (1, 0), (0, 1), (1, 1), (2, 1)]]
-        centers = [(2, 2), (10, 1), (6, 7), (12, 9), (2, 11), (8, 12)]
-        n = 5
-    elif shape == "dots":
-        shapes = [[(0, 0), (1, 0), (1, 1)], [(0, 0), (0, 1), (1, 1)], [(1, 0), (0, 1), (1, 1), (2, 1)]]
-        centers = [(2, 2), (8, 1), (13, 3), (5, 6), (11, 7), (2, 10), (7, 11), (12, 12)]
-        n = 7
-    else:  # gemas: rombos
-        shapes = [[(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)]]
-        centers = [(2, 2), (10, 2), (6, 7), (12, 10), (2, 11), (8, 12)]
-        n = 5
-    rng.shuffle(centers)
-    for (cx, cy) in centers[:n]:
-        cells = rng.choice(shapes)
-        cs = set(cells)
-        for (dx, dy) in cells:                                    # sombra
-            for (ex, ey) in ((1, 0), (0, 1), (1, 1)):
-                if (dx + ex, dy + ey) not in cs:
-                    px[(cx + dx + ex) % T, (cy + dy + ey) % T] = rgba(stone_dark)
-        for (dx, dy) in cells:
-            top_left = (dx - 1, dy) not in cs and (dx, dy - 1) not in cs
-            bottom_right = (dx + 1, dy) not in cs and (dx, dy + 1) not in cs
-            c = light if top_left else dark if bottom_right else base
-            px[(cx + dx) % T, (cy + dy) % T] = rgba(c)
-        if shape != "dots" and rng.random() < 0.6:            # destello
-            px[cx % T, cy % T] = rgba(shade(light, 1.15))
+    tones = ore_tones(*colors)
+    key = SHAPE_ALIAS.get(shape, shape)
+    cells = _compose(rng, key if key in LAYOUTS else "chunks")
+    # 1) borde: la piedra que toca la veta se oscurece (mas arriba/izquierda, menos abajo/derecha), un poco fria
+    ring = {}
+    soft = 0.45 if sum(colors[0]) < 200 else 1.0          # minerales muy oscuros (carbon): borde mas suave
+    for (x, y) in cells:
+        for dx, dy, k in ((0, -1, 0.56), (-1, 0, 0.58), (-1, -1, 0.66), (1, -1, 0.7), (-1, 1, 0.7),
+                          (0, 1, 0.74), (1, 0, 0.76), (1, 1, 0.8)):
+            q = (x + dx, y + dy)
+            if q not in cells and 0 <= q[0] < T and 0 <= q[1] < T:
+                ring[q] = min(1 - (1 - k) * soft, ring.get(q, 1.0))
+    for q, f in ring.items():
+        c = stone_img.getpixel(q)[:3]
+        px[q] = rgba((int(c[0] * f * 0.97), int(c[1] * f), min(255, int(c[2] * f * 1.04))))
+    # 2) la veta, con 7 tonos
+    for (x, y), ch in cells.items():
+        opts = _TONE_MAP[ch]
+        r, acc = rng.random(), 0.0
+        idx = opts[-1][0]
+        for t, p in opts:
+            acc += p
+            if r < acc:
+                idx = t
+                break
+        px[x, y] = rgba(tones[idx])
     return img
 
 
@@ -459,10 +574,10 @@ def make_textures():
     t["reed_pod"] = reed_pod()
     t["glowcap_stew"] = glow_stew()
     t.update(stone_family(rng, base["amber_stone"]))
-    t["deep_cerulean_stone"] = deep_stone(rng)
+    t["deep_cerulean_stone"] = CT.calmed(deep_stone, CT.deep_stone, rng, 9104)
     for name, (cols, shape) in ORES.items():
-        t[f"cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode())), t["cerulean_stone"], cols, shape)
-        t[f"deep_cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode())), t["deep_cerulean_stone"], cols, shape)
+        t[f"cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode()) + ORE_SALT.get(name, 0)), t["cerulean_stone"], cols, shape)
+        t[f"deep_cerulean_{name}_ore"] = ore(random.Random(zlib.crc32(name.encode()) + ORE_SALT.get(name, 0)), t["deep_cerulean_stone"], cols, shape)
     t["cerulean_crystal_ore"] = crystal_ore(random.Random(31), t["cerulean_stone"])
     t["deep_cerulean_crystal_ore"] = crystal_ore(random.Random(31), t["deep_cerulean_stone"])
     t["cerulean_crystal"] = crystal_item()

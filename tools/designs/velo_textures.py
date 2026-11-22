@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import amber_planet_preview as AP  # noqa: E402
 import amber_textures as AT  # noqa: E402
+import calm_textures as CT  # noqa: E402
 import cerulea_food_ores as CF  # noqa: E402
 
 T = 16
@@ -204,7 +205,7 @@ def make_textures():
     rng = random.Random(4242)
     t = {}
     t["velo_dust"] = dust(rng)
-    t["velo_rock"] = rock(rng)
+    t["velo_rock"] = CT.calmed(rock, CT.velo_rock, rng, 9107)
     t["velo_rock_bricks"] = bricks(rng)
     t["polished_velo_rock"] = polished(rng)
     t["vitreous_basalt"] = basalt(rng)

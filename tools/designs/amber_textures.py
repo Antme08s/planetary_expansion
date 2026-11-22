@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import amber_planet_preview as AP  # noqa: E402  (mismos biomas que el concepto)
+import calm_textures as CT  # noqa: E402  (suelos y rocas sin rasgos que se repitan)
 
 T = 16
 
@@ -452,13 +453,13 @@ def bush_leaves(rng):
 def make_textures():
     rng = random.Random(2026)
     t = {}
-    t["amber_soil"] = soil(rng)
+    t["amber_soil"] = CT.calmed(soil, CT.soil, rng, 9101)
     for name, base, light, dark in (("amber_grass", (77, 176, 138), (104, 202, 160), (56, 146, 116)),
                                     ("amber_short_grass_block", (104, 196, 150), (134, 220, 176), (82, 168, 128))):
         t[name + "_top"] = grass_top(rng, base, light, dark, (90, 150, 255))
         t[name + "_side"] = grass_side(rng, base, t["amber_soil"], light, dark)
-    t["amber_stone"] = stone(rng)
-    t["amber_sand"] = pale_sand(rng)
+    t["amber_stone"] = CT.calmed(stone, CT.stone, rng, 9102)
+    t["amber_sand"] = CT.calmed(pale_sand, CT.pale_sand, rng, 9103)
     t["amber_mud"] = mud(rng)
     t["silverwood_log"] = silver_bark(rng)
     t["silverwood_log_top"] = log_top(rng, (196, 206, 214), (170, 180, 194), (214, 222, 230))

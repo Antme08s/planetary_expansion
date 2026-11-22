@@ -22,7 +22,7 @@ import shutil
 import sys
 
 NS = "planetary_expansion"
-MOD_VERSION = "1.0.3"
+MOD_VERSION = "1.0.4"
 
 VANILLA = sys.argv[1]
 OUT = sys.argv[2]
@@ -4539,6 +4539,27 @@ side="BOTH"
         write(f"{lang_dir}/{loc}.json", dict(sorted(LANG_ES.items())))
 
 
+# --------------------------------------------------------------------------
+# 1.0.4: items redibujados (tools/designs/items_v2.py + items_v2_draw.py). Se escriben encima de los de siempre:
+# mismo nombre y tamaño (16x16), distinto sombreado y volumen. Los que no están en ningún lote conservan el original.
+# --------------------------------------------------------------------------
+def build_items_v2():
+    sys.path.insert(0, DESIGNS)
+    import io
+    import items_v2_draw as IV2
+    count = 0
+    for batch in (IV2.BATCH1, IV2.BATCH2, IV2.BATCH3, IV2.BATCH4, IV2.BATCH5, IV2.BATCH6, IV2.BATCH7):
+        for name, draw in batch.items():
+            rel = f"assets/{NS}/textures/item/{name}.png"
+            if not os.path.exists(os.path.join(OUT, rel)):
+                raise SystemExit(f"items_v2: no existe la textura original de {name}")
+            buf = io.BytesIO()
+            draw().save(buf, format="PNG")
+            write_bytes(rel, buf.getvalue())
+            count += 1
+    print(f"items_v2: {count} items redibujados")
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -4569,6 +4590,7 @@ if __name__ == "__main__":
     build_ignis_creatures()
     build_cerulea_creatures()   # 1.0.3
     build_amber_system()
+    build_items_v2()            # 1.0.4: items redibujados
     build_meta()
     n = sum(len(f) for _, _, f in os.walk(OUT))
     print(f"Generados {n} archivos en {OUT}")
