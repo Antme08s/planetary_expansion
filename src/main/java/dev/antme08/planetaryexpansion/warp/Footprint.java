@@ -2,6 +2,7 @@ package dev.antme08.planetaryexpansion.warp;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
@@ -59,6 +60,25 @@ public final class Footprint {
         BlockState s = state.setValue(OX, part.getX() - anchor.getX() + 3).setValue(OZ, part.getZ() - anchor.getZ() + 3);
         if (s.hasProperty(OY)) s = s.setValue(OY, part.getY() - anchor.getY());
         return s;
+    }
+
+
+    /**
+     * Gira el desplazamiento hasta el ancla (OX/OZ) igual que Minecraft gira posiciones (CLOCKWISE_90: (x,z) -> (-z,x)).
+     * Sable llama a rotate() al ensamblar/desensamblar una nave con giro; sin esto las partes apuntan a un ancla
+     * que ya no está donde dicen y el modelo se ve desplazado respecto a la hitbox.
+     */
+    public static BlockState rotateOffset(BlockState state, Rotation rotation) {
+        if (!state.hasProperty(OX) || !state.hasProperty(OZ)) return state;
+        int x = state.getValue(OX) - 3, z = state.getValue(OZ) - 3;
+        int nx, nz;
+        switch (rotation) {
+            case CLOCKWISE_90 -> { nx = -z; nz = x; }
+            case CLOCKWISE_180 -> { nx = -x; nz = -z; }
+            case COUNTERCLOCKWISE_90 -> { nx = z; nz = -x; }
+            default -> { return state; }
+        }
+        return state.setValue(OX, nx + 3).setValue(OZ, nz + 3);
     }
 
     public static BlockPos anchorOf(BlockPos part, BlockState state) {

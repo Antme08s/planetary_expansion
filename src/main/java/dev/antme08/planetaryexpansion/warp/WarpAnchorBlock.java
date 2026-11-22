@@ -105,7 +105,8 @@ public abstract class WarpAnchorBlock extends Block implements EntityBlock {
 
     @Override
     protected BlockState rotate(BlockState state, Rotation rotation) {
-        return state; // las partes guardan desplazamientos absolutos: no se puede girar
+        // las partes guardan su desplazamiento hasta el ancla y lo giran ellas mismas (Footprint.rotateOffset)
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override

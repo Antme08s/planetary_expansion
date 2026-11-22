@@ -59,6 +59,12 @@ public class WarpDriveInputBlock extends RotatedPillarKineticBlock implements IB
 
     @Override
     public BlockState rotate(BlockState state, Rotation rotation) {
+        state = Footprint.rotateOffset(state, rotation);
+        if (rotation == Rotation.CLOCKWISE_90 || rotation == Rotation.COUNTERCLOCKWISE_90) {
+            Direction.Axis axis = state.getValue(AXIS);
+            if (axis == Direction.Axis.X) state = state.setValue(AXIS, Direction.Axis.Z);
+            else if (axis == Direction.Axis.Z) state = state.setValue(AXIS, Direction.Axis.X);
+        }
         return state;
     }
 
