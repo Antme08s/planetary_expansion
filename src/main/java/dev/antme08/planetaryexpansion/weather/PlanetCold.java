@@ -20,26 +20,32 @@ public final class PlanetCold {
     private PlanetCold() {}
 
     private static final ResourceLocation THALASSA = ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "thalassa");
+    private static final ResourceLocation TITAN = ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "titan");
     private static final float RATE = 0.1f;
 
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || !level.dimension().location().equals(THALASSA)) return;
+        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        boolean titan = level.dimension().location().equals(TITAN);
+        if (!titan && !level.dimension().location().equals(THALASSA)) return;
         // durante una ventisca ya congela StormManager (más rápido) a quien esté a la intemperie; no sumar los dos
         boolean blizzard = StormManager.intensity(StormType.THALASSA_BLIZZARD) > 0.01f;
         RandomSource rng = level.getRandom();
         for (ServerPlayer player : level.players()) {
             if (player.isSpectator() || player.isCreative() || !player.isAlive() || !player.canFreeze()) continue;
             // el agua de Thalassa está helada: meterse no descongela, enfría igual (aunque estés bajo techo)
-            boolean inWater = player.isInWater();
+            // Titán (1.0.4): el metano líquido (-179 °C) congela mucho más rápido que el aire
+            boolean inMethane = titan && player.isInFluidType(dev.antme08.planetaryexpansion.titan.TitanBlocks.METHANE_TYPE.get());
+            boolean inWater = player.isInWater() || inMethane;
             boolean exposed = StormShelter.exposedToHazards(player);
-            if (blizzard && exposed) continue;
+            if (!titan && blizzard && exposed) continue;
             if (!inWater && !exposed) continue;
             float cold = GlacialArmor.coldFactor(player);
             if (cold <= 0f) continue;
             int required = player.getTicksRequiredToFreeze();
             // +2 compensa el deshielo vanilla de cada tick
             int add = 2 + (rng.nextFloat() < RATE * cold ? 1 : 0);
+            if (inMethane) add += Math.round(3 * cold);
             player.setTicksFrozen(Math.min(required + 2, player.getTicksFrozen() + add));
         }
     }

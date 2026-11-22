@@ -12,6 +12,9 @@
     "planetary_expansion:velo_dust",
     "planetary_expansion:ferra_rock",
     "planetary_expansion:ferra_dust",
-    "planetary_expansion:ferra_ochre"
+    "planetary_expansion:ferra_ochre",
+    "planetary_expansion:titan_ice_rock",
+    "planetary_expansion:tholin_sand",
+    "planetary_expansion:tholin_crust"
   ]
 }

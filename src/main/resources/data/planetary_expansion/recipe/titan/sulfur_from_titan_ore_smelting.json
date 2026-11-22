@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "planetary_expansion:titan_sulfur_ore"
+  },
+  "result": {
+    "id": "planetary_expansion:venusian_sulfur"
+  },
+  "experience": 0.3,
+  "cookingtime": 200
+}

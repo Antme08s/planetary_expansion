@@ -43,6 +43,15 @@ public final class ClientStormEffects {
     /** Neblina permanente de Venus: se ve hasta ~60 bloques (40 en la lluvia ácida fuerte). 0.7.4: antes 40/30. */
     private static final float VENUS_HAZE = 60f;
     private static final float[] VENUS_FOG = {0.70f, 0.52f, 0.24f};
+    /** Titán (1.0.4): bruma naranja de tolinas permanente (la atmósfera es densa). */
+    private static final float TITAN_HAZE = 90f;
+    private static final float[] TITAN_FOG = {0.50f, 0.30f, 0.12f};
+    private static final net.minecraft.resources.ResourceLocation TITAN_DIM =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(dev.antme08.planetaryexpansion.PlanetaryExpansion.MODID, "titan");
+
+    private static boolean inTitan(Minecraft mc) {
+        return mc.level != null && mc.level.dimension().location().equals(TITAN_DIM);
+    }
 
     /** Intensidad mostrada (suavizada) y la dimensión a la que corresponde. */
     private static float shown = 0f;
@@ -243,6 +252,14 @@ public final class ClientStormEffects {
     public static void onRenderFog(ViewportEvent.RenderFog event) {
         Minecraft mc = Minecraft.getInstance();
         StormType type = currentType(mc);
+        if (type == null && inTitan(mc)) {
+            if (event.getType() != FogType.NONE) return;
+            float far = Math.min(event.getFarPlaneDistance(), TITAN_HAZE);
+            event.setFarPlaneDistance(far);
+            event.setNearPlaneDistance(Math.min(event.getNearPlaneDistance(), far * 0.3f));
+            event.setCanceled(true);
+            return;
+        }
         if (type == StormType.ACID_RAIN) {
             if (event.getType() != FogType.NONE) return;
             // Venus: neblina amarilla siempre (60 bloques); en la lluvia ácida fuerte baja a 40
@@ -266,6 +283,13 @@ public final class ClientStormEffects {
     public static void onFogColor(ViewportEvent.ComputeFogColor event) {
         Minecraft mc = Minecraft.getInstance();
         StormType type = currentType(mc);
+        if (type == null && inTitan(mc)) {
+            float day = Mth.clamp(mc.level.getSkyDarken((float) event.getPartialTick()), 0.35f, 1f);
+            event.setRed(TITAN_FOG[0] * day);
+            event.setGreen(TITAN_FOG[1] * day);
+            event.setBlue(TITAN_FOG[2] * day);
+            return;
+        }
         if (type == StormType.ACID_RAIN && mc.level != null) {
             // Venus (0.7.6): neblina ámbar siempre. Con shaders (Complementary modificado) la niebla se pinta con
             // fogColor² × 1.8, así que un color claro salía casi blanco: este es más oscuro y saturado.

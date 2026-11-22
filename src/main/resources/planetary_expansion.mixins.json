@@ -32,7 +32,8 @@
     "PlanetSkyColorMixin",
     "UniverseUnderwaterMixin",
     "NightSunMixin",
-    "StarTintMixin"
+    "StarTintMixin",
+    "SaturnRingsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

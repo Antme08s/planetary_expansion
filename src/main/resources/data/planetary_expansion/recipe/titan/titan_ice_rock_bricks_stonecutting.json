@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "planetary_expansion:titan_ice_rock"
+  },
+  "result": {
+    "id": "planetary_expansion:titan_ice_rock_bricks",
+    "count": 1
+  }
+}

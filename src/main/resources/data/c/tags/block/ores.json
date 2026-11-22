@@ -30,6 +30,10 @@
     "planetary_expansion:ferra_copper_ore",
     "planetary_expansion:ferra_gold_ore",
     "planetary_expansion:ferra_redstone_ore",
-    "planetary_expansion:ferra_titanium_ore"
+    "planetary_expansion:ferra_titanium_ore",
+    "planetary_expansion:titan_coal_ore",
+    "planetary_expansion:titan_redstone_ore",
+    "planetary_expansion:titan_lapis_ore",
+    "planetary_expansion:titan_sulfur_ore"
   ]
 }

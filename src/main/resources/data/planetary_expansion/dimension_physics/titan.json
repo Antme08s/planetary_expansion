@@ -1,0 +1,22 @@
+{
+  "dimension": "planetary_expansion:titan",
+  "priority": 1000,
+  "universal_drag": 0.008,
+  "base_gravity": [
+    0.0,
+    -1.35,
+    0.0
+  ],
+  "pressure_function": [
+    {
+      "altitude": 80.0,
+      "value": 1.4,
+      "slope": 0.0
+    },
+    {
+      "altitude": 3000.0,
+      "value": 0.0,
+      "slope": 0.0
+    }
+  ]
+}

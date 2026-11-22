@@ -1,0 +1,43 @@
+{
+  "has_precipitation": false,
+  "temperature": -0.5,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 9196582,
+    "fog_color": 11167792,
+    "water_color": 1328722,
+    "water_fog_color": 532006
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:titan/ore_coal",
+      "planetary_expansion:titan/ore_sulfur",
+      "planetary_expansion:titan/ore_redstone",
+      "planetary_expansion:titan/ore_lapis"
+    ],
+    [],
+    [],
+    [],
+    []
+  ]
+}

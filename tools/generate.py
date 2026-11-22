@@ -4444,6 +4444,360 @@ def build_ferra():
         LANG_EN[f"{n}body.{P}.{field}"] = en
         LANG_ES[f"{n}body.{P}.{field}"] = es
 
+# ==========================================================================
+# 1.0.4: SATURNO (gigante gaseoso con anillos) y TITÁN (su luna de combustibles y lagos de metano)
+# ==========================================================================
+SATURN_TEX = os.path.join(DESIGNS, "saturn")
+TITAN_TEX = os.path.join(DESIGNS, "titan")
+
+
+def build_saturn():
+    write_bytes(f"assets/{NS}/textures/planet/saturn.png", open(os.path.join(SATURN_TEX, "saturn.png"), "rb").read())
+    write_bytes(f"assets/{NS}/textures/planet/saturn_rings.png", open(os.path.join(SATURN_TEX, "saturn_rings.png"), "rb").read())
+    # entre el gigante gaseoso (período 28 días) y el mundo helado (56 días); los anillos los pinta SaturnRingsMixin
+    data("universe_planets/saturn", {
+        "name": "saturn",
+        "parent": "sol",
+        "priority": 1000,
+        "acceleration_at_surface": 10.4,
+        "radius": 1.06e7,
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": -0.6, "y": 0.0, "z": -0.8}, "period_seconds": 3.6e6},
+        "rotation": {"type": "period", "period_seconds": 540.0, "rotation_axis": {"x": 0.0, "y": -1.0, "z": 0.0}},
+        "planet_extras": {"light_source_name": "sol"},
+        "planet_texture": {"type": "resloc", "texture": f"{NS}:textures/planet/saturn.png"},
+    })
+    LANG_EN[f"hologram.{NS}.body.saturn"] = "Saturn"
+    LANG_ES[f"hologram.{NS}.body.saturn"] = "Saturno"
+    n = f"nav.{NS}.body.saturn."
+    for field, (en, es) in {
+            "type": ("Ringed gas giant", "Gigante gaseoso con anillos"),
+            "desc": ("A pale golden giant wrapped in a wide ring system. It has no surface to land on, but its moon Titan does.",
+                     "Un gigante dorado pálido rodeado de anillos anchos. No tiene superficie donde aterrizar, pero su luna Titán sí."),
+            "hazards": ("No surface", "Sin superficie")}.items():
+        LANG_EN[n + field] = en
+        LANG_ES[n + field] = es
+
+
+def build_titan():
+    P = "titan"
+    B = rl
+    for f in sorted(os.listdir(os.path.join(TITAN_TEX, "block"))):
+        write_bytes(f"assets/{NS}/textures/block/{f}", open(os.path.join(TITAN_TEX, "block", f), "rb").read())
+    write_bytes(f"assets/{NS}/textures/item/methane_bucket.png", open(os.path.join(TITAN_TEX, "item", "methane_bucket.png"), "rb").read())
+
+    def lang(kind, n, en, es):
+        LANG_EN[f"{kind}.{NS}.{n}"] = en
+        LANG_ES[f"{kind}.{NS}.{n}"] = es
+
+    def model(n, parent, textures):
+        write(f"assets/{NS}/models/block/{n}.json", {"parent": parent, "textures": {k: rl(f"block/{v}") for k, v in textures.items()}})
+
+    def bstate(n, variants):
+        write(f"assets/{NS}/blockstates/{n}.json", {"variants": variants})
+
+    def item_block(n):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": rl(f"block/{n}")})
+
+    def loot(n, pools):
+        data(f"loot_table/blocks/{n}", {"type": "minecraft:block", "pools": pools, "random_sequence": rl(f"blocks/{n}")})
+
+    def pool(entry, conditions=None):
+        pl = {"rolls": 1.0, "bonus_rolls": 0.0, "entries": [entry]}
+        if conditions:
+            pl["conditions"] = conditions
+        return pl
+
+    SURVIVES = [{"condition": "minecraft:survives_explosion"}]
+    SILK = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+
+    def cube(n, en, es):
+        model(n, "minecraft:block/cube_all", {"all": n})
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        lang("block", n, en, es)
+
+    def tag(kind, tagname, values):
+        for v in values:
+            tag_add(f"data/{tagname.split(':')[0]}/tags/{kind}/{tagname.split(':')[1]}.json", v)
+
+    # --------------------------------------------------------------- bloques
+    for n, en, es in (("tholin_sand", "Tholin Sand", "Arena de tolina"), ("tholin_crust", "Tholin Crust", "Corteza de tolina"),
+                      ("titan_ice_rock", "Titan Ice Rock", "Roca de hielo de Titán"),
+                      ("titan_ice_rock_bricks", "Titan Ice Rock Bricks", "Ladrillos de roca de hielo de Titán"),
+                      ("polished_titan_ice_rock", "Polished Titan Ice Rock", "Roca de hielo de Titán pulida"),
+                      ("bitumen", "Bitumen", "Bitumen")):
+        cube(n, en, es)
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, SURVIVES)])
+
+    def fortune(formula="minecraft:ore_drops", **extra):
+        return {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": formula, **extra}
+    TORES = {"coal": ("minecraft:coal", None, "Coal", "carbón", 0.1),
+             "redstone": ("minecraft:redstone", (4, 5), "Redstone", "redstone", 0.7),
+             "lapis": ("minecraft:lapis_lazuli", (4, 9), "Lapis Lazuli", "lapislázuli", 0.2),
+             "sulfur": (B("venusian_sulfur"), (2, 4), "Sulfur", "azufre", 0.3)}
+    for o, (item, count, en, es, xp) in TORES.items():
+        n = f"titan_{o}_ore"
+        if o == "redstone":
+            model(n, "minecraft:block/cube_all", {"all": n})
+            write(f"assets/{NS}/models/block/{n}_on.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{n}")}})
+            bstate(n, {"lit=false": {"model": rl(f"block/{n}")}, "lit=true": {"model": rl(f"block/{n}_on")}})
+            item_block(n)
+            lang("block", n, f"Titan {en} Ore", f"Mena de {es} en roca de hielo de Titán")
+        else:
+            cube(n, f"Titan {en} Ore", f"Mena de {es} en roca de hielo de Titán")
+        fns = []
+        if count:
+            fns.append({"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": count[0], "max": count[1]}})
+        fns.append(fortune("minecraft:uniform_bonus_count", parameters={"bonusMultiplier": 1}) if o == "redstone" else fortune())
+        fns.append({"function": "minecraft:explosion_decay"})
+        loot(n, [pool({"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": B(n), "conditions": [SILK]}, {"type": "minecraft:item", "name": item, "functions": fns}]})])
+        smelt = {"coal": "minecraft:coal", "redstone": "minecraft:redstone", "lapis": "minecraft:lapis_lazuli", "sulfur": B("venusian_sulfur")}[o]
+        for k, t in (("smelting", 200), ("blasting", 100)):
+            data(f"recipe/titan/{o}_from_titan_ore_{k}", {"type": f"minecraft:{k}", "category": "misc",
+                 "ingredient": {"item": B(n)}, "result": {"id": smelt}, "experience": xp, "cookingtime": t})
+
+    FACING_Y = {"east": 0, "south": 90, "west": 180, "north": 270}
+    shapes = {"straight": "", "inner_left": "_inner", "inner_right": "_inner", "outer_left": "_outer", "outer_right": "_outer"}
+    stair_ids, slab_ids = [], []
+    for prefix, base, en, es in (("titan_ice_rock", "titan_ice_rock", "Titan Ice Rock", "de roca de hielo de Titán"),
+                                 ("titan_ice_rock_brick", "titan_ice_rock_bricks", "Titan Ice Rock Brick", "de ladrillos de roca de hielo de Titán"),
+                                 ("polished_titan_ice_rock", "polished_titan_ice_rock", "Polished Titan Ice Rock", "de roca de hielo de Titán pulida")):
+        st_, sl_ = f"{prefix}_stairs", f"{prefix}_slab"
+        tx = {"bottom": base, "top": base, "side": base}
+        model(st_, "minecraft:block/stairs", tx)
+        model(st_ + "_inner", "minecraft:block/inner_stairs", tx)
+        model(st_ + "_outer", "minecraft:block/outer_stairs", tx)
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half in ("bottom", "top"):
+                for shape, suffix in shapes.items():
+                    y = y0
+                    if shape in ("inner_left", "outer_left") and half == "bottom":
+                        y += 270
+                    if shape in ("inner_right", "outer_right") and half == "top":
+                        y += 90
+                    v = {"model": rl(f"block/{st_}{suffix}")}
+                    if half == "top":
+                        v["x"] = 180
+                    if y % 360:
+                        v["y"] = y % 360
+                    if "x" in v or "y" in v:
+                        v["uvlock"] = True
+                    var[f"facing={facing},half={half},shape={shape}"] = v
+        bstate(st_, var)
+        item_block(st_)
+        lang("block", st_, f"{en} Stairs", f"Escaleras {es}")
+        loot(st_, [pool({"type": "minecraft:item", "name": B(st_)}, SURVIVES)])
+        model(sl_, "minecraft:block/slab", tx)
+        model(sl_ + "_top", "minecraft:block/slab_top", tx)
+        bstate(sl_, {"type=bottom": {"model": rl(f"block/{sl_}")}, "type=top": {"model": rl(f"block/{sl_}_top")},
+                     "type=double": {"model": rl(f"block/{base}")}})
+        item_block(sl_)
+        lang("block", sl_, f"{en} Slab", f"Losa {es}")
+        loot(sl_, [pool({"type": "minecraft:item", "name": B(sl_), "functions": [
+            {"function": "minecraft:set_count", "count": 2.0, "add": False,
+             "conditions": [{"condition": "minecraft:block_state_property", "block": B(sl_), "properties": {"type": "double"}}]},
+            {"function": "minecraft:explosion_decay"}]})])
+        data(f"recipe/titan/{st_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["#  ", "## ", "###"],
+                                     "key": {"#": {"item": B(base)}}, "result": {"id": B(st_), "count": 4}})
+        data(f"recipe/titan/{sl_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["###"],
+                                     "key": {"#": {"item": B(base)}}, "result": {"id": B(sl_), "count": 6}})
+        for out, cnt in ((st_, 1), (sl_, 2)):
+            data(f"recipe/titan/{out}_from_{base}_stonecutting", {"type": "minecraft:stonecutting",
+                 "ingredient": {"item": B(base)}, "result": {"id": B(out), "count": cnt}})
+        stair_ids.append(B(st_))
+        slab_ids.append(B(sl_))
+    for out, ing in (("polished_titan_ice_rock", "titan_ice_rock"), ("titan_ice_rock_bricks", "polished_titan_ice_rock")):
+        data(f"recipe/titan/{out}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                     "key": {"#": {"item": B(ing)}}, "result": {"id": B(out), "count": 4}})
+        data(f"recipe/titan/{out}_stonecutting", {"type": "minecraft:stonecutting", "ingredient": {"item": B("titan_ice_rock")},
+                                                  "result": {"id": B(out), "count": 1}})
+
+    ores = [B(f"titan_{o}_ore") for o in TORES]
+    rocks = [B("titan_ice_rock"), B("titan_ice_rock_bricks"), B("polished_titan_ice_rock"), B("bitumen")]
+    tag("block", "minecraft:mineable/shovel", [B("tholin_sand"), B("tholin_crust")])
+    tag("block", "minecraft:sand", [B("tholin_sand")])
+    tag("block", "minecraft:mineable/pickaxe", rocks + ores + stair_ids + slab_ids)
+    tag("block", "minecraft:needs_stone_tool", [B("titan_coal_ore"), B("titan_sulfur_ore")])
+    tag("block", "minecraft:needs_iron_tool", [B("titan_lapis_ore"), B("titan_redstone_ore")])
+    tag("block", "minecraft:base_stone_overworld", [B("titan_ice_rock")])
+    tag("block", "minecraft:overworld_carver_replaceables", [B("titan_ice_rock"), B("tholin_sand"), B("tholin_crust")])
+    for kind_ in ("block", "item"):
+        tag(kind_, "minecraft:stairs", stair_ids)
+        tag(kind_, "minecraft:slabs", slab_ids)
+        tag(kind_, "minecraft:coal_ores", [B("titan_coal_ore")])
+        tag(kind_, "minecraft:redstone_ores", [B("titan_redstone_ore")])
+        tag(kind_, "minecraft:lapis_ores", [B("titan_lapis_ore")])
+        for o in ("coal", "redstone", "lapis"):
+            tag(kind_, f"c:ores/{o}", [B(f"titan_{o}_ore")])
+        for o in TORES:
+            tag(kind_, "c:ores", [B(f"titan_{o}_ore")])
+    tag("item", "minecraft:stone_crafting_materials", [B("titan_ice_rock")])
+    tag("item", "minecraft:stone_tool_materials", [B("titan_ice_rock")])
+    data("tags/block/titan_ore_replaceable", {"values": [B("titan_ice_rock")]})
+
+    # --------------------------------------------------------------- combustibles (el bitumen y el metano arden en los hornos)
+    datamap_add("data/neoforge/data_maps/item/furnace_fuels.json", {B("bitumen"): {"burn_time": 16000},
+                                                                   B("methane_bucket"): {"burn_time": 24000}})
+
+    # --------------------------------------------------------------- metano líquido
+    write(f"assets/{NS}/models/block/methane.json", {"textures": {"particle": rl("block/methane_still")}})
+    bstate("methane", {"": {"model": rl("block/methane")}})
+    write(f"assets/{NS}/models/item/methane_bucket.json", {"parent": "minecraft:item/generated", "textures": {"layer0": rl("item/methane_bucket")}})
+    lang("block", "methane", "Liquid Methane", "Metano líquido")
+    lang("item", "methane_bucket", "Liquid Methane Bucket", "Cubo de metano líquido")
+    # el metano a 111 K: tampoco se puede beber ni apaga el fuego; los fluidos propios se marcan para que no se confundan con agua
+    write("data/c/tags/fluid/methane.json", {"values": [B("methane"), B("flowing_methane")]})
+
+    # --------------------------------------------------------------- terreno
+    # Se queda en y 0..256 (min_y 0): así el selector de fluidos de Minecraft nunca pone lava en el fondo (solo lo hace
+    # por debajo de y -54). Nivel del mar 57 con metano; las cuencas de los lagos bajan el terreno hasta ~40 donde el ruido
+    # "lake" pasa de 0,15; las tierras altas (ruido "regions" > 0,25) suben ~16 bloques.
+    def noise(n, first, amps):
+        data(f"worldgen/noise/{P}/{n}", {"firstOctave": first, "amplitudes": amps})
+        return rl(f"{P}/{n}")
+    hills, detail = noise("hills", -8, [1.0, 1.0, 0.5]), noise("detail", -5, [1.0, 0.5])
+    regions, lake = noise("regions", -9, [1.0, 1.0]), noise("lake", -8, [1.0, 0.6])
+    n2 = lambda nn: {"type": "minecraft:noise", "noise": nn, "xz_scale": 1.0, "y_scale": 0.0}           # noqa: E731
+    base_h, sea = 78, 57
+    basin = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:mul", "argument1": 6.0, "argument2": {
+        "type": "minecraft:add", "argument1": n2(lake), "argument2": -0.15}}}
+    high = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:mul", "argument1": 3.0, "argument2": {
+        "type": "minecraft:add", "argument1": n2(regions), "argument2": -0.25}}}
+    density = {"type": "minecraft:add",
+               "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": 0, "to_y": 256,
+                             "from_value": base_h / 16.0, "to_value": (base_h - 256) / 16.0},
+               "argument2": {"type": "minecraft:add",
+                             "argument1": {"type": "minecraft:add",
+                                           "argument1": {"type": "minecraft:mul", "argument1": n2(hills), "argument2": 8 / 16.0},
+                                           "argument2": {"type": "minecraft:mul", "argument1": n2(detail), "argument2": 3 / 16.0}},
+                             "argument2": {"type": "minecraft:add",
+                                           "argument1": {"type": "minecraft:mul", "argument1": basin, "argument2": -40 / 16.0},
+                                           "argument2": {"type": "minecraft:mul", "argument1": high, "argument2": 16 / 16.0}}}}
+    # cuevas de ruido como las de Ferra (entradas, túneles y cavernas); por debajo del nivel del mar se llenan de metano
+    cl = RouterCloner(P)
+    entr = cl.df("minecraft:overworld/caves/entrances")
+    spag = {"type": "minecraft:add", "argument1": cl.df("minecraft:overworld/caves/spaghetti_2d"),
+            "argument2": cl.df("minecraft:overworld/caves/spaghetti_roughness_function")}
+    noodle = cl.df("minecraft:overworld/caves/noodle")
+    cheese = {"type": "minecraft:add",
+              "argument1": {"type": "minecraft:mul", "argument1": 4.0, "argument2": {"type": "minecraft:square", "argument": {
+                  "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_layer"), "xz_scale": 1.0, "y_scale": 8.0}}},
+              "argument2": {"type": "minecraft:add",
+                            "argument1": {"type": "minecraft:clamp", "min": -1.0, "max": 1.0, "input": {
+                                "type": "minecraft:add", "argument1": 0.27, "argument2": {
+                                    "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_cheese"), "xz_scale": 1.0, "y_scale": 0.6666666666666666}}},
+                            "argument2": {"type": "minecraft:clamp", "min": 0.0, "max": 0.5, "input": {
+                                "type": "minecraft:add", "argument1": 1.5, "argument2": {"type": "minecraft:mul", "argument1": -0.64, "argument2": density}}}}}
+    deep = {"type": "minecraft:min", "argument1": {"type": "minecraft:min", "argument1": cheese, "argument2": entr}, "argument2": spag}
+    caved = {"type": "minecraft:range_choice", "input": density, "min_inclusive": -1000000.0, "max_exclusive": 1.5625,
+             "when_in_range": {"type": "minecraft:min", "argument1": density, "argument2": {"type": "minecraft:mul", "argument1": 5.0, "argument2": entr}},
+             "when_out_of_range": deep}
+    final = {"type": "minecraft:min", "argument1": {"type": "minecraft:interpolated", "argument": caved}, "argument2": noodle}
+    zero = 0.0
+    router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
+              "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
+              "ridges": n2(lake), "initial_density_without_jaggedness": density,
+              "final_density": final,
+              "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
+    sand, crust, bitumen = {"Name": B("tholin_sand")}, {"Name": B("tholin_crust")}, {"Name": B("bitumen")}
+    surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
+        cond(biome_is("titan_methane_lake"), cond(UNDER_FLOOR, put(bitumen))),
+        cond(biome_is("titan_methane_shore"), cond(UNDER_FLOOR, seq(
+            cond(noise_band("minecraft:surface", 0.2, 2.0), put(bitumen)), put(sand)))),
+        cond(biome_is("titan_dunes"), cond(UNDER_FLOOR, put(sand))),
+        cond(biome_is("titan_tholin_plains"), cond(UNDER_FLOOR, put(crust))),
+        cond(biome_is("titan_ice_highlands"), cond(ON_FLOOR, cond(noise_band("minecraft:surface", 0.25, 2.0), put(crust)))))))
+    noise_settings(P, router, default_block={"Name": B("titan_ice_rock")}, default_fluid=block(B("methane"), level=0),
+                   sea_level=sea, aquifers=False, surface_rule=surface, min_y=0, height=256, spawn_target=[
+                       {"temperature": FULL, "humidity": FULL, "continentalness": [-0.4, 0.2], "erosion": FULL,
+                        "weirdness": [-2.0, 0.0], "depth": 0.0, "offset": 0.0}])
+
+    def configured(nm, obj):
+        data(f"worldgen/configured_feature/{P}/{nm}", obj)
+        return rl(f"{P}/{nm}")
+
+    def placed(nm, feature, placement):
+        data(f"worldgen/placed_feature/{P}/{nm}", {"feature": feature, "placement": placement})
+        return rl(f"{P}/{nm}")
+
+    def ore(nm, block_id, size, count, lo, hi, shape="minecraft:uniform"):
+        cf = configured(f"ore_{nm}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": 0.0,
+            "targets": [{"target": {"predicate_type": "minecraft:tag_match", "tag": f"{NS}:titan_ore_replaceable"},
+                         "state": {"Name": B(block_id)}}]}})
+        return placed(f"ore_{nm}", cf, [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+                                        {"type": "minecraft:height_range", "height": {"type": shape, "min_inclusive": {"absolute": lo},
+                                                                                      "max_inclusive": {"absolute": hi}}},
+                                        {"type": "minecraft:biome"}])
+    # especialidad de Titán: combustibles (carbón, redstone, lapislázuli y azufre), varias veces lo de la Tierra
+    ores_t = [ore("coal", "titan_coal_ore", 18, 60, 0, 190), ore("sulfur", "titan_sulfur_ore", 12, 26, 0, 150),
+              ore("redstone", "titan_redstone_ore", 12, 26, 0, 110, "minecraft:trapezoid"),
+              ore("lapis", "titan_lapis_ore", 10, 20, 0, 120, "minecraft:trapezoid")]
+
+    sky, fog = rgb(140, 84, 38), rgb(170, 104, 48)
+    common = dict(temperature=-0.5, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(20, 70, 82),
+                  water_fog=rgb(8, 30, 38), carvers=[])
+    for nm in ("titan_dunes", "titan_tholin_plains", "titan_ice_highlands", "titan_methane_shore", "titan_methane_lake"):
+        biome(nm, feats=features(underground_ores=ores_t), **common)
+    name("titan_dunes", "Tholin Dunes", "Dunas de tolina")
+    name("titan_tholin_plains", "Tholin Plains", "Llanuras de tolina")
+    name("titan_ice_highlands", "Ice Highlands", "Tierras altas de hielo")
+    name("titan_methane_shore", "Methane Shore", "Orilla de metano")
+    name("titan_methane_lake", "Methane Lake", "Lago de metano")
+    pts = [point("titan_methane_lake", weirdness=[0.12, 2.0]), point("titan_methane_shore", weirdness=[0.0, 0.12]),
+           point("titan_dunes", continentalness=[-2.0, -0.2], weirdness=[-2.0, 0.0]),
+           point("titan_tholin_plains", continentalness=[-0.2, 0.25], weirdness=[-2.0, 0.0]),
+           point("titan_ice_highlands", continentalness=[0.25, 2.0], weirdness=[-2.0, 0.0])]
+    dimension(P, pts)
+    dimension_type(P, effects="minecraft:overworld", min_y=0, height=256)
+    # atmósfera densa (1,4 bar): mucho rozamiento para las naves y para quien se lance de lo alto
+    dimension_physics(P, universal_drag=0.008, base_gravity=[0.0, -1.35, 0.0],
+                      pressure_function=[{"altitude": 80.0, "value": 1.4, "slope": 0.0},
+                                         {"altitude": 3000.0, "value": 0.0, "slope": 0.0}])
+
+    data(f"universe_planets/{P}", {
+        "name": P,
+        "parent": "saturn",
+        "priority": 1000,
+        "acceleration_at_surface": 1.35,
+        "radius": 1.2e6,
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": 1.0, "y": 0.0, "z": 0.0}, "period_seconds": 100000.0},
+        "rotation": {"type": "tidal_lock", "rotations_per_orbit": -1.0},
+        "planet_extras": {"light_source_name": "sol"},
+        "dimension_data": {
+            "linked_dimension": rl(P), "allowed_transfer": "all", "dimension_transfer_height": 20000,
+            "atmosphere_composition": {"21000": ["drowning"]},
+            "render_universe_in_dimension": True, "dimension_day_time_controller_name": "sol",
+            "apply_gravity_correction_to_entities_in_dimension": True, "entity_drag_multiplier": drag_curve(2500, 6000),
+        },
+        "planet_atmosphere": {"enabled": True, "radius": 1.12, "intensity": 0.8, "densityFalloff": 4.0,
+                              "scatteringStrength": 0.09, "wavelengths": [450.0, 540.0, 700.0]},
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 190, "fallback_green": 120, "fallback_blue": 56,
+                           "colors": [color(196, 124, 54, biomes=["titan_dunes"]), color(156, 96, 46, biomes=["titan_tholin_plains"]),
+                                      color(176, 150, 128, biomes=["titan_ice_highlands"], priority=5),
+                                      color(104, 74, 48, biomes=["titan_methane_shore"]),
+                                      color(24, 64, 76, biomes=["titan_methane_lake"], ocean=True)]},
+    })
+    LANG_EN[f"hologram.{NS}.body.{P}"] = "Titan"
+    LANG_ES[f"hologram.{NS}.body.{P}"] = "Titán"
+    n = f"nav.{NS}."
+    for field, (en, es) in {
+            "type": ("Moon of Saturn", "Luna de Saturno"),
+            "desc": ("A frozen moon under a thick orange haze, with tholin dunes and lakes of liquid methane.",
+                     "Una luna helada bajo una espesa bruma naranja, con dunas de tolina y lagos de metano líquido."),
+            "air": ("Dense, not breathable", "Densa, no respirable"), "temp": ("Freezing (-179 °C)", "Helada (-179 °C)"),
+            "hazards": ("Extreme cold, liquid methane", "Frío extremo, metano líquido"),
+            "armor": ("Glacial Armor", "Glacial Armor"),
+            "resources": ("Huge amounts of coal, redstone, lapis lazuli and sulfur; bitumen and liquid methane as fuel",
+                          "Muchísimo carbón, redstone, lapislázuli y azufre; bitumen y metano líquido como combustible")}.items():
+        LANG_EN[f"{n}body.{P}.{field}"] = en
+        LANG_ES[f"{n}body.{P}.{field}"] = es
+
+
 
 def build_meta():
     # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
@@ -4529,7 +4883,7 @@ side="BOTH"
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
         "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin"],
-        "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin"],
+        "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},
     })
     write("pack.mcmeta", {"pack": {"description": "Cosmonautics: Planetary Expansion", "pack_format": 34}})
@@ -4573,6 +4927,8 @@ if __name__ == "__main__":
     build_cerulea()          # 1.0.3: antes de no_earth_mobs (la etiqueta de biomas del mod)
     build_velo()             # 1.0.3: luna de cristal de Cerúlea
     build_ferra()            # 1.0.3: luna de óxido de Cerúlea
+    build_saturn()           # 1.0.4: Saturno con anillos
+    build_titan()            # 1.0.4: su luna Titán
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

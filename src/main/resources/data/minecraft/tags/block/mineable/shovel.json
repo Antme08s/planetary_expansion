@@ -7,6 +7,8 @@
     "planetary_expansion:cerulean_mud",
     "planetary_expansion:cerulean_sand",
     "planetary_expansion:velo_dust",
-    "planetary_expansion:ferra_dust"
+    "planetary_expansion:ferra_dust",
+    "planetary_expansion:tholin_sand",
+    "planetary_expansion:tholin_crust"
   ]
 }

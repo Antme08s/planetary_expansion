@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "planetary_expansion:block/titan_redstone_ore"
+    },
+    "lit=true": {
+      "model": "planetary_expansion:block/titan_redstone_ore_on"
+    }
+  }
+}

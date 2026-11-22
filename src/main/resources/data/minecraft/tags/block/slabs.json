@@ -14,6 +14,9 @@
     "planetary_expansion:polished_velo_rock_slab",
     "planetary_expansion:ferra_rock_slab",
     "planetary_expansion:ferra_rock_brick_slab",
-    "planetary_expansion:polished_ferra_rock_slab"
+    "planetary_expansion:polished_ferra_rock_slab",
+    "planetary_expansion:titan_ice_rock_slab",
+    "planetary_expansion:titan_ice_rock_brick_slab",
+    "planetary_expansion:polished_titan_ice_rock_slab"
   ]
 }

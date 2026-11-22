@@ -3,6 +3,12 @@
     "planetary_expansion:dried_ribbon_kelp_block": {
       "burn_time": 4001
     },
+    "planetary_expansion:bitumen": {
+      "burn_time": 16000
+    },
+    "planetary_expansion:methane_bucket": {
+      "burn_time": 24000
+    },
     "planetary_expansion:magma_core": {
       "burn_time": 9600
     }

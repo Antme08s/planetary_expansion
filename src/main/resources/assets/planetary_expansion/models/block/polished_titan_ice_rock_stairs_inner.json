@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "planetary_expansion:block/polished_titan_ice_rock",
+    "top": "planetary_expansion:block/polished_titan_ice_rock",
+    "side": "planetary_expansion:block/polished_titan_ice_rock"
+  }
+}

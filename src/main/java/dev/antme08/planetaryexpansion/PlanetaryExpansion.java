@@ -73,6 +73,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.cerulea.mobs.CeruleaMobs.register(modBus); // 1.0.3: criaturas de Cerúlea
         dev.antme08.planetaryexpansion.velo.VeloBlocks.register(modBus); // 1.0.3: Velo, luna de cristal de Cerúlea
         dev.antme08.planetaryexpansion.ferra.FerraBlocks.register(modBus); // 1.0.3: Ferra, luna de óxido de Cerúlea
+        dev.antme08.planetaryexpansion.titan.TitanBlocks.register(modBus); // 1.0.4: Titán, luna de Saturno
         dev.antme08.planetaryexpansion.ferra.mobs.FerraMobs.register(modBus); // 1.0.3: gusano de óxido y rastreador ciego
         dev.antme08.planetaryexpansion.cerulea.CeruleaSea.register(modBus); // 1.0.3: plantas del mar de Cerúlea
         if (FMLEnvironment.dist == Dist.CLIENT) {
@@ -90,6 +91,7 @@ public final class PlanetaryExpansion {
             dev.antme08.planetaryexpansion.creatures.client.CreaturesClient.register(modBus); // 0.7.61
             dev.antme08.planetaryexpansion.cerulea.mobs.client.CeruleaMobsClient.register(modBus); // 1.0.3
             dev.antme08.planetaryexpansion.ferra.mobs.client.FerraMobsClient.register(modBus); // 1.0.3
+            dev.antme08.planetaryexpansion.titan.client.TitanClient.register(modBus); // 1.0.4
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThermalLavaVision.class); // 0.7.64
         }
 

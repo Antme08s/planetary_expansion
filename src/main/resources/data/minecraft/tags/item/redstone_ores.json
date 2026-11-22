@@ -3,6 +3,7 @@
   "values": [
     "planetary_expansion:cerulean_redstone_ore",
     "planetary_expansion:deep_cerulean_redstone_ore",
-    "planetary_expansion:ferra_redstone_ore"
+    "planetary_expansion:ferra_redstone_ore",
+    "planetary_expansion:titan_redstone_ore"
   ]
 }

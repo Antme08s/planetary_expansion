@@ -54,9 +54,11 @@ public class NavConsoleRenderer implements BlockEntityRenderer<NavConsoleBlockEn
     private static final float HOLO_Y = 24.5f;      // px sobre la base de la consola
     private static final float MAX_R = 13.2f;       // px: radio de la órbita más lejana
     private static final float[] MOON_R = {1.7f, 2.6f, 3.4f};
-    private static final Map<String, Float> SIZE = Map.of("sol", 1.25f, "gas_giant", 0.95f, "moon", 0.38f, "ignis", 0.38f, "thalassa", 0.42f);
-    private static final Map<String, String> FALLBACK = Map.of("sol", "sun", "overworld", "earth", "moon", "ice", "venus", "venus",
-            "mars", "mars", "gas_giant", "giant", "ice_world", "ice", "ignis", "ignis", "thalassa", "thalassa");
+    private static final Map<String, Float> SIZE = Map.of("sol", 1.25f, "gas_giant", 0.95f, "moon", 0.38f, "ignis", 0.38f, "thalassa", 0.42f,
+            "saturn", 0.9f, "titan", 0.42f);
+    private static final Map<String, String> FALLBACK = Map.ofEntries(Map.entry("sol", "sun"), Map.entry("overworld", "earth"), Map.entry("moon", "ice"),
+            Map.entry("venus", "venus"), Map.entry("mars", "mars"), Map.entry("gas_giant", "giant"), Map.entry("ice_world", "ice"),
+            Map.entry("ignis", "ignis"), Map.entry("thalassa", "thalassa"), Map.entry("saturn", "giant"), Map.entry("titan", "venus"));
     private static final Map<Integer, Long> REQUESTED = new HashMap<>();
     private static boolean loggedError;
 

@@ -1,0 +1,117 @@
+{
+  "name": "titan",
+  "parent": "saturn",
+  "priority": 1000,
+  "acceleration_at_surface": 1.35,
+  "radius": 1200000.0,
+  "position": {
+    "type": "circular_orbit_period",
+    "orbit_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    },
+    "position_direction": {
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "period_seconds": 100000.0
+  },
+  "rotation": {
+    "type": "tidal_lock",
+    "rotations_per_orbit": -1.0
+  },
+  "planet_extras": {
+    "light_source_name": "sol"
+  },
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:titan",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "21000": [
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "dimension_day_time_controller_name": "sol",
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 2500.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 6000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.12,
+    "intensity": 0.8,
+    "densityFalloff": 4.0,
+    "scatteringStrength": 0.09,
+    "wavelengths": [
+      450.0,
+      540.0,
+      700.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 190,
+    "fallback_green": 120,
+    "fallback_blue": 56,
+    "colors": [
+      {
+        "red": 196,
+        "green": 124,
+        "blue": 54,
+        "matching_biomes": [
+          "planetary_expansion:titan_dunes"
+        ]
+      },
+      {
+        "red": 156,
+        "green": 96,
+        "blue": 46,
+        "matching_biomes": [
+          "planetary_expansion:titan_tholin_plains"
+        ]
+      },
+      {
+        "red": 176,
+        "green": 150,
+        "blue": 128,
+        "matching_biomes": [
+          "planetary_expansion:titan_ice_highlands"
+        ],
+        "priority": 5
+      },
+      {
+        "red": 104,
+        "green": 74,
+        "blue": 48,
+        "matching_biomes": [
+          "planetary_expansion:titan_methane_shore"
+        ]
+      },
+      {
+        "red": 24,
+        "green": 64,
+        "blue": 76,
+        "matching_biomes": [
+          "planetary_expansion:titan_methane_lake"
+        ],
+        "flags": [
+          "ocean"
+        ]
+      }
+    ]
+  }
+}
