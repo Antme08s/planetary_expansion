@@ -220,6 +220,42 @@ public class WarpDriveBlockEntity extends BlockEntity {
         return best;
     }
 
+    /**
+     * Motor que se usaría para viajar a {@code targetName} (1.0.4): con varios motores en la nave se prefiere uno que
+     * pueda hacer ese salto ahora mismo (si el destino es otra estrella, uno estelar y con carga de sobra; si es del
+     * mismo sistema, el normal, para no gastar la carga del estelar), después uno listo aunque no pueda, y por último el
+     * más cercano a la consola. Sin destino, el de siempre.
+     */
+    public static WarpDriveBlockEntity findFor(ServerLevel level, BlockPos console, String targetName) {
+        if (targetName == null || targetName.isEmpty()) return find(level, console);
+        ServerSubLevel ship = Warp.shipAt(level, console);
+        DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
+        var universe = data == null ? null : data.getUniverse();
+        String to = StarSystems.systemOf(universe, targetName);
+        WarpDriveBlockEntity best = null;
+        double bestScore = Double.MAX_VALUE;
+        for (WarpDriveBlockEntity d : LOADED) {
+            if (d.isRemoved() || d.level != level) continue;
+            ServerSubLevel other = Warp.shipAt(level, d.worldPosition);
+            boolean same = ship != null
+                    ? other != null && other.getUniqueId().equals(ship.getUniqueId())
+                    : other == null && d.worldPosition.distSqr(console) < 48 * 48;
+            if (!same) continue;
+            String from = StarSystems.systemOf(universe, d.currentOrbit(level));
+            boolean ready = d.status(level) == WarpStatus.READY;
+            boolean able = ready && interstellarProblem(d.stellar, d.charge, d.tank.getFluidAmount(), from, to) == null;
+            boolean interstellar = !from.equals(to);
+            double score = d.worldPosition.distSqr(console)
+                    + (able ? 0 : ready ? 1e12 : 2e12)
+                    + (able && d.stellar != interstellar ? 1e9 : 0);   // a igualdad de capacidad, el normal para viajes cortos
+            if (score < bestScore) {
+                bestScore = score;
+                best = d;
+            }
+        }
+        return best;
+    }
+
     // ------------------------------------------------------------------ tick
 
     void serverTick() {

@@ -1133,3 +1133,7 @@ Motivo: el modpack del usuario (~1800 descargas) recibió la queja de que items 
 - **Selector de distancia** (`warp/client/OrbitDistanceScreen`): "Viajar (orbitar)" en el mapa abre un control logarítmico de altitud (con "Más cerca", "Predeterminada" y "Más lejos"), el período y la velocidad orbital. Mínimo: libra las esquinas del cubo + 60 km; máximo: el 90 % de la zona de influencia (en una estrella, 60 radios). El paquete `WarpJumpRequestPayload` lleva la altitud; el motor la guarda (`TargetAlt`) y el servidor la limita al rango válido (`WarpDriveBlockEntity.orbitRange`).
 - **Se pueden orbitar las estrellas** (Sol y Ámbar) y **el mismo astro a otra distancia** (solo se rechaza si ya estás a menos de un 1 % de esa órbita).
 - **Anillos de Saturno**: Cosmonautics dibuja los planetas por defecto como cubos (`planetShape = CUBE`); el anillo se medía desde el radio de la esfera y quedaba metido en el cubo. Ahora, con cubos, se mide desde la esfera circunscrita (1,75 radios).
+
+## 1.0.4 — varios motores de distorsión en la misma nave
+
+La consola elige el motor según el destino (`WarpDriveBlockEntity.findFor`): primero uno que pueda hacer ese salto ahora (para otra estrella, uno estelar con carga de sobra; para el mismo sistema, el normal, para no gastar la carga del estelar), después uno listo aunque no pueda, y por último el más cercano. El mapa pide el estado con el destino (`NavStatusRequestPayload.target`), así que la barra de estado y el bloqueo del menú reflejan el motor que se usaría.

@@ -113,8 +113,13 @@ public class NavMapScreen extends Screen {
     }
 
     private void requestStatus() {
+        requestStatus(popup != null ? popup : "");
+    }
+
+    /** 1.0.4: con varios motores, el estado es el del que se usaría para ese destino. */
+    private void requestStatus(String target) {
         try {
-            PacketDistributor.sendToServer(new NavStatusRequestPayload(console));
+            PacketDistributor.sendToServer(new NavStatusRequestPayload(console, target == null ? "" : target));
         } catch (Throwable ignored) {
         }
     }
@@ -729,6 +734,7 @@ public class NavMapScreen extends Screen {
         String hit = pick(mx, my);
         if (button == 1 && hit != null) {
             popup = hit;
+            requestStatus(hit);
             popupX = (int) Math.min(mx, mapW() - popupW() - 4);
             popupY = (int) Math.min(my, height - 60);
             return true;

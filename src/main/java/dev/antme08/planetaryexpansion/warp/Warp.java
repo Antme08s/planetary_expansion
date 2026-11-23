@@ -174,7 +174,7 @@ public final class Warp {
     private static void onStatusRequest(NavStatusRequestPayload p, IPayloadContext ctx) {
         if (!(ctx.player() instanceof ServerPlayer player) || !nearConsole(player, p.console())) return;
         ServerLevel level = player.serverLevel();
-        WarpDriveBlockEntity drive = WarpDriveBlockEntity.find(level, p.console());
+        WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(level, p.console(), p.target());
         NavStatusPayload out = drive == null
                 ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false)
                 : new NavStatusPayload(p.console(), drive.status(level).ordinal(), (float) drive.charge(), (float) drive.heat(),
@@ -184,7 +184,7 @@ public final class Warp {
 
     private static void onJumpRequest(WarpJumpRequestPayload p, IPayloadContext ctx) {
         if (!(ctx.player() instanceof ServerPlayer player) || !nearConsole(player, p.console())) return;
-        WarpDriveBlockEntity drive = WarpDriveBlockEntity.find(player.serverLevel(), p.console());
+        WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(player.serverLevel(), p.console(), p.target());
         if (drive == null) {
             player.displayClientMessage(WarpStatus.NO_DRIVE.text(), true);
             return;
