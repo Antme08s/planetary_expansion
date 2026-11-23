@@ -160,9 +160,18 @@ public class WarpDriveBlockEntity extends BlockEntity {
      * servidor al saltar y la consola para avisar antes.
      */
     public static Component interstellarProblem(boolean stellar, double charge, int nitrogen, String fromSystem, String toSystem) {
+        return interstellarProblem(stellar, charge, nitrogen, fromSystem, toSystem, false);
+    }
+
+    /**
+     * @param shipHasStellar 1.0.4: la nave tiene algún motor estelar. Entonces los saltos entre sistemas solo los hace uno
+     *                       estelar (con dos motores, el normal ya no puede "volver al Sol" mientras el estelar se carga);
+     *                       el atajo de volver al Sol solo queda para las naves que no tienen ninguno estelar.
+     */
+    public static Component interstellarProblem(boolean stellar, double charge, int nitrogen, String fromSystem, String toSystem, boolean shipHasStellar) {
         if (fromSystem == null || toSystem == null || fromSystem.equals(toSystem)) return null;
         String k = "message.planetary_expansion.";
-        if (!stellar && !toSystem.equals("sol")) return Component.translatable(k + "warp_needs_stellar").withStyle(ChatFormatting.RED);
+        if (!stellar && (!toSystem.equals("sol") || shipHasStellar)) return Component.translatable(k + "warp_needs_stellar").withStyle(ChatFormatting.RED);
         if (stellar && charge < 2.0 - 1e-6)
             return Component.translatable(k + "warp_needs_overcharge", (int) Math.floor(charge * 100)).withStyle(ChatFormatting.GOLD);
         if (nitrogen < INTERSTELLAR_MB)
@@ -220,6 +229,20 @@ public class WarpDriveBlockEntity extends BlockEntity {
         return best;
     }
 
+    /** ¿Algún motor de la misma nave que la consola es estelar? */
+    private static boolean shipHasStellar(ServerLevel level, BlockPos console) {
+        ServerSubLevel ship = Warp.shipAt(level, console);
+        for (WarpDriveBlockEntity d : LOADED) {
+            if (d.isRemoved() || d.level != level || !d.stellar) continue;
+            ServerSubLevel other = Warp.shipAt(level, d.worldPosition);
+            boolean same = ship != null
+                    ? other != null && other.getUniqueId().equals(ship.getUniqueId())
+                    : other == null && d.worldPosition.distSqr(console) < 48 * 48;
+            if (same) return true;
+        }
+        return false;
+    }
+
     /**
      * Motor que se usaría para viajar a {@code targetName} (1.0.4): con varios motores en la nave se prefiere uno que
      * pueda hacer ese salto ahora mismo (si el destino es otra estrella, uno estelar y con carga de sobra; si es del
@@ -232,6 +255,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
         var universe = data == null ? null : data.getUniverse();
         String to = StarSystems.systemOf(universe, targetName);
+        boolean hasStellar = shipHasStellar(level, console);
         WarpDriveBlockEntity best = null;
         double bestScore = Double.MAX_VALUE;
         for (WarpDriveBlockEntity d : LOADED) {
@@ -242,9 +266,11 @@ public class WarpDriveBlockEntity extends BlockEntity {
                     : other == null && d.worldPosition.distSqr(console) < 48 * 48;
             if (!same) continue;
             String from = StarSystems.systemOf(universe, d.currentOrbit(level));
-            boolean ready = d.status(level) == WarpStatus.READY;
-            boolean able = ready && interstellarProblem(d.stellar, d.charge, d.tank.getFluidAmount(), from, to) == null;
             boolean interstellar = !from.equals(to);
+            // con un motor estelar a bordo, los saltos entre sistemas son solo suyos (aunque se esté cargando)
+            if (interstellar && hasStellar && !d.stellar) continue;
+            boolean ready = d.status(level) == WarpStatus.READY;
+            boolean able = ready && interstellarProblem(d.stellar, d.charge, d.tank.getFluidAmount(), from, to, hasStellar) == null;
             double score = d.worldPosition.distSqr(console)
                     + (able ? 0 : ready ? 1e12 : 2e12)
                     + (able && d.stellar != interstellar ? 1e9 : 0);   // a igualdad de capacidad, el normal para viajes cortos
@@ -507,7 +533,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         // 1.0.3: ¿salto a otra estrella?
         String from = StarSystems.systemOf(data.getUniverse(), currentOrbit(sl));
         String to = StarSystems.systemOf(data.getUniverse(), targetName);
-        Component problem = interstellarProblem(stellar, charge, tank.getFluidAmount(), from, to);
+        Component problem = interstellarProblem(stellar, charge, tank.getFluidAmount(), from, to, shipHasStellar(sl, worldPosition));
         if (problem != null) {
             player.displayClientMessage(problem, true);
             return;

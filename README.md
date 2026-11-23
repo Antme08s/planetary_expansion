@@ -1137,3 +1137,5 @@ Motivo: el modpack del usuario (~1800 descargas) recibió la queja de que items 
 ## 1.0.4 — varios motores de distorsión en la misma nave
 
 La consola elige el motor según el destino (`WarpDriveBlockEntity.findFor`): primero uno que pueda hacer ese salto ahora (para otra estrella, uno estelar con carga de sobra; para el mismo sistema, el normal, para no gastar la carga del estelar), después uno listo aunque no pueda, y por último el más cercano. El mapa pide el estado con el destino (`NavStatusRequestPayload.target`), así que la barra de estado y el bloqueo del menú reflejan el motor que se usaría.
+
+Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos entre sistemas solares solo los hace un motor estelar, aunque se esté cargando o enfriando; el motor normal ya no puede "volver al Sol" en ese caso (`interstellarProblem(..., shipHasStellar)`). El atajo de volver al Sol con el motor normal solo queda para naves sin ningún motor estelar.
