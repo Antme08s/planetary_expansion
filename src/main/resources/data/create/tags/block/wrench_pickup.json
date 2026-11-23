@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "planetary_expansion:methane_thruster_mount",
     "planetary_expansion:gravity_generator",
     "planetary_expansion:inertial_dampener_core",
     "planetary_expansion:inertial_dampener_casing",

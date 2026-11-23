@@ -4491,6 +4491,42 @@ def build_saturn():
         LANG_ES[n + field] = es
 
 
+def build_methane_engine():
+    """Soporte de motor de metano (1.0.4): bloque de MethaneEngine.java. El modelo hereda el del soporte de Cosmonautics y
+    solo cambia la textura (tools/designs/methane_engine_texture.py)."""
+    write_bytes(f"assets/{NS}/textures/block/methane_thruster_mount.png",
+                open(os.path.join(DESIGNS, "methane_engine", "engine_mount.png"), "rb").read())
+    tex = {"0": rl("block/methane_thruster_mount"), "particle": rl("block/methane_thruster_mount")}
+    write(f"assets/{NS}/models/block/methane_thruster_mount.json", {"parent": "rocketnautics:block/thruster_mount", "textures": tex})
+    write(f"assets/{NS}/models/item/methane_thruster_mount.json", {"parent": "rocketnautics:item/thruster_mount", "textures": tex})
+    model = rl("block/methane_thruster_mount")
+    write(f"assets/{NS}/blockstates/methane_thruster_mount.json", {"variants": {
+        "facing=up": {"model": model},
+        "facing=down": {"model": model, "x": 180},
+        "facing=north": {"model": model, "x": 90},
+        "facing=south": {"model": model, "x": 90, "y": 180},
+        "facing=east": {"model": model, "x": 90, "y": 90},
+        "facing=west": {"model": model, "x": 90, "y": 270}}})
+    data("loot_table/blocks/methane_thruster_mount", {"type": "minecraft:block", "pools": [{
+        "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl("methane_thruster_mount")}],
+        "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl("blocks/methane_thruster_mount")})
+    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl("methane_thruster_mount"))
+    tag_add("data/create/tags/block/wrench_pickup.json", rl("methane_thruster_mount"))
+    # receta (cuadrícula 3x3): láminas de aleación de titanio en las esquinas, tubería de fluidos arriba, láminas de plomo a los
+    # lados, la palanca de aceleración de Create Simulated (Aeronautics) en el centro y una tobera de titanio abajo.
+    # Solo existe si Simulated está cargado (la palanca viene con Create Aeronautics).
+    data("recipe/methane_thruster_mount", {
+        "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "simulated"}],
+        "type": "minecraft:crafting_shaped", "category": "misc",
+        "key": {"A": {"tag": "c:plates/titanium_alloy"}, "P": {"item": "create:fluid_pipe"},
+                "L": {"item": rl("lead_sheet")}, "T": {"item": "simulated:throttle_lever"},
+                "N": {"item": "rocketnautics:titanium_nozzle"}},
+        "pattern": ["APA", "LTL", "ANA"],
+        "result": {"id": rl("methane_thruster_mount"), "count": 1}})
+    LANG_EN[f"block.{NS}.methane_thruster_mount"] = "Methane Thruster Mount"
+    LANG_ES[f"block.{NS}.methane_thruster_mount"] = "Soporte de motor de metano"
+
+
 def build_titan():
     P = "titan"
     B = rl
@@ -4945,6 +4981,7 @@ if __name__ == "__main__":
     build_ferra()            # 1.0.3: luna de óxido de Cerúlea
     build_saturn()           # 1.0.4: Saturno con anillos
     build_titan()            # 1.0.4: su luna Titán
+    build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

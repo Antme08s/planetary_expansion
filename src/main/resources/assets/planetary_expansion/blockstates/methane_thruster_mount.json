@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "planetary_expansion:block/methane_thruster_mount"
+    },
+    "facing=down": {
+      "model": "planetary_expansion:block/methane_thruster_mount",
+      "x": 180
+    },
+    "facing=north": {
+      "model": "planetary_expansion:block/methane_thruster_mount",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "planetary_expansion:block/methane_thruster_mount",
+      "x": 90,
+      "y": 180
+    },
+    "facing=east": {
+      "model": "planetary_expansion:block/methane_thruster_mount",
+      "x": 90,
+      "y": 90
+    },
+    "facing=west": {
+      "model": "planetary_expansion:block/methane_thruster_mount",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

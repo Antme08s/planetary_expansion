@@ -1,0 +1,7 @@
+{
+  "parent": "rocketnautics:item/thruster_mount",
+  "textures": {
+    "0": "planetary_expansion:block/methane_thruster_mount",
+    "particle": "planetary_expansion:block/methane_thruster_mount"
+  }
+}
