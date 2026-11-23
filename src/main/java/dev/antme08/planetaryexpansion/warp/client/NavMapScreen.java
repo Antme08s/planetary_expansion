@@ -633,11 +633,9 @@ public class NavMapScreen extends Screen {
 
     /** Motivo por el que no se puede viajar (o null si se puede). */
     private Component travelBlocked(String id) {
-        Body target = body(id);
-        if (target != null && target.star()) return Component.translatable(K + "blocked_sun");
         NavStatusPayload st = WarpClient.lastStatus;
         if (st == null || !st.console().equals(console)) return Component.translatable(K + "status_wait");
-        if (id.equals(st.orbit()) || (isDeepSpace() && id.equals(currentBody()))) return Component.translatable(K + "blocked_here");
+        // 1.0.4: ya no se bloquea el astro que ya orbitas ni las estrellas: se puede cambiar de distancia y orbitar el Sol
         if (st.warpStatus() != WarpStatus.READY) return st.warpStatus().text();
         // 1.0.3: saltos entre estrellas (motor estelar, 200 % de carga y más nitrógeno)
         String[] sys = systems(id);
@@ -718,7 +716,7 @@ public class NavMapScreen extends Screen {
             String id = popup;
             popup = null;
             if (i == 0 && travelBlocked(id) == null) {
-                PacketDistributor.sendToServer(new WarpJumpRequestPayload(console, id));
+                minecraft.setScreen(new OrbitDistanceScreen(this, console, id, name(id), interstellar(id)));   // 1.0.4
                 return true;
             }
             if (i == 1) {

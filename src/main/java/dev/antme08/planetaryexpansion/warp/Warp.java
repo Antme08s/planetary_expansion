@@ -189,7 +189,7 @@ public final class Warp {
             player.displayClientMessage(WarpStatus.NO_DRIVE.text(), true);
             return;
         }
-        drive.tryJump(player, p.target());
+        drive.tryJump(player, p.target(), Double.isFinite(p.altitudeKm()) ? p.altitudeKm() : 0);
     }
 
     static boolean isPart(Block b) {

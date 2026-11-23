@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
+import dev.devce.rocketnautics.RocketConfig;
 import dev.devce.rocketnautics.client.DeepSpaceHandler;
 import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
 import dev.devce.rocketnautics.shaded.hipparchus.geometry.euclidean.threed.Vector3D;
@@ -87,7 +88,12 @@ public abstract class SaturnRingsMixin {
         RenderSystem.setShaderTexture(0, RINGS);
 
         BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        float in = INNER * radius, out = OUTER * radius;
+        // Cosmonautics dibuja los planetas por defecto como CUBOS (planetShape = CUBE) de semilado = radio: las esquinas llegan a
+        // 1,73 radios. Si el anillo empezara en 1,22 radios quedaría metido en el cubo y se vería descentrado y corto, así que
+        // con cubos el anillo se mide desde el radio de la esfera que rodea al cubo.
+        boolean sphere = RocketConfig.SERVER.planetShape.get() == RocketConfig.PlanetShape.SPHERE;
+        float base = radius * (sphere ? 1.0f : 1.75f);
+        float in = INNER * base, out = OUTER * base;
         int quads = 0;
         for (int i = 0; i < SEGMENTS; i++) {
             double a0 = Math.PI * 2 * i / SEGMENTS, a1 = Math.PI * 2 * (i + 1) / SEGMENTS, mid = (a0 + a1) / 2;

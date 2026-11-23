@@ -1127,3 +1127,9 @@ Motivo: el modpack del usuario (~1800 descargas) recibió la queja de que items 
 - **Especialidad: combustibles.** Menas de carbón, redstone, lapislázuli y azufre (suelta `venusian_sulfur`), bitumen (combustible en horno) y **metano líquido** (fluido propio con cubo; el cubo arde en el horno). Familia de roca de hielo (ladrillos, pulida, escaleras y losas).
 - Código: `titan/TitanBlocks.java`, `titan/client/TitanClient.java`; datos en `build_saturn()` / `build_titan()` de tools/generate.py.
 - Pendiente tras probar: criaturas de Titán, lluvia de metano, metano en capa translúcida (en 1.21.1 sale opaco).
+
+## 1.0.4 — selector de distancia de órbita, órbita de estrellas y anillos de Saturno corregidos
+
+- **Selector de distancia** (`warp/client/OrbitDistanceScreen`): "Viajar (orbitar)" en el mapa abre un control logarítmico de altitud (con "Más cerca", "Predeterminada" y "Más lejos"), el período y la velocidad orbital. Mínimo: libra las esquinas del cubo + 60 km; máximo: el 90 % de la zona de influencia (en una estrella, 60 radios). El paquete `WarpJumpRequestPayload` lleva la altitud; el motor la guarda (`TargetAlt`) y el servidor la limita al rango válido (`WarpDriveBlockEntity.orbitRange`).
+- **Se pueden orbitar las estrellas** (Sol y Ámbar) y **el mismo astro a otra distancia** (solo se rechaza si ya estás a menos de un 1 % de esa órbita).
+- **Anillos de Saturno**: Cosmonautics dibuja los planetas por defecto como cubos (`planetShape = CUBE`); el anillo se medía desde el radio de la esfera y quedaba metido en el cubo. Ahora, con cubos, se mide desde la esfera circunscrita (1,75 radios).

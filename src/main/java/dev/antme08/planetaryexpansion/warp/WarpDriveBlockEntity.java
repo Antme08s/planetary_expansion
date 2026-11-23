@@ -87,6 +87,8 @@ public class WarpDriveBlockEntity extends BlockEntity {
     private double drainDebt;
     private int jumpTick = -1;
     private String target = "";
+    /** Altitud de la órbita de llegada pedida en el mapa (km sobre el centro de las caras; <= 0: la de siempre). 1.0.4 */
+    private double targetAlt;
     private boolean stellar;
     private boolean interstellarJump;
     private final FluidTank tank = new FluidTank(TANK_CAPACITY, s -> s.is(NITROGEN)) {
@@ -264,6 +266,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
             if (jumpTick >= (interstellarJump ? STELLAR_END_TICK : END_TICK)) {
                 jumpTick = -1;
                 target = "";
+                targetAlt = 0;
                 interstellarJump = false;
                 dirtySync = true;
             }
@@ -346,6 +349,15 @@ public class WarpDriveBlockEntity extends BlockEntity {
         }
     }
 
+    /** Distancia de la nave al centro del astro que orbita (0 si no se sabe). */
+    private static double currentOrbitRadius(DeepSpaceInstance inst) {
+        try {
+            return inst.getPosition().getCurrentPVCoords().getPosition().getNorm();
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
     private static DeepSpaceInstance instance(ServerLevel level, ServerSubLevel ship) {
         if (ship == null || !level.dimension().location().equals(DEEP_SPACE)) return null;
         DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
@@ -367,14 +379,34 @@ public class WarpDriveBlockEntity extends BlockEntity {
         }
     }
 
-    public static Arrival arrival(UniverseDefinition universe, String name) {
-        if (universe == null || name == null || name.isEmpty() || name.equals("sol")) return null;
+    /**
+     * Órbitas posibles alrededor de un astro (1.0.4, selector de distancia del mapa). Radios medidos desde el centro del
+     * astro: {@code rMin} libra las esquinas del cubo con margen, {@code rMax} queda dentro de la zona de influencia
+     * (o, en una estrella, a 60 radios) y {@code rDefault} es la órbita de siempre.
+     */
+    public record OrbitRange(Frame frame, double mu, double planetRadius, double rMin, double rMax, double rDefault, boolean star) {
+        public double altitudeKm(double r) {
+            return (r - planetRadius) / 1000.0;
+        }
+
+        public double radiusFor(double altitudeKm) {
+            return Math.max(rMin, Math.min(rMax, planetRadius + altitudeKm * 1000.0));
+        }
+
+        /** Período de una órbita circular de radio r, en segundos. */
+        public double period(double r) {
+            return 2.0 * Math.PI * Math.sqrt(r * r * r / mu);
+        }
+    }
+
+    public static OrbitRange orbitRange(UniverseDefinition universe, String name) {
+        if (universe == null || name == null || name.isEmpty()) return null;
         CubePlanet planet = null;
         for (CubePlanet p : universe.getPlanets()) if (p.frame().getName().equals(name)) planet = p;
-        if (StarSystems.isStar(planet)) return null;   // 1.0.3: ninguna estrella (antes solo "sol")
         PointGravitySource source = null;
         for (PointGravitySource s : universe.getGravitySources()) if (s.frame().getName().equals(name)) source = s;
         if (planet == null || source == null || !(source.mu() > 0)) return null;
+        boolean star = StarSystems.isStar(planet);   // 1.0.4: las estrellas (Sol y Ámbar) también se pueden orbitar
         Frame frame = universe.getFrameByName(name).orElse(null);
         if (frame == null) frame = planet.frame().getOrekitFrame();
         double big = planet.radius();
@@ -388,14 +420,29 @@ public class WarpDriveBlockEntity extends BlockEntity {
         } catch (Throwable ignored) {
         }
         double corner = sphere ? big : big * Math.sqrt(2.0) * 1.02;
-        double r = corner + Math.max(200_000.0, 0.3 * big);
-        if (source.roi() > 0 && Double.isFinite(source.roi())) r = Math.min(r, 0.9 * source.roi());
-        r = Math.max(r, corner + 60_000.0);
-        return new Arrival(frame, source.mu(), big, r);
+        double rMin = corner + 60_000.0;
+        double rDef = corner + Math.max(200_000.0, 0.3 * big);
+        double roi = source.roi() > 0 && Double.isFinite(source.roi()) ? 0.9 * source.roi() : Double.POSITIVE_INFINITY;
+        rDef = Math.max(Math.min(rDef, roi), rMin);
+        double rMax = Double.isFinite(roi) ? roi : big * 60.0;
+        rMax = Math.max(rMax, rDef);
+        return new OrbitRange(frame, source.mu(), big, rMin, rMax, rDef, star);
+    }
+
+    public static Arrival arrival(UniverseDefinition universe, String name) {
+        return arrival(universe, name, 0);
+    }
+
+    /** @param altitudeKm altitud pedida sobre el centro de las caras; <= 0: la órbita de siempre */
+    public static Arrival arrival(UniverseDefinition universe, String name, double altitudeKm) {
+        OrbitRange range = orbitRange(universe, name);
+        if (range == null) return null;
+        double r = altitudeKm > 0 ? range.radiusFor(altitudeKm) : range.rDefault();
+        return new Arrival(range.frame(), range.mu(), range.planetRadius(), r);
     }
 
     /** Lo pide un jugador desde la consola. */
-    public void tryJump(ServerPlayer player, String targetName) {
+    public void tryJump(ServerPlayer player, String targetName, double altitudeKm) {
         if (!(level instanceof ServerLevel sl)) return;
         WarpStatus st = status(sl);
         if (st != WarpStatus.READY) {
@@ -403,19 +450,23 @@ public class WarpDriveBlockEntity extends BlockEntity {
             return;
         }
         DeepSpaceData data = DeepSpaceData.getInstance(sl.getServer());
-        Arrival arrival = data == null ? null : arrival(data.getUniverse(), targetName);
+        Arrival arrival = data == null ? null : arrival(data.getUniverse(), targetName, altitudeKm);
         if (arrival == null) {
             player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_bad_target").withStyle(ChatFormatting.RED), true);
-            return;
-        }
-        if (targetName.equals(currentOrbit(sl))) {
-            player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_already_there").withStyle(ChatFormatting.GOLD), true);
             return;
         }
         DeepSpaceInstance inst = instance(sl, Warp.shipAt(sl, worldPosition));
         if (inst == null) {
             player.displayClientMessage(WarpStatus.NOT_IN_SPACE.text(), true);
             return;
+        }
+        // 1.0.4: orbitar el mismo astro a otra distancia sí se puede; solo se rechaza si ya estás (casi) a esa distancia
+        if (targetName.equals(currentOrbit(sl))) {
+            double now = currentOrbitRadius(inst);
+            if (now > 0 && Math.abs(now - arrival.radius()) < 0.01 * arrival.radius()) {
+                player.displayClientMessage(Component.translatable("message.planetary_expansion.warp_already_there").withStyle(ChatFormatting.GOLD), true);
+                return;
+            }
         }
         // 1.0.3: ¿salto a otra estrella?
         String from = StarSystems.systemOf(data.getUniverse(), currentOrbit(sl));
@@ -429,6 +480,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         refund = tank.drain(interstellarJump ? INTERSTELLAR_MB : JUMP_MB, IFluidHandler.FluidAction.EXECUTE).copy();
         jumpTick = 0;
         target = targetName;
+        targetAlt = altitudeKm;
         dirtySync = true;
         setChanged();
         WarpEffectPayload effect = new WarpEffectPayload(interstellarJump ? WarpEffectPayload.START_STELLAR : WarpEffectPayload.START,
@@ -452,7 +504,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         ServerSubLevel ship = Warp.shipAt(sl, worldPosition);
         DeepSpaceInstance inst = instance(sl, ship);
         DeepSpaceData data = DeepSpaceData.getInstance(sl.getServer());
-        Arrival arrival = data == null ? null : arrival(data.getUniverse(), target);
+        Arrival arrival = data == null ? null : arrival(data.getUniverse(), target, targetAlt);
         if (inst == null || arrival == null) {
             abort(sl, inst);
             return;
@@ -505,6 +557,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         refund = FluidStack.EMPTY;
         jumpTick = -1;
         target = "";
+        targetAlt = 0;
         interstellarJump = false;
         dirtySync = true;
         setChanged();
@@ -567,6 +620,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         tag.putDouble("DrainDebt", drainDebt);
         tag.putInt("JumpTick", jumpTick);
         tag.putString("Target", target);
+        tag.putDouble("TargetAlt", targetAlt);
         tag.putBoolean("Interstellar", interstellarJump);
     }
 
@@ -580,6 +634,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         clientJumping = tag.getBoolean("Jumping");
         if (tag.contains("DrainDebt")) drainDebt = tag.getDouble("DrainDebt");
         if (tag.contains("Target")) target = tag.getString("Target");
+        targetAlt = tag.getDouble("TargetAlt");
         stellar = tag.getBoolean("Stellar");
         if (tag.contains("Interstellar")) interstellarJump = tag.getBoolean("Interstellar");
         // un salto a medias al cargar el mundo se termina (el efecto de los jugadores ya no existe)
