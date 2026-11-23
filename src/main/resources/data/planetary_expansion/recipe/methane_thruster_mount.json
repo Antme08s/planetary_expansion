@@ -1,10 +1,4 @@
 {
-  "neoforge:conditions": [
-    {
-      "type": "neoforge:mod_loaded",
-      "modid": "simulated"
-    }
-  ],
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
@@ -17,8 +11,8 @@
     "L": {
       "item": "planetary_expansion:lead_sheet"
     },
-    "T": {
-      "item": "simulated:throttle_lever"
+    "M": {
+      "item": "rocketnautics:thruster_mount"
     },
     "N": {
       "item": "rocketnautics:titanium_nozzle"
@@ -26,7 +20,7 @@
   },
   "pattern": [
     "APA",
-    "LTL",
+    "LML",
     "ANA"
   ],
   "result": {

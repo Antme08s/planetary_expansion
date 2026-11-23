@@ -4512,16 +4512,14 @@ def build_methane_engine():
         "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl("blocks/methane_thruster_mount")})
     tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl("methane_thruster_mount"))
     tag_add("data/create/tags/block/wrench_pickup.json", rl("methane_thruster_mount"))
-    # receta (cuadrícula 3x3): láminas de aleación de titanio en las esquinas, tubería de fluidos arriba, láminas de plomo a los
-    # lados, la palanca de aceleración de Create Simulated (Aeronautics) en el centro y una tobera de titanio abajo.
-    # Solo existe si Simulated está cargado (la palanca viene con Create Aeronautics).
+    # receta (cuadrícula 3x3): mejora del soporte de Cosmonautics, que va en el centro. Láminas de aleación de titanio en las
+    # esquinas, tubería de fluidos arriba, láminas de plomo a los lados y una tobera de titanio abajo. No depende de otros mods.
     data("recipe/methane_thruster_mount", {
-        "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "simulated"}],
         "type": "minecraft:crafting_shaped", "category": "misc",
         "key": {"A": {"tag": "c:plates/titanium_alloy"}, "P": {"item": "create:fluid_pipe"},
-                "L": {"item": rl("lead_sheet")}, "T": {"item": "simulated:throttle_lever"},
+                "L": {"item": rl("lead_sheet")}, "M": {"item": "rocketnautics:thruster_mount"},
                 "N": {"item": "rocketnautics:titanium_nozzle"}},
-        "pattern": ["APA", "LTL", "ANA"],
+        "pattern": ["APA", "LML", "ANA"],
         "result": {"id": rl("methane_thruster_mount"), "count": 1}})
     LANG_EN[f"block.{NS}.methane_thruster_mount"] = "Methane Thruster Mount"
     LANG_ES[f"block.{NS}.methane_thruster_mount"] = "Soporte de motor de metano"
