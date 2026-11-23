@@ -37,6 +37,8 @@ import org.joml.Vector3f;
 public final class ClientStormEffects {
     private static final DustParticleOptions SAND_LIGHT = new DustParticleOptions(new Vector3f(0.74f, 0.42f, 0.25f), 0.9f);
     private static final DustParticleOptions SAND_DARK = new DustParticleOptions(new Vector3f(0.52f, 0.27f, 0.16f), 0.7f);
+    private static final DustParticleOptions ASH_LIGHT = new DustParticleOptions(new Vector3f(0.58f, 0.54f, 0.74f), 0.9f);
+    private static final DustParticleOptions ASH_DARK = new DustParticleOptions(new Vector3f(0.32f, 0.30f, 0.46f), 0.7f);
     private static final DustParticleOptions SNOW_DUST = new DustParticleOptions(new Vector3f(0.95f, 0.97f, 1.0f), 0.8f);
     private static final DustParticleOptions ACID_DROP = new DustParticleOptions(new Vector3f(0.72f, 0.78f, 0.22f), 0.7f);
     private static final DustParticleOptions ACID_DROP_DARK = new DustParticleOptions(new Vector3f(0.55f, 0.62f, 0.15f), 0.6f);
@@ -222,7 +224,8 @@ public final class ClientStormEffects {
             ParticleOptions options;
             double vy;
             if (type.isDust()) {
-                options = r.nextInt(3) == 0 ? SAND_DARK : SAND_LIGHT;
+                boolean fulgor = type == StormType.FULGOR_STORM;
+                options = r.nextInt(3) == 0 ? (fulgor ? ASH_DARK : SAND_DARK) : (fulgor ? ASH_LIGHT : SAND_LIGHT);
                 vy = (r.nextDouble() - 0.5) * 0.04;
             } else {
                 options = r.nextInt(4) == 0 ? SNOW_DUST : ParticleTypes.SNOWFLAKE;

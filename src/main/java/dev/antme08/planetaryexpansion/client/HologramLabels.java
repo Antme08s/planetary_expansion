@@ -55,7 +55,9 @@ public final class HologramLabels {
             Map.entry("velo", new float[]{0.9f, 0.93f, 0.97f}),
             Map.entry("ferra", new float[]{0.85f, 0.42f, 0.2f}),
             Map.entry("saturn", new float[]{0.93f, 0.82f, 0.6f}),
-            Map.entry("titan", new float[]{0.85f, 0.54f, 0.24f}));
+            Map.entry("titan", new float[]{0.85f, 0.54f, 0.24f}),
+            Map.entry("aurelia", new float[]{0.92f, 0.6f, 0.28f}),
+            Map.entry("fulgor", new float[]{0.56f, 0.5f, 0.82f}));
     static final float[] DEFAULT_COLOR = {0.9f, 0.9f, 0.9f};
     private static final float[] YOU_COLOR = {0.0f, 1.0f, 0.8f}; // el mismo cian que el marcador de Cosmonautics
 

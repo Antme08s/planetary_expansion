@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "planetary_expansion:block/fulgor_basalt_brick_slab"
+    },
+    "type=top": {
+      "model": "planetary_expansion:block/fulgor_basalt_brick_slab_top"
+    },
+    "type=double": {
+      "model": "planetary_expansion:block/fulgor_basalt_bricks"
+    }
+  }
+}

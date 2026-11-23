@@ -1,0 +1,106 @@
+{
+  "name": "fulgor",
+  "parent": "aurelia",
+  "priority": 1000,
+  "acceleration_at_surface": 1.4,
+  "radius": 1100000.0,
+  "position": {
+    "type": "circular_orbit_period",
+    "orbit_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    },
+    "position_direction": {
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "period_seconds": 90000.0
+  },
+  "rotation": {
+    "type": "tidal_lock",
+    "rotations_per_orbit": -1.0
+  },
+  "planet_extras": {
+    "light_source_name": "amber"
+  },
+  "dimension_data": {
+    "linked_dimension": "planetary_expansion:fulgor",
+    "allowed_transfer": "all",
+    "dimension_transfer_height": 20000,
+    "atmosphere_composition": {
+      "21000": [
+        "drowning"
+      ]
+    },
+    "render_universe_in_dimension": true,
+    "dimension_day_time_controller_name": "amber",
+    "apply_gravity_correction_to_entities_in_dimension": true,
+    "entity_drag_multiplier": [
+      {
+        "altitude": 2500.0,
+        "value": 1.0,
+        "slope": 0.0
+      },
+      {
+        "altitude": 6000.0,
+        "value": 0.0,
+        "slope": -0.0006
+      }
+    ]
+  },
+  "planet_atmosphere": {
+    "enabled": true,
+    "radius": 1.12,
+    "intensity": 0.8,
+    "densityFalloff": 4.0,
+    "scatteringStrength": 0.08,
+    "wavelengths": [
+      520.0,
+      600.0,
+      430.0
+    ]
+  },
+  "planet_texture": {
+    "type": "biome_sampler",
+    "fallback_red": 110,
+    "fallback_green": 104,
+    "fallback_blue": 140,
+    "colors": [
+      {
+        "red": 122,
+        "green": 116,
+        "blue": 150,
+        "matching_biomes": [
+          "planetary_expansion:fulgor_ash_flats"
+        ]
+      },
+      {
+        "red": 70,
+        "green": 74,
+        "blue": 104,
+        "matching_biomes": [
+          "planetary_expansion:fulgor_basalt_plains"
+        ]
+      },
+      {
+        "red": 48,
+        "green": 52,
+        "blue": 78,
+        "matching_biomes": [
+          "planetary_expansion:fulgor_spires"
+        ],
+        "priority": 5
+      },
+      {
+        "red": 190,
+        "green": 184,
+        "blue": 232,
+        "matching_biomes": [
+          "planetary_expansion:fulgor_fulgurite_fields"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "planetary_expansion:fulgor_basalt"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:polished_fulgor_basalt",
+    "count": 4
+  }
+}

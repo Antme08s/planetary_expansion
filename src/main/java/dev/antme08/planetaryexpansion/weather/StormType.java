@@ -71,11 +71,24 @@ public enum StormType {
             7.0,
             0.014,
             0.50f,              // fuerte: 50 %
-            new float[]{0.72f, 0.32f, 0.16f}, 14f);   // rojo óxido; se ve hasta 14 bloques
+            new float[]{0.72f, 0.32f, 0.16f}, 14f),   // rojo óxido; se ve hasta 14 bloques
+    /**
+     * Fulgor (1.0.4, luna de tormentas de Aurelia): ceniza arrastrada por el viento y rayos de verdad que caen cerca de
+     * los jugadores (el pararrayos los atrae; ver FulgorStorms). La fuerte trae niebla violeta y muchos más rayos.
+     */
+    FULGOR_STORM("fulgor", "Electric storm",
+            12_000, 30_000,     // calma: medio día a día y cuarto
+            3_600, 9_600,       // duración: 3 a 8 minutos
+            600,
+            9.0,
+            4.0,
+            0.008,
+            0.40f,              // fuerte: 40 %
+            new float[]{0.30f, 0.26f, 0.46f}, 22f);   // violeta oscuro; se ve hasta 22 bloques
 
-    /** Tormentas de polvo (Marte y Ferra): golpes de piedras, partículas de arena. */
+    /** Tormentas de polvo (Marte, Ferra y Fulgor): partículas arrastradas por el viento; en Marte y Ferra, golpes de piedras. */
     public boolean isDust() {
-        return this == DUST_STORM || this == FERRA_DUST_STORM;
+        return this == DUST_STORM || this == FERRA_DUST_STORM || this == FULGOR_STORM;
     }
 
     public final ResourceKey<Level> dimension;

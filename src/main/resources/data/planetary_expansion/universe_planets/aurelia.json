@@ -1,0 +1,37 @@
+{
+  "name": "aurelia",
+  "parent": "amber",
+  "priority": 1000,
+  "acceleration_at_surface": 12.0,
+  "radius": 8500000.0,
+  "position": {
+    "type": "circular_orbit_period",
+    "orbit_axis": {
+      "x": 0.0,
+      "y": 1.0,
+      "z": 0.0
+    },
+    "position_direction": {
+      "x": -0.7,
+      "y": 0.0,
+      "z": 0.7
+    },
+    "period_seconds": 3000000.0
+  },
+  "rotation": {
+    "type": "period",
+    "period_seconds": 600.0,
+    "rotation_axis": {
+      "x": 0.0,
+      "y": -1.0,
+      "z": 0.0
+    }
+  },
+  "planet_extras": {
+    "light_source_name": "amber"
+  },
+  "planet_texture": {
+    "type": "resloc",
+    "texture": "planetary_expansion:textures/planet/aurelia.png"
+  }
+}

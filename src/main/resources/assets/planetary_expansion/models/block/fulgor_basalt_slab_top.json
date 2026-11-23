@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "planetary_expansion:block/fulgor_basalt",
+    "top": "planetary_expansion:block/fulgor_basalt",
+    "side": "planetary_expansion:block/fulgor_basalt"
+  }
+}

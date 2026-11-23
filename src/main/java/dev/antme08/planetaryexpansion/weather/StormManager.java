@@ -139,6 +139,7 @@ public final class StormManager {
         if (level == null) return;
         String id = switch (type) {
             case DUST_STORM, FERRA_DUST_STORM -> "sandblasted";
+            case FULGOR_STORM -> null;
             case ACID_RAIN -> "acid_test";
             case BLIZZARD, THALASSA_BLIZZARD -> severe ? "whiteout" : null;
         };
@@ -246,6 +247,8 @@ public final class StormManager {
             boolean severe = severe(type);
             if (type == StormType.ACID_RAIN) {
                 continue; // la lluvia ácida la gestiona VenusHazards (armadura primero, luego vida)
+            } else if (type == StormType.FULGOR_STORM) {
+                continue; // la tormenta de Fulgor la gestiona FulgorStorms (rayos)
             } else if (type.isDust()) {
                 dustHit(level, player, intensity, severe);
             } else {

@@ -4491,6 +4491,37 @@ def build_saturn():
         LANG_ES[n + field] = es
 
 
+AURELIA_TEX = os.path.join(DESIGNS, "aurelia")
+
+
+def build_aurelia():
+    """Aurelia (1.0.4): gigante gaseoso de la estrella Ámbar, sin superficie. Su luna Fulgor (build_fulgor) es aterrizable."""
+    write_bytes(f"assets/{NS}/textures/planet/aurelia.png", open(os.path.join(AURELIA_TEX, "aurelia.png"), "rb").read())
+    # más lejos que Cerúlea (período 7 días): 3,0e6 s ≈ 35 días
+    data("universe_planets/aurelia", {
+        "name": "aurelia",
+        "parent": "amber",
+        "priority": 1000,
+        "acceleration_at_surface": 12.0,
+        "radius": 8.5e6,
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": -0.7, "y": 0.0, "z": 0.7}, "period_seconds": 3.0e6},
+        "rotation": {"type": "period", "period_seconds": 600.0, "rotation_axis": {"x": 0.0, "y": -1.0, "z": 0.0}},
+        "planet_extras": {"light_source_name": "amber"},
+        "planet_texture": {"type": "resloc", "texture": f"{NS}:textures/planet/aurelia.png"},
+    })
+    LANG_EN[f"hologram.{NS}.body.aurelia"] = "Aurelia"
+    LANG_ES[f"hologram.{NS}.body.aurelia"] = "Aurelia"
+    n = f"nav.{NS}.body.aurelia."
+    for field, (en, es) in {
+            "type": ("Gas giant", "Gigante gaseoso"),
+            "desc": ("A giant banded in amber and copper, with a great storm spinning in its southern hemisphere. It has no surface to land on, but its moon Fulgor does.",
+                     "Un gigante a bandas de ámbar y cobre, con una gran tormenta girando en su hemisferio sur. No tiene superficie donde aterrizar, pero su luna Fulgor sí."),
+            "hazards": ("No surface", "Sin superficie")}.items():
+        LANG_EN[n + field] = en
+        LANG_ES[n + field] = es
+
+
 def build_methane_engine():
     """Soporte de motor de metano (1.0.4): bloque de MethaneEngine.java. El modelo hereda el del soporte de Cosmonautics y
     solo cambia la textura (tools/designs/methane_engine_texture.py)."""
@@ -4849,6 +4880,311 @@ def build_titan():
 
 
 
+FULGOR_TEX = os.path.join(DESIGNS, "fulgor")
+
+
+def build_fulgor():
+    """Fulgor (1.0.4): luna de tormentas eléctricas de Aurelia, no respirable. Bloques de FulgorBlocks.java; rayos en
+    weather/FulgorStorms.java (tipo de tormenta FULGOR_STORM). Especialidad: minerales conductores (cobre, zinc, redstone)."""
+    P = "fulgor"
+    B = rl
+    for f in sorted(os.listdir(os.path.join(FULGOR_TEX, "block"))):
+        write_bytes(f"assets/{NS}/textures/block/{f}", open(os.path.join(FULGOR_TEX, "block", f), "rb").read())
+
+    def lang(kind, n, en, es):
+        LANG_EN[f"{kind}.{NS}.{n}"] = en
+        LANG_ES[f"{kind}.{NS}.{n}"] = es
+
+    def model(n, parent, textures):
+        write(f"assets/{NS}/models/block/{n}.json", {"parent": parent, "textures": {k: rl(f"block/{v}") for k, v in textures.items()}})
+
+    def bstate(n, variants):
+        write(f"assets/{NS}/blockstates/{n}.json", {"variants": variants})
+
+    def item_block(n):
+        write(f"assets/{NS}/models/item/{n}.json", {"parent": rl(f"block/{n}")})
+
+    def loot(n, pools):
+        data(f"loot_table/blocks/{n}", {"type": "minecraft:block", "pools": pools, "random_sequence": rl(f"blocks/{n}")})
+
+    def pool(entry, conditions=None):
+        pl = {"rolls": 1.0, "bonus_rolls": 0.0, "entries": [entry]}
+        if conditions:
+            pl["conditions"] = conditions
+        return pl
+
+    SURVIVES = [{"condition": "minecraft:survives_explosion"}]
+    SILK = {"condition": "minecraft:match_tool", "predicate": {"predicates": {"minecraft:enchantments": [
+        {"enchantments": "minecraft:silk_touch", "levels": {"min": 1}}]}}}
+
+    def cube(n, en, es):
+        model(n, "minecraft:block/cube_all", {"all": n})
+        bstate(n, {"": {"model": rl(f"block/{n}")}})
+        item_block(n)
+        lang("block", n, en, es)
+
+    def tag(kind, tagname, values):
+        for v in values:
+            tag_add(f"data/{tagname.split(':')[0]}/tags/{kind}/{tagname.split(':')[1]}.json", v)
+
+    # --------------------------------------------------------------- bloques
+    for n, en, es in (("fulgor_basalt", "Storm Basalt", "Basalto de tormenta"),
+                      ("fulgor_basalt_bricks", "Storm Basalt Bricks", "Ladrillos de basalto de tormenta"),
+                      ("polished_fulgor_basalt", "Polished Storm Basalt", "Basalto de tormenta pulido"),
+                      ("storm_dust", "Storm Dust", "Polvo de tormenta"), ("fulgurite", "Fulgurite", "Fulgurita")):
+        cube(n, en, es)
+        loot(n, [pool({"type": "minecraft:item", "name": B(n)}, SURVIVES)])
+
+    def fortune(formula="minecraft:ore_drops", **extra):
+        return {"function": "minecraft:apply_bonus", "enchantment": "minecraft:fortune", "formula": formula, **extra}
+    FORES = {"copper": ("minecraft:raw_copper", (2, 5), "Copper", "cobre", "minecraft:copper_ingot", 0.7),
+             "zinc": ("create:raw_zinc", (1, 2), "Zinc", "zinc", "create:zinc_ingot", 0.7),
+             "redstone": ("minecraft:redstone", (4, 5), "Redstone", "redstone", "minecraft:redstone", 0.7)}
+    for o, (item, count, en, es, smelt, xp) in FORES.items():
+        n = f"fulgor_{o}_ore"
+        if o == "redstone":
+            model(n, "minecraft:block/cube_all", {"all": n})
+            write(f"assets/{NS}/models/block/{n}_on.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{n}")}})
+            bstate(n, {"lit=false": {"model": rl(f"block/{n}")}, "lit=true": {"model": rl(f"block/{n}_on")}})
+            item_block(n)
+            lang("block", n, f"Storm Basalt {en} Ore", f"Mena de {es} en basalto de tormenta")
+        else:
+            cube(n, f"Storm Basalt {en} Ore", f"Mena de {es} en basalto de tormenta")
+        fns = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": count[0], "max": count[1]}},
+               fortune("minecraft:uniform_bonus_count", parameters={"bonusMultiplier": 1}) if o == "redstone" else fortune(),
+               {"function": "minecraft:explosion_decay"}]
+        loot(n, [pool({"type": "minecraft:alternatives", "children": [
+            {"type": "minecraft:item", "name": B(n), "conditions": [SILK]}, {"type": "minecraft:item", "name": item, "functions": fns}]})])
+        if o != "redstone":
+            # la materia prima se funde (cobre y zinc en bruto); la redstone ya sale lista
+            raw = {"copper": "minecraft:raw_copper", "zinc": "create:raw_zinc"}[o]
+            data_ing = {"item": B(n)}
+            for k, t in (("smelting", 200), ("blasting", 100)):
+                data(f"recipe/fulgor/{o}_ingot_from_fulgor_ore_{k}", {"type": f"minecraft:{k}", "category": "misc",
+                     "ingredient": data_ing, "result": {"id": smelt}, "experience": xp, "cookingtime": t})
+        else:
+            for k, t in (("smelting", 200), ("blasting", 100)):
+                data(f"recipe/fulgor/redstone_from_fulgor_ore_{k}", {"type": f"minecraft:{k}", "category": "misc",
+                     "ingredient": {"item": B(n)}, "result": {"id": smelt}, "experience": xp, "cookingtime": t})
+
+    FACING_Y = {"east": 0, "south": 90, "west": 180, "north": 270}
+    shapes = {"straight": "", "inner_left": "_inner", "inner_right": "_inner", "outer_left": "_outer", "outer_right": "_outer"}
+    stair_ids, slab_ids = [], []
+    for prefix, base, en, es in (("fulgor_basalt", "fulgor_basalt", "Storm Basalt", "de basalto de tormenta"),
+                                 ("fulgor_basalt_brick", "fulgor_basalt_bricks", "Storm Basalt Brick", "de ladrillos de basalto de tormenta"),
+                                 ("polished_fulgor_basalt", "polished_fulgor_basalt", "Polished Storm Basalt", "de basalto de tormenta pulido")):
+        st_, sl_ = f"{prefix}_stairs", f"{prefix}_slab"
+        tx = {"bottom": base, "top": base, "side": base}
+        model(st_, "minecraft:block/stairs", tx)
+        model(st_ + "_inner", "minecraft:block/inner_stairs", tx)
+        model(st_ + "_outer", "minecraft:block/outer_stairs", tx)
+        var = {}
+        for facing, y0 in FACING_Y.items():
+            for half in ("bottom", "top"):
+                for shape, suffix in shapes.items():
+                    y = y0
+                    if shape in ("inner_left", "outer_left") and half == "bottom":
+                        y += 270
+                    if shape in ("inner_right", "outer_right") and half == "top":
+                        y += 90
+                    v = {"model": rl(f"block/{st_}{suffix}")}
+                    if half == "top":
+                        v["x"] = 180
+                    if y % 360:
+                        v["y"] = y % 360
+                    if "x" in v or "y" in v:
+                        v["uvlock"] = True
+                    var[f"facing={facing},half={half},shape={shape}"] = v
+        bstate(st_, var)
+        item_block(st_)
+        lang("block", st_, f"{en} Stairs", f"Escaleras {es}")
+        loot(st_, [pool({"type": "minecraft:item", "name": B(st_)}, SURVIVES)])
+        model(sl_, "minecraft:block/slab", tx)
+        model(sl_ + "_top", "minecraft:block/slab_top", tx)
+        bstate(sl_, {"type=bottom": {"model": rl(f"block/{sl_}")}, "type=top": {"model": rl(f"block/{sl_}_top")},
+                     "type=double": {"model": rl(f"block/{base}")}})
+        item_block(sl_)
+        lang("block", sl_, f"{en} Slab", f"Losa {es}")
+        loot(sl_, [pool({"type": "minecraft:item", "name": B(sl_), "functions": [
+            {"function": "minecraft:set_count", "count": 2.0, "add": False,
+             "conditions": [{"condition": "minecraft:block_state_property", "block": B(sl_), "properties": {"type": "double"}}]},
+            {"function": "minecraft:explosion_decay"}]})])
+        data(f"recipe/fulgor/{st_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["#  ", "## ", "###"],
+                                      "key": {"#": {"item": B(base)}}, "result": {"id": B(st_), "count": 4}})
+        data(f"recipe/fulgor/{sl_}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["###"],
+                                      "key": {"#": {"item": B(base)}}, "result": {"id": B(sl_), "count": 6}})
+        for out, cnt in ((st_, 1), (sl_, 2)):
+            data(f"recipe/fulgor/{out}_from_{base}_stonecutting", {"type": "minecraft:stonecutting",
+                 "ingredient": {"item": B(base)}, "result": {"id": B(out), "count": cnt}})
+        stair_ids.append(B(st_))
+        slab_ids.append(B(sl_))
+    for out, ing in (("polished_fulgor_basalt", "fulgor_basalt"), ("fulgor_basalt_bricks", "polished_fulgor_basalt")):
+        data(f"recipe/fulgor/{out}", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["##", "##"],
+                                      "key": {"#": {"item": B(ing)}}, "result": {"id": B(out), "count": 4}})
+        data(f"recipe/fulgor/{out}_stonecutting", {"type": "minecraft:stonecutting", "ingredient": {"item": B("fulgor_basalt")},
+                                                   "result": {"id": B(out), "count": 1}})
+
+    ores = [B(f"fulgor_{o}_ore") for o in FORES]
+    rocks = [B("fulgor_basalt"), B("fulgor_basalt_bricks"), B("polished_fulgor_basalt"), B("fulgurite")]
+    tag("block", "minecraft:mineable/shovel", [B("storm_dust")])
+    tag("block", "minecraft:sand", [B("storm_dust")])
+    tag("block", "minecraft:mineable/pickaxe", rocks + ores + stair_ids + slab_ids)
+    tag("block", "minecraft:needs_stone_tool", [B("fulgor_copper_ore"), B("fulgor_zinc_ore")])
+    tag("block", "minecraft:needs_iron_tool", [B("fulgor_redstone_ore")])
+    tag("block", "minecraft:base_stone_overworld", [B("fulgor_basalt")])
+    tag("block", "minecraft:overworld_carver_replaceables", [B("fulgor_basalt"), B("storm_dust")])
+    for kind_ in ("block", "item"):
+        tag(kind_, "minecraft:stairs", stair_ids)
+        tag(kind_, "minecraft:slabs", slab_ids)
+        tag(kind_, "minecraft:copper_ores", [B("fulgor_copper_ore")])
+        tag(kind_, "minecraft:redstone_ores", [B("fulgor_redstone_ore")])
+        tag(kind_, "c:ores/copper", [B("fulgor_copper_ore")])
+        tag(kind_, "c:ores/zinc", [B("fulgor_zinc_ore")])
+        tag(kind_, "c:ores/redstone", [B("fulgor_redstone_ore")])
+        for o in FORES:
+            tag(kind_, "c:ores", [B(f"fulgor_{o}_ore")])
+    tag("item", "minecraft:stone_crafting_materials", [B("fulgor_basalt")])
+    tag("item", "minecraft:stone_tool_materials", [B("fulgor_basalt")])
+    data("tags/block/fulgor_ore_replaceable", {"values": [B("fulgor_basalt")]})
+
+    # --------------------------------------------------------------- terreno
+    # y 0..256 como Titán. Sin líquidos (default_fluid aire). Montes de basalto ("regions" > 0,25 sube ~24 bloques) sobre
+    # llanuras de polvo; el relieve es algo más quebrado que el de Titán.
+    def noise(n, first, amps):
+        data(f"worldgen/noise/{P}/{n}", {"firstOctave": first, "amplitudes": amps})
+        return rl(f"{P}/{n}")
+    hills, detail = noise("hills", -8, [1.0, 1.0, 0.5]), noise("detail", -5, [1.0, 0.5])
+    regions, lake = noise("regions", -9, [1.0, 1.0]), noise("lake", -8, [1.0, 0.6])
+    n2 = lambda nn: {"type": "minecraft:noise", "noise": nn, "xz_scale": 1.0, "y_scale": 0.0}           # noqa: E731
+    base_h = 74
+    high = {"type": "minecraft:clamp", "min": 0.0, "max": 1.0, "input": {"type": "minecraft:mul", "argument1": 3.0, "argument2": {
+        "type": "minecraft:add", "argument1": n2(regions), "argument2": -0.25}}}
+    density = {"type": "minecraft:add",
+               "argument1": {"type": "minecraft:y_clamped_gradient", "from_y": 0, "to_y": 256,
+                             "from_value": base_h / 16.0, "to_value": (base_h - 256) / 16.0},
+               "argument2": {"type": "minecraft:add",
+                             "argument1": {"type": "minecraft:add",
+                                           "argument1": {"type": "minecraft:mul", "argument1": n2(hills), "argument2": 10 / 16.0},
+                                           "argument2": {"type": "minecraft:mul", "argument1": n2(detail), "argument2": 4 / 16.0}},
+                             "argument2": {"type": "minecraft:mul", "argument1": high, "argument2": 24 / 16.0}}}
+    cl = RouterCloner(P)
+    entr = cl.df("minecraft:overworld/caves/entrances")
+    spag = {"type": "minecraft:add", "argument1": cl.df("minecraft:overworld/caves/spaghetti_2d"),
+            "argument2": cl.df("minecraft:overworld/caves/spaghetti_roughness_function")}
+    noodle = cl.df("minecraft:overworld/caves/noodle")
+    cheese = {"type": "minecraft:add",
+              "argument1": {"type": "minecraft:mul", "argument1": 4.0, "argument2": {"type": "minecraft:square", "argument": {
+                  "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_layer"), "xz_scale": 1.0, "y_scale": 8.0}}},
+              "argument2": {"type": "minecraft:add",
+                            "argument1": {"type": "minecraft:clamp", "min": -1.0, "max": 1.0, "input": {
+                                "type": "minecraft:add", "argument1": 0.27, "argument2": {
+                                    "type": "minecraft:noise", "noise": cl.noise("minecraft:cave_cheese"), "xz_scale": 1.0, "y_scale": 0.6666666666666666}}},
+                            "argument2": {"type": "minecraft:clamp", "min": 0.0, "max": 0.5, "input": {
+                                "type": "minecraft:add", "argument1": 1.5, "argument2": {"type": "minecraft:mul", "argument1": -0.64, "argument2": density}}}}}
+    deep = {"type": "minecraft:min", "argument1": {"type": "minecraft:min", "argument1": cheese, "argument2": entr}, "argument2": spag}
+    caved = {"type": "minecraft:range_choice", "input": density, "min_inclusive": -1000000.0, "max_exclusive": 1.5625,
+             "when_in_range": {"type": "minecraft:min", "argument1": density, "argument2": {"type": "minecraft:mul", "argument1": 5.0, "argument2": entr}},
+             "when_out_of_range": deep}
+    final = {"type": "minecraft:min", "argument1": {"type": "minecraft:interpolated", "argument": caved}, "argument2": noodle}
+    zero = 0.0
+    router = {"barrier": zero, "fluid_level_floodedness": zero, "fluid_level_spread": zero, "lava": zero,
+              "temperature": zero, "vegetation": zero, "continents": n2(regions), "erosion": zero, "depth": zero,
+              "ridges": n2(lake), "initial_density_without_jaggedness": density,
+              "final_density": final,
+              "vein_toggle": zero, "vein_ridged": zero, "vein_gap": zero}
+    dust, fulg = {"Name": B("storm_dust")}, {"Name": B("fulgurite")}
+    surface = seq(BEDROCK_FLOOR, cond(ABOVE_PRELIM, seq(
+        cond(biome_is("fulgor_ash_flats"), cond(UNDER_FLOOR, put(dust))),
+        cond(biome_is("fulgor_fulgurite_fields"), seq(
+            cond(ON_FLOOR, cond(noise_band("minecraft:surface", 0.2, 2.0), put(fulg))),
+            cond(UNDER_FLOOR, put(dust)))),
+        cond(biome_is("fulgor_basalt_plains"), cond(ON_FLOOR, cond(noise_band("minecraft:surface", 0.1, 2.0), put(dust)))))))
+    noise_settings(P, router, default_block={"Name": B("fulgor_basalt")}, default_fluid=block("minecraft:air"),
+                   sea_level=40, aquifers=False, surface_rule=surface, min_y=0, height=256, spawn_target=[
+                       {"temperature": FULL, "humidity": FULL, "continentalness": [-0.4, 0.2], "erosion": FULL,
+                        "weirdness": [-2.0, 0.0], "depth": 0.0, "offset": 0.0}])
+
+    def configured(nm, obj):
+        data(f"worldgen/configured_feature/{P}/{nm}", obj)
+        return rl(f"{P}/{nm}")
+
+    def placed(nm, feature, placement):
+        data(f"worldgen/placed_feature/{P}/{nm}", {"feature": feature, "placement": placement})
+        return rl(f"{P}/{nm}")
+
+    def ore(nm, block_id, size, count, lo, hi, shape="minecraft:uniform"):
+        cf = configured(f"ore_{nm}", {"type": "minecraft:ore", "config": {"size": size, "discard_chance_on_air_exposure": 0.0,
+            "targets": [{"target": {"predicate_type": "minecraft:tag_match", "tag": f"{NS}:fulgor_ore_replaceable"},
+                         "state": {"Name": B(block_id)}}]}})
+        return placed(f"ore_{nm}", cf, [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+                                        {"type": "minecraft:height_range", "height": {"type": shape, "min_inclusive": {"absolute": lo},
+                                                                                      "max_inclusive": {"absolute": hi}}},
+                                        {"type": "minecraft:biome"}])
+    # especialidad de Fulgor: minerales conductores, varias veces lo de la Tierra
+    ores_f = [ore("copper", "fulgor_copper_ore", 16, 56, 0, 200), ore("zinc", "fulgor_zinc_ore", 12, 36, 0, 160),
+              ore("redstone", "fulgor_redstone_ore", 12, 30, 0, 120, "minecraft:trapezoid")]
+
+    sky, fog = rgb(58, 48, 92), rgb(84, 72, 120)
+    common = dict(temperature=0.2, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(60, 60, 110),
+                  water_fog=rgb(30, 30, 64), carvers=[])
+    for nm in ("fulgor_ash_flats", "fulgor_basalt_plains", "fulgor_spires", "fulgor_fulgurite_fields"):
+        biome(nm, feats=features(underground_ores=ores_f), **common)
+    name("fulgor_ash_flats", "Ash Flats", "Llanuras de ceniza")
+    name("fulgor_basalt_plains", "Basalt Plains", "Llanuras de basalto")
+    name("fulgor_spires", "Basalt Spires", "Agujas de basalto")
+    name("fulgor_fulgurite_fields", "Fulgurite Fields", "Campos de fulgurita")
+    pts = [point("fulgor_spires", continentalness=[0.25, 2.0], weirdness=WIDE),
+           point("fulgor_fulgurite_fields", continentalness=[-2.0, 0.25], weirdness=[0.12, 2.0]),
+           point("fulgor_basalt_plains", continentalness=[-0.2, 0.25], weirdness=[-2.0, 0.12]),
+           point("fulgor_ash_flats", continentalness=[-2.0, -0.2], weirdness=[-2.0, 0.12])]
+    dimension(P, pts)
+    dimension_type(P, effects="minecraft:overworld", min_y=0, height=256)
+    dimension_physics(P, universal_drag=0.005, base_gravity=[0.0, -1.4, 0.0],
+                      pressure_function=[{"altitude": 80.0, "value": 1.0, "slope": 0.0},
+                                         {"altitude": 3000.0, "value": 0.0, "slope": 0.0}])
+
+    data(f"universe_planets/{P}", {
+        "name": P,
+        "parent": "aurelia",
+        "priority": 1000,
+        "acceleration_at_surface": 1.4,
+        "radius": 1.1e6,
+        "position": {"type": "circular_orbit_period", "orbit_axis": {"x": 0.0, "y": 1.0, "z": 0.0},
+                     "position_direction": {"x": 1.0, "y": 0.0, "z": 0.0}, "period_seconds": 90000.0},
+        "rotation": {"type": "tidal_lock", "rotations_per_orbit": -1.0},
+        "planet_extras": {"light_source_name": "amber"},
+        "dimension_data": {
+            "linked_dimension": rl(P), "allowed_transfer": "all", "dimension_transfer_height": 20000,
+            "atmosphere_composition": {"21000": ["drowning"]},
+            "render_universe_in_dimension": True, "dimension_day_time_controller_name": "amber",
+            "apply_gravity_correction_to_entities_in_dimension": True, "entity_drag_multiplier": drag_curve(2500, 6000),
+        },
+        "planet_atmosphere": {"enabled": True, "radius": 1.12, "intensity": 0.8, "densityFalloff": 4.0,
+                              "scatteringStrength": 0.08, "wavelengths": [520.0, 600.0, 430.0]},
+        "planet_texture": {"type": "biome_sampler", "fallback_red": 110, "fallback_green": 104, "fallback_blue": 140,
+                           "colors": [color(122, 116, 150, biomes=["fulgor_ash_flats"]),
+                                      color(70, 74, 104, biomes=["fulgor_basalt_plains"]),
+                                      color(48, 52, 78, biomes=["fulgor_spires"], priority=5),
+                                      color(190, 184, 232, biomes=["fulgor_fulgurite_fields"])]},
+    })
+    LANG_EN[f"hologram.{NS}.body.{P}"] = "Fulgor"
+    LANG_ES[f"hologram.{NS}.body.{P}"] = "Fulgor"
+    LANG_EN[f"storm.{NS}.fulgor_storm"] = "Electric storm"
+    LANG_ES[f"storm.{NS}.fulgor_storm"] = "Tormenta eléctrica"
+    n = f"nav.{NS}."
+    for field, (en, es) in {
+            "type": ("Moon of Aurelia", "Luna de Aurelia"),
+            "desc": ("A dark basalt moon under a violet sky, swept by electric storms that fuse its dust into glass.",
+                     "Una luna de basalto oscuro bajo un cielo violeta, azotada por tormentas eléctricas que funden su polvo en vidrio."),
+            "air": ("Not breathable", "No respirable"), "temp": ("Mild (12 °C)", "Templada (12 °C)"),
+            "hazards": ("Electric storms (lightning)", "Tormentas eléctricas (rayos)"),
+            "armor": ("A space suit; lightning rods", "Un traje espacial; pararrayos"),
+            "resources": ("Huge amounts of copper, zinc and redstone; fulgurite",
+                          "Muchísimo cobre, zinc y redstone; fulgurita")}.items():
+        LANG_EN[f"{n}body.{P}.{field}"] = en
+        LANG_ES[f"{n}body.{P}.{field}"] = es
+
+
 def build_meta():
     # logo del mod (tools/designs/logo.py): pixel art de 512×512, sin difuminar en la lista de mods
     write_bytes("logo.png", open(os.path.join(DESIGNS, "logo.png"), "rb").read())
@@ -4979,6 +5315,8 @@ if __name__ == "__main__":
     build_ferra()            # 1.0.3: luna de óxido de Cerúlea
     build_saturn()           # 1.0.4: Saturno con anillos
     build_titan()            # 1.0.4: su luna Titán
+    build_aurelia()          # 1.0.4: gigante gaseoso de Ámbar
+    build_fulgor()           # 1.0.4: su luna de tormentas Fulgor
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
     build_no_earth_mobs()
     build_weather_data()

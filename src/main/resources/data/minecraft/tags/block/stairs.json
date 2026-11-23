@@ -17,6 +17,9 @@
     "planetary_expansion:polished_ferra_rock_stairs",
     "planetary_expansion:titan_ice_rock_stairs",
     "planetary_expansion:titan_ice_rock_brick_stairs",
-    "planetary_expansion:polished_titan_ice_rock_stairs"
+    "planetary_expansion:polished_titan_ice_rock_stairs",
+    "planetary_expansion:fulgor_basalt_stairs",
+    "planetary_expansion:fulgor_basalt_brick_stairs",
+    "planetary_expansion:polished_fulgor_basalt_stairs"
   ]
 }

@@ -17,6 +17,9 @@
     "planetary_expansion:polished_ferra_rock_slab",
     "planetary_expansion:titan_ice_rock_slab",
     "planetary_expansion:titan_ice_rock_brick_slab",
-    "planetary_expansion:polished_titan_ice_rock_slab"
+    "planetary_expansion:polished_titan_ice_rock_slab",
+    "planetary_expansion:fulgor_basalt_slab",
+    "planetary_expansion:fulgor_basalt_brick_slab",
+    "planetary_expansion:polished_fulgor_basalt_slab"
   ]
 }

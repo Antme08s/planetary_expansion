@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "planetary_expansion:fulgor_basalt"
+  },
+  "result": {
+    "id": "planetary_expansion:polished_fulgor_basalt",
+    "count": 1
+  }
+}

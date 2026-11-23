@@ -46,6 +46,7 @@ public final class PlanetaryExpansion {
         NeoForge.EVENT_BUS.register(StormManager.class);
         NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.PlanetCold.class);
         NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.VenusHazards.class);
+        NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.FulgorStorms.class); // 1.0.4: rayos de Fulgor
         NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.ShipTransferGuard.class);
         NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.ShipFreeze.class);
         NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.weather.OrbitRescue.class);
@@ -74,6 +75,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.velo.VeloBlocks.register(modBus); // 1.0.3: Velo, luna de cristal de Cerúlea
         dev.antme08.planetaryexpansion.ferra.FerraBlocks.register(modBus); // 1.0.3: Ferra, luna de óxido de Cerúlea
         dev.antme08.planetaryexpansion.titan.TitanBlocks.register(modBus); // 1.0.4: Titán, luna de Saturno
+        dev.antme08.planetaryexpansion.fulgor.FulgorBlocks.register(modBus); // 1.0.4: Fulgor, luna de tormentas de Aurelia
         dev.antme08.planetaryexpansion.engine.MethaneEngine.register(modBus); // 1.0.4: soporte de motor de metano
         dev.antme08.planetaryexpansion.ferra.mobs.FerraMobs.register(modBus); // 1.0.3: gusano de óxido y rastreador ciego
         dev.antme08.planetaryexpansion.cerulea.CeruleaSea.register(modBus); // 1.0.3: plantas del mar de Cerúlea

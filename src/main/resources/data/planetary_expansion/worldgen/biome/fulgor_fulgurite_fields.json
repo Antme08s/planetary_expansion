@@ -1,0 +1,42 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.2,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 3813468,
+    "fog_color": 5523576,
+    "water_color": 3947630,
+    "water_fog_color": 1973824
+  },
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "planetary_expansion:fulgor/ore_copper",
+      "planetary_expansion:fulgor/ore_zinc",
+      "planetary_expansion:fulgor/ore_redstone"
+    ],
+    [],
+    [],
+    [],
+    []
+  ]
+}

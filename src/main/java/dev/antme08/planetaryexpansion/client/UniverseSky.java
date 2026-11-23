@@ -19,12 +19,13 @@ public final class UniverseSky {
             "planetary_expansion:mars", "planetary_expansion:ice_world", "planetary_expansion:ignis",
             "planetary_expansion:thalassa", "planetary_expansion:venus", "rocketnautics:moon",
             "planetary_expansion:cerulea", "planetary_expansion:velo",
-            "planetary_expansion:ferra", "planetary_expansion:titan");
+            "planetary_expansion:ferra", "planetary_expansion:titan", "planetary_expansion:fulgor");
 
     /** Con atmósfera: de día el cielo tiene color y no se ven las estrellas. */
     public static final Set<String> ATMOSPHERE_DIMS = Set.of(
             "planetary_expansion:mars", "planetary_expansion:thalassa", "planetary_expansion:venus",
-            "planetary_expansion:cerulea", "planetary_expansion:ferra", "planetary_expansion:titan");
+            "planetary_expansion:cerulea", "planetary_expansion:ferra", "planetary_expansion:titan",
+            "planetary_expansion:fulgor");
 
     public static boolean drawsUniverse(ClientLevel level) {
         return level != null && UNIVERSE_DIMS.contains(level.dimension().location().toString());
