@@ -4663,6 +4663,10 @@ def build_titan():
     lang("item", "methane_bucket", "Liquid Methane Bucket", "Cubo de metano líquido")
     # el metano a 111 K: tampoco se puede beber ni apaga el fuego; los fluidos propios se marcan para que no se confundan con agua
     write("data/c/tags/fluid/methane.json", {"values": [B("methane"), B("flowing_methane")]})
+    # combustible de cohete: Cosmonautics solo acepta en sus motores los fluidos de rocketnautics:rocket_fuel (el oxidante
+    # sigue siendo el suyo: agua o aire). El rendimiento propio del metano lo da RocketFuelPropertiesMixin.
+    tag_add("data/rocketnautics/tags/fluid/rocket_fuel.json", B("methane"))
+    tag_add("data/rocketnautics/tags/fluid/rocket_fuel.json", B("flowing_methane"))
 
     # --------------------------------------------------------------- terreno
     # Se queda en y 0..256 (min_y 0): así el selector de fluidos de Minecraft nunca pone lava en el fondo (solo lo hace
@@ -4894,7 +4898,7 @@ side="BOTH"
         "minVersion": "0.8",
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
-        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin"],
+        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin"],
         "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},
     })
