@@ -48,6 +48,7 @@ public final class MethaneEngine {
     }
 
     private static void register(IEventBus modBus) {
+        PlanetaryExpansion.LOGGER.info("[Motor de metano] Soporte de metano registrado");
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         BLOCK_ENTITIES.register(modBus);
@@ -72,9 +73,10 @@ public final class MethaneEngine {
         });
     }
 
+    /** Va a la pestaña de recursos de Cosmonautics (junto a sus motores) y a la de mundos, donde están el resto de bloques del mod. */
     private static void creativeTab(BuildCreativeModeTabContentsEvent event) {
         ResourceLocation tab = event.getTabKey().location();
-        if (!(tab.getNamespace().equals("rocketnautics") && tab.getPath().equals("resource_tab"))) {
+        if (!tab.getNamespace().equals("rocketnautics") || !(tab.getPath().equals("resource_tab") || tab.getPath().equals("world_tab"))) {
             return;
         }
         try {

@@ -2300,7 +2300,10 @@ def build_advancements():
          # 5 destinos distintos de los 15. Minecraft no sabe contar "5 de N" sin listar todas las combinaciones (1365 grupos
          # con 15 destinos), así que el código da el criterio "five" al llegar a 5 (Achievements.checkCommuter). Los grupos
          # originales (5 de los 8 primeros) se mantienen, con "five" en cada uno: quien ya lo tenía completado lo sigue teniendo.
-         [list(c) + ["five"] for c in itertools.combinations(JUMP_TARGETS_OLD, len(JUMP_TARGETS_OLD) - 5 + 1)], 500,
+         # Todos los criterios tienen que salir en algun grupo (si no, Minecraft descarta el logro entero: "requirements did not
+         # exactly match specified criteria"); los destinos nuevos van en el primer grupo, que por si solo no completa nada.
+         [list(c) + ["five"] + (JUMP_TARGETS[len(JUMP_TARGETS_OLD):] if i == 0 else [])
+          for i, c in enumerate(itertools.combinations(JUMP_TARGETS_OLD, len(JUMP_TARGETS_OLD) - 5 + 1))], 500,
          "Interplanetary Commuter", "Warp to five different destinations", "Viajero interplanetario", "Salta a cinco destinos distintos"),
         ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
          "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",

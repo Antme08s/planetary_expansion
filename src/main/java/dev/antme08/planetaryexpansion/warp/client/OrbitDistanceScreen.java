@@ -51,16 +51,23 @@ public class OrbitDistanceScreen extends Screen {
         this.alt = defAlt;
     }
 
+    // Diseno (1.0.4): todo relativo al borde superior del panel; antes el texto del rango caia encima de los botones.
+    private static final int PANEL_HALF_W = 150, PANEL_H = 170;
+
+    private int top() {
+        return height / 2 - PANEL_H / 2;
+    }
+
     @Override
     protected void init() {
-        int cx = width / 2, y = height / 2 - 28;
-        slider = addRenderableWidget(new AltSlider(cx - 120, y, 240, 20));
-        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.closest"), b -> setAlt(minAlt)).bounds(cx - 120, y + 26, 76, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.default"), b -> setAlt(defAlt)).bounds(cx - 38, y + 26, 76, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.farthest"), b -> setAlt(maxAlt)).bounds(cx + 44, y + 26, 76, 18).build());
+        int cx = width / 2, t = top();
+        slider = addRenderableWidget(new AltSlider(cx - 140, t + 22, 280, 20));
+        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.closest"), b -> setAlt(minAlt)).bounds(cx - 140, t + 48, 90, 18).build());
+        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.default"), b -> setAlt(defAlt)).bounds(cx - 45, t + 48, 90, 18).build());
+        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.farthest"), b -> setAlt(maxAlt)).bounds(cx + 50, t + 48, 90, 18).build());
         addRenderableWidget(Button.builder(Component.translatable(K + (interstellar ? "orbit.go_interstellar" : "orbit.go")), b -> go())
-                .bounds(cx - 120, y + 94, 116, 20).build()).active = range != null;
-        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.cancel"), b -> onClose()).bounds(cx + 4, y + 94, 116, 20).build());
+                .bounds(cx - 140, t + 142, 136, 20).build()).active = range != null;
+        addRenderableWidget(Button.builder(Component.translatable(K + "orbit.cancel"), b -> onClose()).bounds(cx + 4, t + 142, 136, 20).build());
     }
 
     private void setAlt(double v) {
@@ -102,19 +109,34 @@ public class OrbitDistanceScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partial) {
         parent.render(g, -1, -1, partial);
         g.fill(0, 0, width, height, 0x90000000);
-        int cx = width / 2, top = height / 2 - 60;
-        g.fill(cx - 136, top - 6, cx + 136, top + 170, 0xF0101828);
-        g.renderOutline(cx - 136, top - 6, 272, 176, 0xFF4FA8E0);
-        g.drawCenteredString(font, title, cx, top + 2, 0xFFD9A8FF);
+        int cx = width / 2, t = top();
+        g.fill(cx - PANEL_HALF_W, t - 6, cx + PANEL_HALF_W, t + PANEL_H, 0xF0101828);
+        g.renderOutline(cx - PANEL_HALF_W, t - 6, PANEL_HALF_W * 2, PANEL_H + 6, 0xFF4FA8E0);
+        g.drawCenteredString(font, title, cx, t + 4, 0xFFD9A8FF);
         super.render(g, mouseX, mouseY, partial);
         if (range == null) return;
         double r = range.planetRadius() + alt * 1000.0;
         double v = Math.sqrt(range.mu() / r) / 1000.0;
-        int y = height / 2 + 34 + 22;
-        g.drawCenteredString(font, Component.translatable(K + "orbit.radii", String.format(Locale.ROOT, "%.2f", r / range.planetRadius())), cx, y - 22, 0xFFB0C0D0);
-        g.drawCenteredString(font, Component.translatable(K + "orbit.period", time(range.period(r))), cx, y - 10, 0xFFFFFFFF);
-        g.drawCenteredString(font, Component.translatable(K + "orbit.speed", String.format(Locale.ROOT, "%.2f", v)), cx, y + 2, 0xFFFFFFFF);
-        g.drawCenteredString(font, Component.translatable(K + "orbit.range", km(minAlt), km(maxAlt)), cx, y + 18, 0xFF8090A0);
+        int y = t + 74;
+        fit(g, Component.translatable(K + "orbit.radii", String.format(Locale.ROOT, "%.2f", r / range.planetRadius())), cx, y, 0xFFB0C0D0);
+        fit(g, Component.translatable(K + "orbit.period", time(range.period(r))), cx, y + 13, 0xFFFFFFFF);
+        fit(g, Component.translatable(K + "orbit.speed", String.format(Locale.ROOT, "%.2f", v)), cx, y + 26, 0xFFFFFFFF);
+        fit(g, Component.translatable(K + "orbit.range", km(minAlt), km(maxAlt)), cx, y + 42, 0xFF8090A0);
+    }
+
+    /** Linea centrada que se encoge si no cabe en el panel. */
+    private void fit(GuiGraphics g, Component text, int cx, int y, int color) {
+        int w = font.width(text), max = PANEL_HALF_W * 2 - 12;
+        if (w <= max) {
+            g.drawCenteredString(font, text, cx, y, color);
+            return;
+        }
+        float s = (float) max / w;
+        g.pose().pushPose();
+        g.pose().translate(cx - max / 2f, y + (1 - s) * 4, 0);
+        g.pose().scale(s, s, 1f);
+        g.drawString(font, text, 0, 0, color);
+        g.pose().popPose();
     }
 
     /** Control con escala logarítmica: valor 0..1 ↔ altitud mínima..máxima. */

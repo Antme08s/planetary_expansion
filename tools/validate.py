@@ -173,5 +173,19 @@ for root, _, files in os.walk(os.path.join(ours, "worldgen/placed_feature")):
                     if isinstance(v, int) and not -16 <= v <= 16:
                         errors.append(f"placed_feature {fn}: {k}={v} fuera de [-16, 16]")
 
+# 10) logros: los criterios y los requisitos tienen que coincidir exactamente (si no, Minecraft descarta el logro entero
+# y avisa en el registro: "Advancement completion requirements did not exactly match specified criteria", 1.0.4)
+for root, _, files in os.walk(os.path.join(ours, "advancement")):
+    for fn in files:
+        if not fn.endswith(".json"):
+            continue
+        adv = load(os.path.join(root, fn))
+        crit = set(adv.get("criteria", {}))
+        reqs = adv.get("requirements")
+        if reqs is not None:
+            used = {c for grp in reqs for c in grp}
+            if used != crit:
+                errors.append(f"logro {fn}: criterios sin requisito {sorted(crit - used)}, requisitos sin criterio {sorted(used - crit)}")
+
 print("\n".join(errors) if errors else "OK: sin referencias rotas")
 sys.exit(1 if errors else 0)

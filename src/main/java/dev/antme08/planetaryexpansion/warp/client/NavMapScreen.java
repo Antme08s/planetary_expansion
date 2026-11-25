@@ -438,7 +438,7 @@ public class NavMapScreen extends Screen {
         drawStatusBar(g);
         if (popup != null) drawPopup(g, mouseX, mouseY);
         g.drawString(font, title.copy().withStyle(ChatFormatting.BOLD), 8, 8, 0xFF7FE8FF);
-        g.drawString(font, Component.translatable(K + "hint"), 8, 20, 0xFF8090A0);
+        drawFit(g, Component.translatable(K + "hint"), 8, 20, 0xFF8090A0, (int) mapW() - 16);
     }
 
     private void drawMap(GuiGraphics g) {
@@ -500,7 +500,7 @@ public class NavMapScreen extends Screen {
             g.fill(x - 4, y - 1, x + 5, y, c);
             float s = 0.75f;
             String t = I18n.get("hologram." + PlanetaryExpansion.MODID + ".you");
-            drawScaled(g, t, (float) (x - font.width(t) * s / 2), y + 2, s, c);
+            drawScaled(g, t, (float) (x - font.width(t) * s / 2), y - 14, s, c);
         }
     }
 
@@ -522,39 +522,93 @@ public class NavMapScreen extends Screen {
         }
     }
 
+    // 1.0.4: el panel se adapta a la altura de la pantalla (con GUI x4 la ficha de un mundo no cabe): se encoge hasta el 60 % y,
+    // si aun asi no cabe, se desplaza con la rueda del raton.
+    private boolean dry;
+    private int pw = PANEL_W - 16;
+    private double panelScroll, panelMaxScroll;
+    private String panelShown = "";
+
+    private void put(GuiGraphics g, Component t, int x, int y, int color) {
+        if (!dry) g.drawString(font, t, x, y, color);
+    }
+
+    private void put(GuiGraphics g, String t, int x, int y, int color) {
+        if (!dry) g.drawString(font, t, x, y, color);
+    }
+
+    private void put(GuiGraphics g, FormattedCharSequence t, int x, int y, int color) {
+        if (!dry) g.drawString(font, t, x, y, color);
+    }
+
     private void drawPanel(GuiGraphics g, String id) {
-        int x0 = width - PANEL_W, x = x0 + 8;
+        int x0 = width - PANEL_W;
         g.fill(x0, 0, width, height, 0xE00A1020);
         g.fill(x0, 0, x0 + 1, height, 0xFF2A4A6A);
+        String key = id == null ? "" : id;
+        if (!key.equals(panelShown)) {
+            panelShown = key;
+            panelScroll = 0;
+        }
+        float scale = 1f;
+        int h;
+        dry = true;
+        while (true) {
+            pw = Math.round((PANEL_W - 16) / scale);
+            h = (int) Math.ceil(panelContent(g, id) * scale);
+            if (h <= height - 12 || scale <= 0.6f) break;
+            scale = Math.max(0.6f, scale - 0.05f);
+        }
+        dry = false;
+        panelMaxScroll = Math.max(0, h - (height - 12));
+        panelScroll = Mth.clamp(panelScroll, 0, panelMaxScroll);
+        g.enableScissor(x0 + 1, 0, width, height);
+        g.pose().pushPose();
+        g.pose().translate(x0 + 8, 6 - panelScroll, 0);
+        g.pose().scale(scale, scale, 1f);
+        panelContent(g, id);
+        g.pose().popPose();
+        g.disableScissor();
+        if (panelMaxScroll > 0) {
+            int track = height - 12, bar = Math.max(12, (int) (track * track / (double) h));
+            int by = 6 + (int) ((track - bar) * (panelScroll / panelMaxScroll));
+            g.fill(width - 3, by, width - 1, by + bar, 0xFF4FA8E0);
+        }
+    }
+
+    /** Dibuja la ficha (o solo la mide, con dry) desde (0, 0) y devuelve su alto sin escalar. */
+    private int panelContent(GuiGraphics g, String id) {
+        int x = 0, y = 0;
         Body b = body(id);
         if (b == null) {
-            int y = 40;
-            for (FormattedCharSequence line : font.split(Component.translatable(K + "panel_hint"), PANEL_W - 16)) {
-                g.drawString(font, line, x, y, 0xFF8090A0);
+            y = 34;
+            for (FormattedCharSequence line : font.split(Component.translatable(K + "panel_hint"), pw)) {
+                put(g, line, x, y, 0xFF8090A0);
                 y += 10;
             }
-            return;
+            return y;
         }
-        int y = 10;
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0);
-        g.pose().scale(1.5f, 1.5f, 1f);
-        g.drawString(font, Component.literal(name(b.id())).withStyle(ChatFormatting.BOLD), 0, 0, b.color());
-        g.pose().popPose();
+        if (!dry) {
+            g.pose().pushPose();
+            g.pose().translate(x, y, 0);
+            g.pose().scale(1.5f, 1.5f, 1f);
+            g.drawString(font, Component.literal(name(b.id())).withStyle(ChatFormatting.BOLD), 0, 0, b.color());
+            g.pose().popPose();
+        }
         y += 17;
         String base = K + "body." + b.id() + ".";
         if (I18n.exists(base + "type")) {
-            g.drawString(font, I18n.get(base + "type"), x, y, 0xFFA0B0C0);
+            put(g, I18n.get(base + "type"), x, y, 0xFFA0B0C0);
             y += 12;
         }
         if (b.id().equals(currentBody())) {
-            g.drawString(font, Component.translatable(K + (isDeepSpace() ? "orbiting_here" : "you_here")).withStyle(ChatFormatting.AQUA), x, y, 0xFF00FFCC);
+            put(g, Component.translatable(K + (isDeepSpace() ? "orbiting_here" : "you_here")).withStyle(ChatFormatting.AQUA), x, y, 0xFF00FFCC);
             y += 12;
         }
         y += 2;
         if (I18n.exists(base + "desc")) {
-            for (FormattedCharSequence line : font.split(Component.translatable(base + "desc"), PANEL_W - 16)) {
-                g.drawString(font, line, x, y, 0xFFE0E0E0);
+            for (FormattedCharSequence line : font.split(Component.translatable(base + "desc"), pw)) {
+                put(g, line, x, y, 0xFFE0E0E0);
                 y += 10;
             }
             y += 4;
@@ -568,16 +622,34 @@ public class NavMapScreen extends Screen {
         }
         String d = distanceText(b);
         if (d != null) y = field(g, x, y, "distance", d);
+        return y;
     }
 
     private int field(GuiGraphics g, int x, int y, String label, String value) {
-        g.drawString(font, Component.translatable(K + "label." + label), x, y, 0xFF7FB8E0);
+        put(g, Component.translatable(K + "label." + label), x, y, 0xFF7FB8E0);
         y += 10;
-        for (FormattedCharSequence line : font.split(Component.literal(value), PANEL_W - 22)) {
-            g.drawString(font, line, x + 6, y, 0xFFFFFFFF);
+        for (FormattedCharSequence line : font.split(Component.literal(value), pw - 6)) {
+            put(g, line, x + 6, y, 0xFFFFFFFF);
             y += 10;
         }
         return y + 3;
+    }
+
+    /** Texto de una linea que se encoge (hasta el 60 %) y se recorta para no invadir lo que tiene al lado. */
+    private void drawFit(GuiGraphics g, Component text, int x, int y, int color, int maxW) {
+        int w = font.width(text);
+        if (w <= maxW) {
+            g.drawString(font, text, x, y, color);
+            return;
+        }
+        float s = Math.max(0.6f, (float) maxW / w);
+        g.enableScissor(x, 0, x + maxW, height);
+        g.pose().pushPose();
+        g.pose().translate(x, y + (1 - s) * 4, 0);
+        g.pose().scale(s, s, 1f);
+        g.drawString(font, text, 0, 0, color);
+        g.pose().popPose();
+        g.disableScissor();
     }
 
     /** Distancia a la superficie desde la nave (en el espacio) o desde el planeta en el que estamos. */
@@ -625,7 +697,7 @@ public class NavMapScreen extends Screen {
                         .append(Component.translatable(K + "rpm", (int) st.rpm()).withStyle(ChatFormatting.WHITE));
             }
         }
-        g.drawString(font, line, 8, y + 8, 0xFFFFFFFF);
+        drawFit(g, line, 8, y + 8, 0xFFFFFFFF, (int) mapW() - 16);
     }
 
     // ------------------------------------------------------------------ menú del clic derecho
@@ -776,6 +848,10 @@ public class NavMapScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
+        if (mx > mapW() && panelMaxScroll > 0 && scrollY != 0) {
+            panelScroll = Mth.clamp(panelScroll - scrollY * 14, 0, panelMaxScroll);
+            return true;
+        }
         if (zoom <= 0 || mx > mapW() || scrollY == 0) return false;
         double old = zoom;
         zoom = Mth.clamp(zoom * Math.pow(1.2, scrollY), minZoom(), maxZoom());
