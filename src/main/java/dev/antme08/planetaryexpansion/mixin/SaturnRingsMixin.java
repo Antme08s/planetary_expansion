@@ -30,7 +30,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *   <li>tras abrir la pose del planeta se inclina el eje de Saturno (el giro del planeta se aplica después, así que la
  *       inclinación es fija y las bandas no se bambolean);</li>
  *   <li>antes de dibujar la esfera se dibuja la mitad de los anillos que queda detrás del planeta (la esfera la tapa);</li>
- *   <li>después de la esfera se dibuja la mitad que queda delante.</li>
+ *   <li>al terminar el planeta (después de su sombra y su atmósfera) se dibuja la mitad que queda delante, con la pose
+ *       guardada en el paso 2. En 1.0.4 se dibujaba justo después de la esfera, pero la sombra del lado oscuro se pintaba
+ *       encima y parecía que el planeta atravesaba el anillo.</li>
  * </ol>
  * "Delante" y "detrás" salen de la posición del espectador en el espacio del planeta (la inversa de la matriz de la
  * pose aplicada al origen): un punto del anillo está delante si apunta hacia el espectador. Cosmonautics dibuja con la
@@ -65,17 +67,30 @@ public abstract class SaturnRingsMixin {
         if (planetaryExpansion$isSaturn(planet)) planetaryExpansion$drawRings(planet, pos, poseStack, false);
     }
 
-    @Inject(method = "renderPlanet", remap = false, require = 0,
-            at = @At(value = "INVOKE", remap = false, ordinal = 0, shift = At.Shift.AFTER,
-                    target = "Lcom/mojang/blaze3d/vertex/BufferUploader;drawWithShader(Lcom/mojang/blaze3d/vertex/MeshData;)V"))
+    /** Pose del planeta (con la inclinación y el giro) guardada al dibujar la mitad de atrás, para la de delante. */
+    private static Matrix4f planetaryExpansion$saved;
+
+    @Inject(method = "renderPlanet", remap = false, require = 0, at = @At("RETURN"))
     private static void planetaryExpansion$ringsFront(CubePlanet planet, Vector3D pos, PoseStack poseStack, AbsoluteDate date,
                                                      float a, float b, CallbackInfoReturnable<Boolean> cir) {
-        if (planetaryExpansion$isSaturn(planet)) planetaryExpansion$drawRings(planet, pos, poseStack, true);
+        Matrix4f m = planetaryExpansion$saved;
+        planetaryExpansion$saved = null;
+        if (m == null || !planetaryExpansion$isSaturn(planet)) return;
+        planetaryExpansion$drawRings(planet, pos, m, true);
+        // el mismo estado en el que Cosmonautics deja todo al terminar el planeta
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.enableCull();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
     }
 
     private static void planetaryExpansion$drawRings(CubePlanet planet, Vector3D pos, PoseStack poseStack, boolean front) {
+        planetaryExpansion$saved = new Matrix4f(poseStack.last().pose());
+        planetaryExpansion$drawRings(planet, pos, poseStack.last().pose(), front);
+    }
+
+    private static void planetaryExpansion$drawRings(CubePlanet planet, Vector3D pos, Matrix4f m, boolean front) {
         float radius = (float) (planet.radius() * (100.0 / Math.max(1.0, pos.getNorm())));
-        Matrix4f m = poseStack.last().pose();
         // espectador en el espacio del planeta
         Vector3f eye = m.invert(new Matrix4f()).transformPosition(new Vector3f());
 

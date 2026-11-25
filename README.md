@@ -1197,3 +1197,6 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - Congelador del tiempo espacial: jaula de acero con un reloj de arena de hielo entre dos emisores; apagado gris, encendido cian (`tools/designs/time_freezer_model.py`).
 - Transportador espacial: tres bobinas moradas alrededor del eje de Create, que se ve girar por dentro, con bridas de latón con agujero para el eje (`tools/designs/space_transporter_model.py`).
 - Utilidades comunes de modelos de cajas en `tools/designs/box_model.py` (caras, vista previa, atlas). Los dos bloques ahora usan `noOcclusion`.
+
+## 1.0.4 — anillos de Saturno por delante del planeta
+- La mitad delantera de los anillos se dibujaba justo después de la esfera/cubo, pero Cosmonautics pinta después la sombra del lado oscuro del planeta y la tapaba: parecía que el planeta atravesaba el anillo. Ahora se dibuja al final de `renderPlanet` (en RETURN) con la pose guardada al dibujar la mitad de atrás, y se deja el estado de render como lo deja Cosmonautics.
