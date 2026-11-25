@@ -2306,8 +2306,8 @@ def build_advancements():
           for i, c in enumerate(itertools.combinations(JUMP_TARGETS_OLD, len(JUMP_TARGETS_OLD) - 5 + 1))], 500,
          "Interplanetary Commuter", "Warp to five different destinations", "Viajero interplanetario", "Salta a cinco destinos distintos"),
         ("time_freezer", "space_race", f"{NS}:time_freezer", "goal", {"froze": IMPOSSIBLE}, None, 0,
-         "Time Out", "Freeze a ship's orbit with a Space Time Freezer", "Tiempo muerto",
-         "Congela la órbita de una nave con un congelador del tiempo espacial"),
+         "Time Out", "Hold a ship in place over the body it orbits with a Space Time Freezer", "Tiempo muerto",
+         "Deja una nave fija sobre el cuerpo que orbita con un congelador del tiempo espacial"),
         ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
          "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",
          "Más allá del Sol", "Salta a otro sistema solar con el motor de distorsión estelar"),
@@ -5419,8 +5419,8 @@ def build_time_freezer():
         "result": {"id": rl(name), "count": 1}})
     LANG_EN[f"block.{NS}.{name}"] = "Space Time Freezer"
     LANG_ES[f"block.{NS}.{name}"] = "Congelador del tiempo espacial"
-    LANG_EN[f"message.{NS}.freezer_on"] = "Time frozen: the orbit holds still. Thrust still changes it."
-    LANG_ES[f"message.{NS}.freezer_on"] = "Tiempo congelado: la órbita no avanza. El empuje sí la cambia."
+    LANG_EN[f"message.{NS}.freezer_on"] = "Frozen: the ship holds its place over the body it orbits. Thrust still changes the orbit."
+    LANG_ES[f"message.{NS}.freezer_on"] = "Congelado: la nave se queda fija sobre el cuerpo que orbita. El empuje sí cambia la órbita."
     LANG_EN[f"message.{NS}.freezer_off"] = "Off: needs a redstone signal"
     LANG_ES[f"message.{NS}.freezer_off"] = "Apagado: necesita señal de redstone"
     LANG_EN[f"message.{NS}.freezer_no_space"] = "Only works in deep space"

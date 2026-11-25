@@ -1175,8 +1175,9 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - **Soporte de motor de metano**: además de la pestaña de recursos de Cosmonautics, está también en la de mundos (donde está el resto de bloques del mod) y el registro lo anota en el log.
 
 ## 1.0.4 — Congelador del tiempo espacial
-- Bloque `time_freezer` (Space Time Freezer). Con una señal de redstone, la nave donde esté puesto queda quieta en su órbita en el espacio profundo (el reloj propio de la instancia, `timescale`, se pone a 0 y se sincroniza al cliente). Al quitar la señal continúa donde se quedó.
-- El empuje mientras está congelado sí cambia la órbita (el cambio de velocidad se aplica en un único punto) y la nave puede girar libremente (física de Sable intacta).
-- Se mantiene cada tick mientras haya un congelador activo; se libera solo si ninguno lo refresca en más de 3 ticks (apagado, bloque roto, nave descargada, cierre del servidor).
-- Mixin de seguridad `DeepSpacePositionFreezeMixin`: `propagate` no hace nada con `timescale <= 0`.
+- Bloque `time_freezer` (Space Time Freezer). Con una señal de redstone, la nave donde esté puesto queda fija respecto al cuerpo que orbita (el de la zona de influencia en la que está). El tiempo sigue igual para todos: si orbitas un planeta viajas con él alrededor del Sol; si orbitas el Sol te quedas quieto y ves pasar los planetas.
+- Cada tick el reloj de la instancia avanza con normalidad y la nave se recoloca en la posición guardada con la velocidad guardada (`SpaceTimeFreeze.propagateFrozen`, llamado desde `DeepSpacePositionFreezeMixin` en `propagate`). Al cliente se le manda `timescale = 0` con una sincronización por tick, para que no extrapole la órbita y la nave no tiemble.
+- El empuje mientras está congelada cambia la velocidad guardada; al quitar la señal la nave sigue su órbita con esa velocidad desde ese punto. La rotación (física de Sable) queda libre.
+- Al congelar, si el reloj de la instancia se había separado del del universo (la primera versión del congelador lo paraba), se resincroniza sin mover la nave respecto a su cuerpo.
+- Se libera solo si ningún congelador lo refresca en más de 3 ticks (apagado, bloque roto, nave descargada, cierre del servidor).
 - Receta: `APA/HCH/APA` (A = placa de aleación de titanio, P = mecanismo de precisión, H = cristal de helio-3, C = reloj). Logro `time_freezer`.
