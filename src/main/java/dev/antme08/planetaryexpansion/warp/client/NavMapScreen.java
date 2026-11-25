@@ -718,7 +718,21 @@ public class NavMapScreen extends Screen {
         boolean up = st != null && st.transporter() && popup != null && popup.equals(currentBody());
         items.add(Component.translatable(K + (up ? "travel_up" : popup != null && interstellar(popup) ? "travel_interstellar" : "travel")));
         items.add(Component.translatable(K + "read"));
+        if (offerDescend(popup)) items.add(Component.translatable(K + "descend"));   // 1.0.4: transportador espacial
         return items;
+    }
+
+    /** 1.0.4: en órbita, con transportador a bordo, sobre el astro que se orbita: "Bajar al planeta". */
+    private boolean offerDescend(String id) {
+        NavStatusPayload st = WarpClient.lastStatus;
+        return id != null && isDeepSpace() && st != null && st.console().equals(console) && st.descendStatus() != null
+                && id.equals(currentBody());
+    }
+
+    private Component descendBlocked(String id) {
+        NavStatusPayload st = WarpClient.lastStatus;
+        if (st == null || st.descendStatus() == null) return Component.translatable(K + "status_wait");
+        return st.descendStatus() == WarpStatus.READY ? null : st.descendStatus().text();
     }
 
     /** Motivo por el que no se puede viajar (o null si se puede). */
@@ -779,11 +793,12 @@ public class NavMapScreen extends Screen {
         Component blocked = travelBlocked(popup);
         for (int i = 0; i < items.size(); i++) {
             int y = popupY + 16 + i * 14;
-            boolean disabled = i == 0 && blocked != null;
+            boolean disabled = (i == 0 && blocked != null) || (i == 2 && descendBlocked(popup) != null);
             if (i == sel && !disabled) g.fill(popupX + 1, y - 2, popupX + w - 1, y + 11, 0x603FA0FF);
             g.drawString(font, items.get(i), popupX + 8, y, disabled ? 0xFF606870 : i == 0 ? 0xFFD9A8FF : 0xFFFFFFFF);
         }
         if (sel == 0 && blocked != null) g.renderTooltip(font, blocked, mx, my);
+        if (sel == 2 && descendBlocked(popup) != null) g.renderTooltip(font, descendBlocked(popup), mx, my);
     }
 
     // ------------------------------------------------------------------ ratón
@@ -810,6 +825,10 @@ public class NavMapScreen extends Screen {
             popup = null;
             if (i == 0 && travelBlocked(id) == null) {
                 minecraft.setScreen(new OrbitDistanceScreen(this, console, id, name(id), interstellar(id)));   // 1.0.4
+                return true;
+            }
+            if (i == 2 && offerDescend(id) && descendBlocked(id) == null) {
+                PacketDistributor.sendToServer(new dev.antme08.planetaryexpansion.warp.DescendRequestPayload(console, id));
                 return true;
             }
             if (i == 1) {

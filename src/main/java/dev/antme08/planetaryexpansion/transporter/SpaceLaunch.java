@@ -52,10 +52,22 @@ public final class SpaceLaunch {
     private static final Map<UUID, Pending> PENDING = new ConcurrentHashMap<>();
     /** Naves recién subidas a las que se les quita la velocidad unos ticks (como al saltar con el motor de distorsión). */
     private static final Map<UUID, Integer> STOP = new ConcurrentHashMap<>();
+    /** Bajadas en curso: nave -> dimensión del planeta y tick límite; al aparecer allí se le quita la velocidad. */
+    private record Descent(ResourceKey<Level> dim, int deadline, int[] stops) {}
+    private static final Map<UUID, Descent> DESCENDING = new ConcurrentHashMap<>();
     private static boolean warned;
 
     public static boolean isPending(ServerSubLevel ship) {
         return ship != null && PENDING.containsKey(ship.getUniqueId());
+    }
+
+    public static boolean isDescending(ServerSubLevel ship) {
+        return ship != null && DESCENDING.containsKey(ship.getUniqueId());
+    }
+
+    static void descending(ServerSubLevel ship, ResourceKey<Level> dim) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        DESCENDING.put(ship.getUniqueId(), new Descent(dim, (server == null ? 0 : server.getTickCount()) + 400, new int[]{STOP_TICKS}));
     }
 
     static void request(ServerLevel level, ServerSubLevel ship, BlockPos transporter, String planet, double altitudeKm, FluidStack fuel) {
@@ -118,9 +130,27 @@ public final class SpaceLaunch {
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
-        if (PENDING.isEmpty() && STOP.isEmpty()) return;
+        if (PENDING.isEmpty() && STOP.isEmpty() && DESCENDING.isEmpty()) return;
         MinecraftServer server = event.getServer();
         int now = server.getTickCount();
+        for (Iterator<Map.Entry<UUID, Descent>> it = DESCENDING.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<UUID, Descent> e = it.next();
+            Descent d = e.getValue();
+            ServerLevel planet = server.getLevel(d.dim());
+            SubLevel s = null;
+            try {
+                s = planet == null ? null : SubLevelContainer.getContainer(planet).getSubLevel(e.getKey());
+            } catch (Throwable ignored) {
+            }
+            if (s instanceof ServerSubLevel ship) {
+                if (d.stops()[0] == STOP_TICKS) PlanetaryExpansion.LOGGER.info("[Transportador] Nave {} llegó a {}", e.getKey(), d.dim().location());
+                stop(ship);
+                if (--d.stops()[0] <= 0) it.remove();
+            } else if (now > d.deadline()) {
+                it.remove();
+                PlanetaryExpansion.LOGGER.warn("[Transportador] La nave {} no apareció en {} a tiempo", e.getKey(), d.dim().location());
+            }
+        }
         for (Iterator<Map.Entry<UUID, Pending>> it = PENDING.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<UUID, Pending> e = it.next();
             Pending p = e.getValue();

@@ -7,7 +7,13 @@ import dev.antme08.planetaryexpansion.warp.Warp;
 import dev.antme08.planetaryexpansion.warp.WarpDriveBlockEntity;
 import dev.antme08.planetaryexpansion.warp.WarpStatus;
 import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceInstance;
 import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
+import dev.devce.rocketnautics.content.orbit.universe.DeepSpacePosition;
+import dev.devce.rocketnautics.content.orbit.universe.UniverseDefinition;
+import dev.devce.rocketnautics.shaded.hipparchus.geometry.euclidean.threed.Rotation;
+import dev.devce.rocketnautics.shaded.hipparchus.geometry.euclidean.threed.Vector3D;
+import dev.devce.rocketnautics.shaded.orekit.utils.TimeStampedPVCoordinates;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -162,7 +168,7 @@ public class SpaceTransporterBlockEntity extends KineticBlockEntity {
 
     public NavStatusPayload statusFor(ServerLevel level, BlockPos console, String target) {
         return new NavStatusPayload(console, status(level, target).ordinal(), (float) charge, 0f, tank.getFluidAmount(),
-                (float) lastRpm, "", false, true);
+                (float) lastRpm, "", false, true, -1);
     }
 
     /** Lo pide un jugador desde el mapa de la consola. */
@@ -191,6 +197,127 @@ public class SpaceTransporterBlockEntity extends KineticBlockEntity {
         sl.playSound(null, c.x, c.y, c.z, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.5f, 0.6f);
         PlanetaryExpansion.LOGGER.info("[Transportador] {} sube la nave {} a la órbita de {} ({} km)", player.getScoreboardName(),
                 ship.getUniqueId(), name, altitudeKm > 0 ? String.format("%,.0f", altitudeKm) : "predeterminada");
+    }
+
+    // ------------------------------------------------------------------ bajar al planeta (1.0.4)
+
+    private DeepSpaceInstance instanceOf(ServerLevel level, ServerSubLevel ship) {
+        if (ship == null || !level.dimension().location().equals(DEEP_SPACE)) return null;
+        DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
+        if (data == null || data.getUniverse() == null) return null;
+        org.joml.Vector3dc p = ship.logicalPose().position();
+        DeepSpaceInstance inst = data.getInstanceForPos((int) Math.floor(p.x()), (int) Math.floor(p.z()));
+        return inst == null || inst.isCorrupted() ? null : inst;
+    }
+
+    private static CubePlanet planetNamed(UniverseDefinition universe, String name) {
+        if (universe == null || name == null) return null;
+        for (CubePlanet p : universe.getPlanets()) if (nameOf(p).equals(name)) return p;
+        return null;
+    }
+
+    private static boolean allowsLanding(CubePlanet planet) {
+        try {
+            return planet != null && planet.linkedDimension() != null && planet.linkedDimension().allowedTransfer().allowToDimension();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** Estado para "Bajar al planeta" (en órbita). {@code target}: astro del menú ("": el que se orbita). */
+    public WarpStatus descendStatus(ServerLevel level, String target) {
+        ServerSubLevel ship = Warp.shipAt(level, worldPosition);
+        if (ship == null) return WarpStatus.NOT_ON_SHIP;
+        if (SpaceLaunch.isDescending(ship)) return WarpStatus.JUMPING;
+        if (charge < 1.0) return lastRpm > 0 ? WarpStatus.CHARGING : WarpStatus.NO_ROTATION;
+        if (tank.getFluidAmount() < LAUNCH_MB) return WarpStatus.NEEDS_NITROGEN;
+        DeepSpaceInstance inst = instanceOf(level, ship);
+        if (inst == null) return WarpStatus.NOT_ON_SHIP;
+        String orbiting;
+        try {
+            orbiting = inst.getPosition().getFrame().getName();
+        } catch (Throwable t) {
+            return WarpStatus.NOT_ORBITING;
+        }
+        if (target != null && !target.isEmpty() && !target.equals(orbiting)) return WarpStatus.NOT_ORBITING;
+        DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
+        CubePlanet planet = planetNamed(data == null ? null : data.getUniverse(), orbiting);
+        if (planet == null) return WarpStatus.NOT_ORBITING;   // orbitando una estrella
+        if (!allowsLanding(planet)) return WarpStatus.NO_LANDING;
+        return WarpStatus.READY;
+    }
+
+    /**
+     * Baja la nave al planeta que orbita: la coloca justo debajo de donde está, por dentro de la altura de transición del
+     * planeta, y Cosmonautics la pasa a la dimensión del planeta como si hubiera bajado con motores (aparece a la altura de
+     * transición menos 1000 bloques: 19 000 en la Tierra).
+     */
+    public void tryDescend(ServerPlayer player, String target) {
+        if (!(level instanceof ServerLevel sl)) return;
+        WarpStatus st = descendStatus(sl, target);
+        if (st != WarpStatus.READY) {
+            player.displayClientMessage(Component.translatable("message.planetary_expansion.transporter_not_ready", st.text()), true);
+            return;
+        }
+        ServerSubLevel ship = Warp.shipAt(sl, worldPosition);
+        DeepSpaceInstance inst = instanceOf(sl, ship);
+        DeepSpaceData data = DeepSpaceData.getInstance(sl.getServer());
+        try {
+            UniverseDefinition universe = data.getUniverse();
+            DeepSpacePosition pos = inst.getPosition();
+            String name = pos.getFrame().getName();
+            CubePlanet planet = planetNamed(universe, name);
+            WarpDriveBlockEntity.OrbitRange range = WarpDriveBlockEntity.orbitRange(universe, name);
+            TimeStampedPVCoordinates cur = pos.getCurrentPVCoords();
+            Rotation rot = planet.getRotationAtTime(cur.getDate());
+            Vector3D body = rot.applyInverseTo(cur.getPosition());   // en ejes del planeta (el cubo gira con él)
+            if (body.getNorm() < 1) body = Vector3D.PLUS_I;
+            double r = planet.radius();
+            double th = planet.linkedDimension().transitionHeight();
+            double h = Math.max(100.0, Math.min(th * 0.5, th - 2000.0));   // altura sobre la superficie, dentro de la transición
+            boolean sphere = false;
+            try {
+                sphere = dev.devce.rocketnautics.api.orbit.DeepSpaceHelper.isSphereShape();
+            } catch (Throwable ignored) {
+            }
+            Vector3D b;
+            if (sphere) {
+                b = body.normalize().scalarMultiply(r + h);
+            } else {
+                double m = Math.max(Math.abs(body.getX()), Math.max(Math.abs(body.getY()), Math.abs(body.getZ())));
+                b = body.scalarMultiply((r + h) / m);
+                double lim = 0.97 * r;   // lejos de las aristas del cubo, sobre la cara de debajo
+                double x = b.getX(), y = b.getY(), z = b.getZ();
+                if (Math.abs(x) < r + h - 1) x = Math.max(-lim, Math.min(lim, x));
+                if (Math.abs(y) < r + h - 1) y = Math.max(-lim, Math.min(lim, y));
+                if (Math.abs(z) < r + h - 1) z = Math.max(-lim, Math.min(lim, z));
+                b = new Vector3D(x, y, z);
+            }
+            Vector3D p = rot.applyTo(b);
+            // una pizca de velocidad lateral para que la órbita no sea degenerada (solo dura hasta el tick siguiente)
+            Vector3D t = Vector3D.PLUS_J.crossProduct(p);
+            if (t.getNorm() < 0.2 * p.getNorm()) t = Vector3D.PLUS_I.crossProduct(p);
+            double mu = range != null ? range.mu() : 1.0;
+            Vector3D v = t.normalize().scalarMultiply(0.05 * Math.sqrt(mu / p.getNorm()));
+            pos.init(universe, pos.getFrame(), new TimeStampedPVCoordinates(cur.getDate(), p, v));
+            data.setDirty();
+            inst.forceClientSync();
+            net.neoforged.neoforge.fluids.FluidStack drained = tank.drain(LAUNCH_MB, IFluidHandler.FluidAction.EXECUTE).copy();
+            charge = 0;
+            sentCharge = -1;
+            setChanged();
+            SpaceLaunch.descending(ship, planet.linkedDimension().key());
+            inst.collectOnlinePlayers(sl.getServer(), pl -> pl.displayClientMessage(Component.translatable(
+                    "message.planetary_expansion.transporter_descending", name).withStyle(ChatFormatting.LIGHT_PURPLE), true));
+            Vector3d c = Warp.toWorld(sl, worldPosition);
+            sl.sendParticles(ParticleTypes.REVERSE_PORTAL, c.x, c.y + 0.5, c.z, 80, 1.5, 1.0, 1.5, 0.3);
+            sl.playSound(null, c.x, c.y, c.z, SoundEvents.BEACON_DEACTIVATE, SoundSource.BLOCKS, 1.5f, 0.6f);
+            PlanetaryExpansion.LOGGER.info("[Transportador] {} baja la nave {} a {} ({} m sobre la superficie; gasta {} mB)",
+                    player.getScoreboardName(), ship.getUniqueId(), name, (int) h, drained.getAmount());
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.error("[Transportador] Falló la bajada", t);
+            player.displayClientMessage(Component.translatable("message.planetary_expansion.transporter_failed").withStyle(ChatFormatting.RED), true);
+        }
     }
 
     /** La subida no llegó a ocurrir: devolver el nitrógeno y la carga. */

@@ -19,7 +19,9 @@ public enum WarpStatus {
     NOT_IN_SPACE(ChatFormatting.GOLD),
     // 1.0.4: transportador espacial
     NO_PLANET(ChatFormatting.RED),
-    ONLY_THIS_PLANET(ChatFormatting.GOLD);
+    ONLY_THIS_PLANET(ChatFormatting.GOLD),
+    NOT_ORBITING(ChatFormatting.GOLD),
+    NO_LANDING(ChatFormatting.RED);
 
     public final ChatFormatting color;
 

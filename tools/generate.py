@@ -2120,6 +2120,9 @@ def build_warp():
             # 1.0.4: transportador espacial (en la superficie de un planeta)
             ("transporter", "Space transporter:", "Transportador espacial:"),
             ("travel_up", "Go up to orbit", "Subir a la órbita"),
+            ("descend", "Land on the planet", "Bajar al planeta"),
+            ("status.not_orbiting", "Only to the planet you are orbiting", "Solo al planeta que estás orbitando"),
+            ("status.no_landing", "You can't land on this body", "No se puede bajar a este astro"),
             ("status.no_planet", "Not on a planet you can leave", "No estás en un planeta del que se pueda salir"),
             ("status.only_this_planet", "From the surface you can only go up to this planet's orbit",
              "Desde la superficie solo se puede subir a la órbita de este planeta")]:
@@ -5477,7 +5480,9 @@ def build_space_transporter():
             ("transporter_ready", "Ready: use the navigation console map", "Listo: usa el mapa de la consola de navegación"),
             ("transporter_not_ready", "Space transporter not ready: %s", "El transportador espacial no está listo: %s"),
             ("transporter_arrived", "In orbit at %s km", "En órbita a %s km"),
-            ("transporter_failed", "The transport failed; the nitrogen was returned", "El transporte falló; se devolvió el nitrógeno")]:
+            ("transporter_failed", "The transport failed; the nitrogen was returned", "El transporte falló; se devolvió el nitrógeno"),
+            ("transporter_descending", "Going down to %s...", "Bajando a %s..."),
+            ("transporter_none", "No space transporter on this ship", "No hay transportador espacial en esta nave")]:
         LANG_EN[m + key] = en
         LANG_ES[m + key] = es
 

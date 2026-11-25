@@ -113,6 +113,8 @@ public final class Warp {
                         (p, ctx) -> ctx.enqueueWork(() -> onStatusRequest(p, ctx)))
                 .playToServer(WarpJumpRequestPayload.TYPE, WarpJumpRequestPayload.CODEC,
                         (p, ctx) -> ctx.enqueueWork(() -> onJumpRequest(p, ctx)))
+                .playToServer(DescendRequestPayload.TYPE, DescendRequestPayload.CODEC,
+                        (p, ctx) -> ctx.enqueueWork(() -> onDescendRequest(p, ctx)))
                 .playToClient(NavStatusPayload.TYPE, NavStatusPayload.CODEC,
                         (p, ctx) -> ctx.enqueueWork(() -> dev.antme08.planetaryexpansion.warp.client.WarpClient.receiveStatus(p)))
                 .playToClient(WarpEffectPayload.TYPE, WarpEffectPayload.CODEC,
@@ -181,10 +183,13 @@ public final class Warp {
             return;
         }
         WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(level, p.console(), p.target());
+        // 1.0.4: en el espacio, el transportador de la nave puede bajar al planeta que se orbita
+        var tr = onSurface(level) ? null : dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.findFor(level, p.console());
+        int descend = tr == null ? -1 : tr.descendStatus(level, p.target()).ordinal();
         NavStatusPayload out = drive == null
-                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false, false)
+                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false, false, descend)
                 : new NavStatusPayload(p.console(), drive.status(level).ordinal(), (float) drive.charge(), (float) drive.heat(),
-                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level), drive.isStellar(), false);
+                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level), drive.isStellar(), false, descend);
         PacketDistributor.sendToPlayer(player, out);
     }
 
@@ -202,6 +207,18 @@ public final class Warp {
             return;
         }
         drive.tryJump(player, p.target(), Double.isFinite(p.altitudeKm()) ? p.altitudeKm() : 0);
+    }
+
+    /** 1.0.4: "Bajar al planeta" en el mapa (transportador espacial, en órbita). */
+    private static void onDescendRequest(DescendRequestPayload p, IPayloadContext ctx) {
+        if (!(ctx.player() instanceof ServerPlayer player) || !nearConsole(player, p.console())) return;
+        ServerLevel level = player.serverLevel();
+        var tr = onSurface(level) ? null : dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.findFor(level, p.console());
+        if (tr == null) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.planetary_expansion.transporter_none").withStyle(net.minecraft.ChatFormatting.RED), true);
+            return;
+        }
+        tr.tryDescend(player, p.target());
     }
 
     private static boolean onSurface(ServerLevel level) {
