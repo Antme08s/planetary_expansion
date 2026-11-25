@@ -50,7 +50,7 @@ public final class SpaceTimeFreeze {
     private static final class Held {
         final DeepSpaceInstance inst;
         final DeepSpacePosition position;
-        final int restore;
+        int restore;
         int lastTick;
         Frame frame;
         Vector3D pos;
@@ -111,7 +111,13 @@ public final class SpaceTimeFreeze {
                 inst.collectOnlinePlayers(level.getServer(), p -> Achievements.award(p, "time_freezer", "froze"));
             } else {
                 h.lastTick = now;
-                if (pos.getTimescale() != 0) pos.setTimescale(0); // otro código (el comando /rn timescale) lo cambió
+                int ts = pos.getTimescale();
+                if (ts != 0) {
+                    // el comando /rn timescale lo cambió con la nave congelada: se adopta como ritmo del reloj
+                    h.restore = ts;
+                    pos.setTimescale(0);
+                    PlanetaryExpansion.LOGGER.info("[Congelador] Instancia {}: ritmo del tiempo cambiado a x{}", inst.getId(), ts);
+                }
             }
             inst.forceClientSync(); // una sincronización por tick: es lo que hace avanzar el cielo en el cliente
         } catch (Throwable t) {
