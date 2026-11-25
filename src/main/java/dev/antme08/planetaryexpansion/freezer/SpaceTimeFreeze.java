@@ -158,8 +158,11 @@ public final class SpaceTimeFreeze {
         try {
             Frame frame = position.getFrame();
             TimeStampedPVCoordinates cur = position.getCurrentPVCoords();
-            if (h.pos == null || h.frame == null || !frame.getName().equals(h.frame.getName())) {
-                // primera vez, o el cuerpo dominante cambió (un planeta te "atrapó" al pasar): fijarse al nuevo
+            boolean moved = h.pos != null
+                    && cur.getPosition().distance(h.pos) > 1e-7 * (1.0 + h.pos.getNorm());
+            if (h.pos == null || h.frame == null || moved || !frame.getName().equals(h.frame.getName())) {
+                // primera vez, el cuerpo dominante cambió (un planeta te "atrapó" al pasar) o la nave cambió de sitio
+                // (salto del motor de distorsión, rescate de órbita): fijarse al punto nuevo
                 h.frame = frame;
                 h.pos = cur.getPosition();
                 h.vel = cur.getVelocity();

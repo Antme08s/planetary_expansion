@@ -1181,4 +1181,5 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - Al congelar, si el reloj de la instancia se había separado del del universo (la primera versión del congelador lo paraba), se resincroniza sin mover la nave respecto a su cuerpo.
 - Se libera solo si ningún congelador lo refresca en más de 3 ticks (apagado, bloque roto, nave descargada, cierre del servidor).
 - `/rn timescale` también funciona con la nave congelada: el nuevo valor pasa a ser el ritmo del reloj.
+- Si la nave cambia de sitio estando congelada (salto del motor de distorsión, rescate de órbita), se queda fija en el punto nuevo; el amortiguador inercial cambia la velocidad guardada como si fuera empuje.
 - Receta: `APA/HCH/APA` (A = placa de aleación de titanio, P = mecanismo de precisión, H = cristal de helio-3, C = reloj). Logro `time_freezer`.
