@@ -5402,13 +5402,14 @@ def build_ore_crushing():
 # --------------------------------------------------------------------------
 def build_time_freezer():
     name = "time_freezer"
-    src = os.path.join(DESIGNS, "time_freezer")
-    for f, dest in (("side_off", "side_off"), ("side_on", "side_on"), ("top", "top")):
-        write_bytes(f"assets/{NS}/textures/block/{name}_{dest}.png", open(os.path.join(src, f + ".png"), "rb").read())
+    # modelo 3D (tools/designs/time_freezer_model.py --export): jaula de acero con un reloj de arena de hielo
     for state in ("off", "on"):
-        write(f"assets/{NS}/models/block/{name}_{state}.json", {"parent": "minecraft:block/cube_column", "textures": {
-            "end": rl(f"block/{name}_top"), "side": rl(f"block/{name}_side_{state}"), "particle": rl(f"block/{name}_top")}})
-    write(f"assets/{NS}/models/item/{name}.json", {"parent": rl(f"block/{name}_off")})
+        write_bytes(f"assets/{NS}/textures/block/{name}_3d_{state}.png",
+                    open(os.path.join(DESIGNS, f"{name}_3d_{state}.png"), "rb").read())
+        with open(os.path.join(DESIGNS, f"{name}_3d_{state}.json"), encoding="utf-8") as fh:
+            write(f"assets/{NS}/models/block/{name}_{state}.json", json.load(fh))
+    with open(os.path.join(DESIGNS, f"{name}_3d_item.json"), encoding="utf-8") as fh:
+        write(f"assets/{NS}/models/item/{name}.json", json.load(fh))
     write(f"assets/{NS}/blockstates/{name}.json", {"variants": {
         f"active={a},powered={p}": {"model": rl(f"block/{name}_{'on' if a == 'true' else 'off'}")}
         for a in ("false", "true") for p in ("false", "true")}})
@@ -5443,12 +5444,12 @@ def build_time_freezer():
 # --------------------------------------------------------------------------
 def build_space_transporter():
     name = "space_transporter"
-    src = os.path.join(DESIGNS, "space_transporter")
-    for f in ("side", "end"):
-        write_bytes(f"assets/{NS}/textures/block/{name}_{f}.png", open(os.path.join(src, f + ".png"), "rb").read())
-    write(f"assets/{NS}/models/block/{name}.json", {"parent": "minecraft:block/cube_column", "textures": {
-        "end": rl(f"block/{name}_end"), "side": rl(f"block/{name}_side"), "particle": rl(f"block/{name}_side")}})
-    write(f"assets/{NS}/models/item/{name}.json", {"parent": rl(f"block/{name}")})
+    # modelo 3D (tools/designs/space_transporter_model.py --export): bobinas alrededor del eje de Create
+    write_bytes(f"assets/{NS}/textures/block/{name}_3d.png", open(os.path.join(DESIGNS, f"{name}_3d.png"), "rb").read())
+    with open(os.path.join(DESIGNS, f"{name}_3d_block.json"), encoding="utf-8") as fh:
+        write(f"assets/{NS}/models/block/{name}.json", json.load(fh))
+    with open(os.path.join(DESIGNS, f"{name}_3d_item.json"), encoding="utf-8") as fh:
+        write(f"assets/{NS}/models/item/{name}.json", json.load(fh))
     write(f"assets/{NS}/blockstates/{name}.json", {"variants": {
         "axis=y": {"model": rl(f"block/{name}")},
         "axis=x": {"model": rl(f"block/{name}"), "x": 90, "y": 90},

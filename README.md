@@ -1190,3 +1190,8 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - Cómo funciona: `SpaceTransitionLaunchMixin` (en `SpaceTransitionHandler.lambda$init$2`, el tick de física de cada planeta) hace que la comprobación de altura de transición dé "sí" para la nave con subida pendiente; Cosmonautics la pasa al espacio como siempre y, justo después de `initInstance`, `SpaceLaunch.onTransition` pone una órbita circular a la altura elegida, encima del punto de despegue. Si la transición no ocurre en 3 s se devuelve el nitrógeno.
 - Con transportador a bordo y en la superficie, la consola muestra su estado (carga, nitrógeno, RPM) en lugar del motor de distorsión.
 - Receta: `APA/ECE/AHA` (A = placa de aleación de titanio, P = mecanismo de precisión, E = perla de Ender, C = casco de latón, H = cristal de helio-3). Logro `space_elevator` ("Ascensor orbital").
+
+## 1.0.4 — modelos 3D del congelador y del transportador
+- Congelador del tiempo espacial: jaula de acero con un reloj de arena de hielo entre dos emisores; apagado gris, encendido cian (`tools/designs/time_freezer_model.py`).
+- Transportador espacial: tres bobinas moradas alrededor del eje de Create, que se ve girar por dentro, con bridas de latón con agujero para el eje (`tools/designs/space_transporter_model.py`).
+- Utilidades comunes de modelos de cajas en `tools/designs/box_model.py` (caras, vista previa, atlas). Los dos bloques ahora usan `noOcclusion`.

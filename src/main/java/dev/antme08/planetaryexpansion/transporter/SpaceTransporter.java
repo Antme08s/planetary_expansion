@@ -43,7 +43,7 @@ public final class SpaceTransporter {
 
     public static final DeferredBlock<SpaceTransporterBlock> BLOCK = BLOCKS.register("space_transporter",
             () -> new SpaceTransporterBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE).strength(5.0f, 1200.0f)
-                    .sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().pushReaction(PushReaction.BLOCK).lightLevel(s -> 5)));
+                    .sound(SoundType.NETHERITE_BLOCK).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.BLOCK).lightLevel(s -> 5)));
     public static final DeferredItem<BlockItem> ITEM =
             ITEMS.registerSimpleBlockItem(BLOCK, new Item.Properties().rarity(Rarity.RARE));
 

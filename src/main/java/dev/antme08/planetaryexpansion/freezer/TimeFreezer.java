@@ -29,7 +29,7 @@ public final class TimeFreezer {
 
     public static final DeferredBlock<TimeFreezerBlock> BLOCK = BLOCKS.register("time_freezer",
             () -> new TimeFreezerBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_LIGHT_BLUE)
-                    .strength(3.5f, 6.0f).sound(SoundType.METAL).requiresCorrectToolForDrops()
+                    .strength(3.5f, 6.0f).sound(SoundType.METAL).requiresCorrectToolForDrops().noOcclusion()
                     .lightLevel(state -> state.getValue(TimeFreezerBlock.ACTIVE) ? 7 : 0)));
     public static final DeferredItem<BlockItem> ITEM = ITEMS.registerSimpleBlockItem(BLOCK, new Item.Properties());
 
