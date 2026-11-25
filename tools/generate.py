@@ -4753,6 +4753,15 @@ def build_titan():
     # sigue siendo el suyo: agua o aire). El rendimiento propio del metano lo da RocketFuelPropertiesMixin.
     tag_add("data/rocketnautics/tags/fluid/rocket_fuel.json", B("methane"))
     tag_add("data/rocketnautics/tags/fluid/rocket_fuel.json", B("flowing_methane"))
+    # 1.0.4: combustible de Create Diesel Generators (registro de datapack createdieselgenerators:fuel_type; si el mod no esta
+    # instalado la carpeta se ignora). Queda entre la gasolina (4096) y el diesel (6144) en motores normales; se ha dejado a
+    # los valores de la gasolina el resto (velocidad, consumo) para que el metano no sea mejor que lo que ya existe en ese mod.
+    data("createdieselgenerators/fuel_type/methane", {
+        "fluid": "#c:methane", "sound_pitch": 0.9,
+        "normal": {"speed": 96.0, "strength": 5120.0, "burn_rate": 0.05},
+        "modular": {"speed": 96.0, "strength": 7168.0, "burn_rate": 0.05},
+        "huge": {"speed": 224.0, "strength": 14336.0, "burn_rate": 0.05},
+        "burner_multiplier": 1.05})
 
     # --------------------------------------------------------------- terreno
     # Se queda en y 0..256 (min_y 0): así el selector de fluidos de Minecraft nunca pone lava en el fondo (solo lo hace
@@ -5324,6 +5333,54 @@ def build_items_v2():
     print(f"items_v2: {count} items redibujados")
 
 
+# Trituracion de Create (create:crushing) de las menas del mod (1.0.4). Create solo tiene recetas para las menas de vanilla y de
+# Cosmonautics: sin esto las menas nuevas solo se fundian. Se copian las proporciones de Create: menas "normales" como la
+# mena de piedra de vanilla (subproducto: adoquin) y menas "deep_" como las de pizarra abisal (el doble, mas tiempo, subproducto:
+# pizarra abisal adoquinada). Los resultados trituran a los mismos materiales que sueltan al picarse; los metales dan sus
+# "crushed_raw_*" (que ya tienen lavado y fundicion en Create / Cosmonautics).
+# nombre: (resultado, tiempo normal, cantidad normal, prob. extra normal, pepitas de experiencia,
+#          tiempo deep, cantidad deep, prob. extra deep)
+ORE_CRUSHING = {
+    "coal":     ("minecraft:coal", 150, 1, 0.75, 1, 300, 2, 0.25),
+    "iron":     ("create:crushed_raw_iron", 250, 1, 0.75, 1, 350, 2, 0.25),
+    "copper":   ("create:crushed_raw_copper", 250, 5, 0.25, 1, 350, 7, 0.25),
+    "gold":     ("create:crushed_raw_gold", 250, 1, 0.75, 2, 350, 2, 0.25),
+    "zinc":     ("create:crushed_raw_zinc", 250, 1, 0.75, 1, 350, 2, 0.25),
+    "redstone": ("minecraft:redstone", 250, 6, 0.5, 1, 350, 7, 0.5),
+    "lapis":    ("minecraft:lapis_lazuli", 250, 10, 0.5, 1, 350, 12, 0.5),
+    "diamond":  ("minecraft:diamond", 350, 1, 0.75, 1, 450, 2, 0.25),
+    "emerald":  ("minecraft:emerald", 350, 1, 0.75, 1, 450, 2, 0.25),
+    "titanium": ("rocketnautics:crushed_raw_titanium", 350, 1, 0.75, 1, 450, 2, 0.25),
+    "crystal":  ("planetary_expansion:cerulean_crystal", 250, 3, 0.5, 1, 350, 4, 0.5),
+    "sulfur":   ("planetary_expansion:venusian_sulfur", 250, 5, 0.5, 1, 350, 6, 0.5),
+}
+
+
+def build_ore_crushing():
+    ores = sorted(f[:-5] for f in os.listdir(os.path.join(OUT, f"assets/{NS}/blockstates")) if f.endswith("_ore.json"))
+    done = 0
+    for n in ores:
+        deep = n.startswith("deep_")
+        kind = n[:-4].rsplit("_", 1)[1]
+        if kind not in ORE_CRUSHING:
+            raise SystemExit(f"ore_crushing: mena sin receta de trituracion: {n}")
+        out, t, c, ex, xp, td, cd, exd = ORE_CRUSHING[kind]
+        if deep:
+            t, c, ex = td, cd, exd
+            rock = "minecraft:cobbled_deepslate"
+        else:
+            rock = "minecraft:cobblestone"
+        main = {"id": out} if c == 1 else {"count": c, "id": out}
+        xp_r = {"chance": 0.75, "id": "create:experience_nugget"}
+        if xp > 1:
+            xp_r["count"] = xp
+        data(f"recipe/crushing/{n}", {
+            "type": "create:crushing", "ingredients": [{"item": rl(n)}], "processing_time": t,
+            "results": [main, {"chance": ex, "id": out}, xp_r, {"chance": 0.125, "id": rock}]})
+        done += 1
+    print(f"ore_crushing: {done} menas con receta de trituracion")
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -5342,6 +5399,7 @@ if __name__ == "__main__":
     build_aurelia()          # 1.0.4: gigante gaseoso de Ámbar
     build_fulgor()           # 1.0.4: su luna de tormentas Fulgor
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
+    build_ore_crushing()     # 1.0.4: trituracion de Create para las menas del mod
     build_no_earth_mobs()
     build_weather_data()
     build_armor()
