@@ -22,7 +22,8 @@
     "SpaceBedNaturalMixin",
     "IceWorldAquiferMixin",
     "PlanetWeatherMixin",
-    "RocketFuelPropertiesMixin"
+    "RocketFuelPropertiesMixin",
+    "DeepSpacePositionFreezeMixin"
   ],
   "client": [
     "HologramTableRendererMixin",

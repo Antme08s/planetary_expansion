@@ -1173,3 +1173,10 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - **Selector de órbita**: el texto del rango permitido caía encima de los botones y "Predeterminada" se cortaba. Diseño nuevo, relativo al borde del panel (panel de 300 px, botones de 90 px; las líneas largas se encogen).
 - **Mapa de la consola**: con GUI x4 la ficha del mundo se salía por abajo y el estado del motor de distorsión pisaba el panel. La ficha se encoge hasta el 60 % y, si aun así no cabe, se desplaza con la rueda sobre el panel; la barra de estado y la ayuda se encogen y recortan para no invadir el panel; la etiqueta "Tú" va encima del marcador para no chocar con el nombre de la luna.
 - **Soporte de motor de metano**: además de la pestaña de recursos de Cosmonautics, está también en la de mundos (donde está el resto de bloques del mod) y el registro lo anota en el log.
+
+## 1.0.4 — Congelador del tiempo espacial
+- Bloque `time_freezer` (Space Time Freezer). Con una señal de redstone, la nave donde esté puesto queda quieta en su órbita en el espacio profundo (el reloj propio de la instancia, `timescale`, se pone a 0 y se sincroniza al cliente). Al quitar la señal continúa donde se quedó.
+- El empuje mientras está congelado sí cambia la órbita (el cambio de velocidad se aplica en un único punto) y la nave puede girar libremente (física de Sable intacta).
+- Se mantiene cada tick mientras haya un congelador activo; se libera solo si ninguno lo refresca en más de 3 ticks (apagado, bloque roto, nave descargada, cierre del servidor).
+- Mixin de seguridad `DeepSpacePositionFreezeMixin`: `propagate` no hace nada con `timescale <= 0`.
+- Receta: `APA/HCH/APA` (A = placa de aleación de titanio, P = mecanismo de precisión, H = cristal de helio-3, C = reloj). Logro `time_freezer`.

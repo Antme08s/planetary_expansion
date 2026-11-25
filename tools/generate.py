@@ -2305,6 +2305,9 @@ def build_advancements():
          [list(c) + ["five"] + (JUMP_TARGETS[len(JUMP_TARGETS_OLD):] if i == 0 else [])
           for i, c in enumerate(itertools.combinations(JUMP_TARGETS_OLD, len(JUMP_TARGETS_OLD) - 5 + 1))], 500,
          "Interplanetary Commuter", "Warp to five different destinations", "Viajero interplanetario", "Salta a cinco destinos distintos"),
+        ("time_freezer", "space_race", f"{NS}:time_freezer", "goal", {"froze": IMPOSSIBLE}, None, 0,
+         "Time Out", "Freeze a ship's orbit with a Space Time Freezer", "Tiempo muerto",
+         "Congela la órbita de una nave con un congelador del tiempo espacial"),
         ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
          "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",
          "Más allá del Sol", "Salta a otro sistema solar con el motor de distorsión estelar"),
@@ -5304,7 +5307,7 @@ side="BOTH"
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
         "plugin": "dev.antme08.planetaryexpansion.PlanetaryMixinPlugin",
-        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin"],
+        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin", "DeepSpacePositionFreezeMixin"],
         "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},
     })
@@ -5384,6 +5387,46 @@ def build_ore_crushing():
     print(f"ore_crushing: {done} menas con receta de trituracion")
 
 
+# --------------------------------------------------------------------------
+# 1.0.4: Congelador del tiempo espacial (freezer/TimeFreezer.java). Idea del usuario: con redstone la nave se queda quieta en
+# su orbita (el reloj de la instancia del espacio profundo se para); el empuje sigue cambiando la orbita y la nave puede girar.
+# --------------------------------------------------------------------------
+def build_time_freezer():
+    name = "time_freezer"
+    src = os.path.join(DESIGNS, "time_freezer")
+    for f, dest in (("side_off", "side_off"), ("side_on", "side_on"), ("top", "top")):
+        write_bytes(f"assets/{NS}/textures/block/{name}_{dest}.png", open(os.path.join(src, f + ".png"), "rb").read())
+    for state in ("off", "on"):
+        write(f"assets/{NS}/models/block/{name}_{state}.json", {"parent": "minecraft:block/cube_column", "textures": {
+            "end": rl(f"block/{name}_top"), "side": rl(f"block/{name}_side_{state}"), "particle": rl(f"block/{name}_top")}})
+    write(f"assets/{NS}/models/item/{name}.json", {"parent": rl(f"block/{name}_off")})
+    write(f"assets/{NS}/blockstates/{name}.json", {"variants": {
+        f"active={a},powered={p}": {"model": rl(f"block/{name}_{'on' if a == 'true' else 'off'}")}
+        for a in ("false", "true") for p in ("false", "true")}})
+    data(f"loot_table/blocks/{name}", {"type": "minecraft:block", "pools": [{
+        "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl(name)}],
+        "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl(f"blocks/{name}")})
+    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl(name))
+    tag_add("data/minecraft/tags/block/needs_iron_tool.json", rl(name))
+    tag_add("data/create/tags/block/wrench_pickup.json", rl(name))
+    # receta: reloj en el centro, mecanismos de precision arriba y abajo, cristal de helio-3 a los lados (se consigue en la Luna)
+    # y laminas de aleacion de titanio en las esquinas
+    data(f"recipe/{name}", {
+        "type": "minecraft:crafting_shaped", "category": "misc",
+        "pattern": ["APA", "HCH", "APA"],
+        "key": {"A": {"tag": "c:plates/titanium_alloy"}, "P": {"item": "create:precision_mechanism"},
+                "H": {"item": rl("helium3_crystal")}, "C": {"item": "minecraft:clock"}},
+        "result": {"id": rl(name), "count": 1}})
+    LANG_EN[f"block.{NS}.{name}"] = "Space Time Freezer"
+    LANG_ES[f"block.{NS}.{name}"] = "Congelador del tiempo espacial"
+    LANG_EN[f"message.{NS}.freezer_on"] = "Time frozen: the orbit holds still. Thrust still changes it."
+    LANG_ES[f"message.{NS}.freezer_on"] = "Tiempo congelado: la órbita no avanza. El empuje sí la cambia."
+    LANG_EN[f"message.{NS}.freezer_off"] = "Off: needs a redstone signal"
+    LANG_ES[f"message.{NS}.freezer_off"] = "Apagado: necesita señal de redstone"
+    LANG_EN[f"message.{NS}.freezer_no_space"] = "Only works in deep space"
+    LANG_ES[f"message.{NS}.freezer_no_space"] = "Solo funciona en el espacio profundo"
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -5403,6 +5446,7 @@ if __name__ == "__main__":
     build_fulgor()           # 1.0.4: su luna de tormentas Fulgor
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
     build_ore_crushing()     # 1.0.4: trituracion de Create para las menas del mod
+    build_time_freezer()     # 1.0.4: congelador del tiempo espacial
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

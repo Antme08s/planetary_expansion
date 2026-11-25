@@ -67,6 +67,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.gravity.GravityGenerator.register(modBus);
         dev.antme08.planetaryexpansion.dampener.InertialDampener.register(modBus);
         dev.antme08.planetaryexpansion.warp.Warp.register(modBus);
+        dev.antme08.planetaryexpansion.freezer.TimeFreezer.register(modBus); // 1.0.4: congelador del tiempo espacial
         dev.antme08.planetaryexpansion.worldgen.TerrainBlendProcessor.register(modBus);
         dev.antme08.planetaryexpansion.creatures.Creatures.register(modBus); // 0.7.61: criaturas de Thalassa
         dev.antme08.planetaryexpansion.creatures.IgnisCreatures.register(modBus); // 0.7.64: caracoles de magma

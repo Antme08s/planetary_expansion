@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "active=false,powered=false": {
+      "model": "planetary_expansion:block/time_freezer_off"
+    },
+    "active=false,powered=true": {
+      "model": "planetary_expansion:block/time_freezer_off"
+    },
+    "active=true,powered=false": {
+      "model": "planetary_expansion:block/time_freezer_on"
+    },
+    "active=true,powered=true": {
+      "model": "planetary_expansion:block/time_freezer_on"
+    }
+  }
+}

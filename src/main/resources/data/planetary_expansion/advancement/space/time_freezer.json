@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:time_freezer"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.time_freezer.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.time_freezer.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "froze": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "froze"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

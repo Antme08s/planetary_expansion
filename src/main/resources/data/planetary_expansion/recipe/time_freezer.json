@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "APA",
+    "HCH",
+    "APA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:plates/titanium_alloy"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "H": {
+      "item": "planetary_expansion:helium3_crystal"
+    },
+    "C": {
+      "item": "minecraft:clock"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:time_freezer",
+    "count": 1
+  }
+}
