@@ -1137,6 +1137,7 @@ Motivo: el modpack del usuario (~1800 descargas) recibió la queja de que items 
 - **Tormenta eléctrica** (`StormType.FULGOR_STORM`, `weather/FulgorStorms.java`): caen rayos cerca de los jugadores y el rayo funde el polvo de tormenta en fulgurita. Partículas y colores en `ClientStormEffects`; lang `storm.<NS>.fulgor_storm`.
 - **Especialidad: minerales conductores.** Menas de cobre, zinc (`create:raw_zinc`) y redstone en basalto de tormenta, varias veces lo de la Tierra. Familia de roca: basalto de tormenta, ladrillos, pulido, escaleras y losas; polvo de tormenta y fulgurita.
 - Código: `fulgor/FulgorBlocks.java`, `weather/FulgorStorms.java`; datos en `build_aurelia()` / `build_fulgor()` de tools/generate.py; texturas `tools/designs/fulgor_textures.py`. `UniverseSky` incluye `planetary_expansion:fulgor` (universo y atmósfera).
+- Texturas (corregido tras probar): el basalto tenía una fisura violeta y la fulgurita una vena amarilla de borde a borde; al tapizar los bloques se repetían por todo el terreno. Ahora solo llevan grano fino de 1-2 px (`FINE` en `fulgor_textures.py`). **Regla para texturas nuevas de bloques que ocupan terreno:** nada de marcas únicas, fisuras ni venas largas (se repiten cada 16 px); mirar siempre una vista tapizada (6×6 o más) antes de darlas por buenas.
 - Pendiente tras probar: pararrayos (ahora el rayo cae en el punto más alto del lugar elegido, sin buscar pararrayos), criaturas, y Umbra y Ruinas como planetas propios de Ámbar.
 
 ## 1.0.4 — selector de distancia de órbita, órbita de estrellas y anillos de Saturno corregidos

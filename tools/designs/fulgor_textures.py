@@ -24,27 +24,24 @@ T = 16
 rgba, shade = AT.rgba, AT.shade
 
 
-def _calm(rng, palette, octaves=((4, 0.5), (2, 0.5)), jitter=0.06, lo=0.15, hi=0.85):
+FINE = ((2, 0.55), (1, 0.45))   # solo grano de 1-2 px: las manchas grandes se repiten cada 16 px y forman bandas
+
+
+def _calm(rng, palette, octaves=FINE, jitter=0.06, lo=0.15, hi=0.85):
     f = AT.pnoise(rng, octaves)
     return AT.posterize(f * (hi - lo) + lo, palette, rng, jitter)
 
 
 def basalt(rng):
-    """Basalto de tormenta: azul grisáceo muy oscuro con tinte violeta y alguna fisura clara."""
-    img = AT.edges(_calm(rng, AT.ramp((30, 32, 48), (88, 90, 120), 6), ((4, 0.5), (2, 0.5)), 0.07), 0.86)
-    px = img.load()
-    x, y = rng.randrange(T), rng.randrange(T)
-    for _ in range(6):                                  # fisura corta violeta
-        px[x % T, y % T] = rgba((112, 100, 150))
-        x += rng.choice((1, 1, 0))
-        y += rng.choice((0, 1, -1))
-    return img
+    """Basalto de tormenta: azul grisáceo muy oscuro con tinte violeta. Sin marcas sueltas (se verían repetidas al
+    tapizar): solo grano repartido y relieve suave."""
+    return AT.edges(_calm(rng, AT.ramp((30, 32, 48), (88, 90, 120), 6), FINE, 0.08, 0.1, 0.9), 0.88)
 
 
 def basalt_bricks(rng):
     img = Image.new("RGBA", (T, T))
     px = img.load()
-    tex = AT.pnoise(rng, ((4, 0.5), (2, 0.5)))
+    tex = AT.pnoise(rng, FINE)
     tone = {}
     for y in range(T):
         for x in range(T):
@@ -63,7 +60,7 @@ def basalt_bricks(rng):
 
 
 def polished_basalt(rng):
-    f = AT.pnoise(rng, ((8, 0.5), (4, 0.5)))
+    f = AT.pnoise(rng, FINE)
     img = AT.posterize(f * 0.4 + 0.3, AT.ramp((54, 56, 80), (92, 96, 128), 5), rng, 0.04)
     d = ImageDraw.Draw(img)
     d.line([(0, 0), (T - 1, 0)], fill=rgba((128, 132, 170)))
@@ -75,31 +72,23 @@ def polished_basalt(rng):
 
 
 def storm_dust(rng):
-    """Polvo de tormenta: ceniza gris violácea, granos finos."""
-    img = _calm(rng, AT.ramp((70, 66, 88), (150, 144, 172), 6), ((4, 0.45), (2, 0.55)), 0.10)
-    px = img.load()
-    for _ in range(4):
-        x, y = rng.randrange(T), rng.randrange(T)
-        px[x, y] = rgba((176, 170, 198))
-    return img
+    """Polvo de tormenta: ceniza gris violácea, granos finos repartidos."""
+    return _calm(rng, AT.ramp((70, 66, 88), (150, 144, 172), 6), FINE, 0.10, 0.1, 0.9)
 
 
 def fulgurite(rng):
-    """Fulgurita: vidrio blanco violáceo fundido por rayos, con una vena ramificada luminosa."""
-    img = _calm(rng, AT.ramp((150, 140, 196), (236, 232, 255), 6), ((4, 0.45), (2, 0.55)), 0.05, 0.1, 0.9)
+    """Fulgurita: vidrio blanco violáceo fundido por rayos. Solo grano fino (nada de venas ni marcas: una marca única se
+    repite en cada bloque y una vena de borde a borde forma rayas al juntar bloques); el brillo sale de granos sueltos
+    claros y de un tinte amarillo pálido en algunos."""
+    img = _calm(rng, AT.ramp((158, 148, 204), (234, 230, 253), 7), FINE, 0.06, 0.1, 0.9)
     px = img.load()
-    # vena que baja en zigzag desde arriba con una rama: colores brillantes (la luz del bloque es 9)
-    x = rng.randrange(5, 11)
     for y in range(T):
-        px[x % T, y] = rgba((255, 250, 170))
-        if y % 3 == 0:
-            px[(x + 1) % T, y] = rgba((255, 224, 110))
-        x += rng.choice((-1, 0, 0, 1))
-        if y == 7:
-            bx = x
-            for k in range(1, 6):
-                bx += rng.choice((1, 1, 0))
-                px[bx % T, (y + k) % T] = rgba((255, 236, 140))
+        for x in range(T):
+            r = rng.random()
+            if r < 0.025:
+                px[x, y] = rgba((252, 242, 196))
+            elif r < 0.07:
+                px[x, y] = rgba((248, 245, 255))
     return img
 
 
