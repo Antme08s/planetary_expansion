@@ -38,6 +38,30 @@
     },
     "thalassa": {
       "trigger": "minecraft:impossible"
+    },
+    "saturn": {
+      "trigger": "minecraft:impossible"
+    },
+    "titan": {
+      "trigger": "minecraft:impossible"
+    },
+    "cerulea": {
+      "trigger": "minecraft:impossible"
+    },
+    "velo": {
+      "trigger": "minecraft:impossible"
+    },
+    "ferra": {
+      "trigger": "minecraft:impossible"
+    },
+    "aurelia": {
+      "trigger": "minecraft:impossible"
+    },
+    "fulgor": {
+      "trigger": "minecraft:impossible"
+    },
+    "five": {
+      "trigger": "minecraft:impossible"
     }
   },
   "requirements": [
@@ -45,421 +69,491 @@
       "overworld",
       "moon",
       "venus",
-      "mars"
+      "mars",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "venus",
-      "gas_giant"
+      "gas_giant",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "venus",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "venus",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "venus",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "mars",
-      "gas_giant"
+      "gas_giant",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "mars",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "mars",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "mars",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "moon",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "mars",
-      "gas_giant"
+      "gas_giant",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "mars",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "mars",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "mars",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "venus",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "mars",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "gas_giant",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "overworld",
       "gas_giant",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "gas_giant",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "overworld",
       "ice_world",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "venus",
       "mars",
-      "gas_giant"
+      "gas_giant",
+      "five"
     ],
     [
       "moon",
       "venus",
       "mars",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "moon",
       "venus",
       "mars",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "venus",
       "mars",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "venus",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "moon",
       "venus",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "venus",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "venus",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "venus",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "venus",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "mars",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "moon",
       "mars",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "mars",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "mars",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "mars",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "mars",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "gas_giant",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "moon",
       "gas_giant",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "gas_giant",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "moon",
       "ice_world",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "mars",
       "gas_giant",
-      "ice_world"
+      "ice_world",
+      "five"
     ],
     [
       "venus",
       "mars",
       "gas_giant",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "venus",
       "mars",
       "gas_giant",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "mars",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "venus",
       "mars",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "mars",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "gas_giant",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "venus",
       "gas_giant",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "gas_giant",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "venus",
       "ice_world",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "mars",
       "gas_giant",
       "ice_world",
-      "ignis"
+      "ignis",
+      "five"
     ],
     [
       "mars",
       "gas_giant",
       "ice_world",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "mars",
       "gas_giant",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "mars",
       "ice_world",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ],
     [
       "gas_giant",
       "ice_world",
       "ignis",
-      "thalassa"
+      "thalassa",
+      "five"
     ]
   ],
   "parent": "planetary_expansion:space/warp_speed",

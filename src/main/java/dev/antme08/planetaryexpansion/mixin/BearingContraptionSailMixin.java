@@ -34,7 +34,7 @@ public abstract class BearingContraptionSailMixin extends Contraption {
     @Unique
     private double planetaryExpansion$sailRemainder;
 
-    @Inject(method = "addBlock", at = @At("HEAD"))
+    @Inject(require = 0, method = "addBlock", at = @At("HEAD"))
     private void planetaryExpansion$weightedSail(Level level, BlockPos pos,
                                                  Pair<StructureTemplate.StructureBlockInfo, BlockEntity> pair,
                                                  CallbackInfo ci) {

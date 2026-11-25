@@ -31,7 +31,7 @@ import java.util.List;
 @Mixin(value = HologramTableRenderer.class, remap = false)
 public abstract class HologramTableRendererMixin {
 
-    @Redirect(
+    @Redirect(require = 0, 
             method = "renderSafe(Ldev/devce/rocketnautics/content/blocks/HologramTableBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V",
             at = @At(value = "INVOKE",
                     target = "Ldev/devce/rocketnautics/client/DeepSpaceHandler;renderHologram(Ldev/devce/rocketnautics/shaded/hipparchus/geometry/euclidean/threed/Vector3D;Ldev/devce/rocketnautics/shaded/orekit/frames/Frame;Ldev/devce/rocketnautics/content/orbit/universe/UniverseDefinition;Ldev/devce/rocketnautics/shaded/orekit/time/AbsoluteDate;DDLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)Lit/unimi/dsi/fastutil/Pair;"))

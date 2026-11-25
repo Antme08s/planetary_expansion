@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = JetpackLayer.class, remap = false)
 public abstract class JetpackLayerMixin {
 
-    @Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V",
+    @Inject(require = 0, method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V",
             at = @At("HEAD"), cancellable = true)
     private void planetaryExpansion$skipForCustomSuits(PoseStack poseStack, MultiBufferSource buffer, int light, AbstractClientPlayer player,
                                                       float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks,

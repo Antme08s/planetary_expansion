@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = GlobalSpacePhysicsHandler.class, remap = false)
 public abstract class GlobalSpacePhysicsMixin {
 
-    @Inject(method = "applyMaxQStress", at = @At("HEAD"), cancellable = true)
+    @Inject(require = 0, method = "applyMaxQStress", at = @At("HEAD"), cancellable = true)
     private static void planetaryExpansion$guardMaxQ(ServerSubLevel ship, RigidBodyHandle handle, ServerLevel level,
                                                      Vector3d position, double timeStep, CallbackInfo ci) {
         if (!StructureLoadGuard.isPlanet(level) || handle == null) return;

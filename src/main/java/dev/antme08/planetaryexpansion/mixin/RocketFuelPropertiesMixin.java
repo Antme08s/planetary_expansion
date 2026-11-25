@@ -32,7 +32,7 @@ public abstract class RocketFuelPropertiesMixin {
     @Shadow private float currentIspMultiplier;
     @Shadow private float currentEfficiencyMultiplier;
 
-    @Inject(method = "updateFuelProperties", at = @At("TAIL"))
+    @Inject(require = 0, method = "updateFuelProperties", at = @At("TAIL"))
     private void planetaryExpansion$methane(CallbackInfo ci) {
         FluidStack fuel = fuelTank.getFluid();
         if (fuel.isEmpty()) {

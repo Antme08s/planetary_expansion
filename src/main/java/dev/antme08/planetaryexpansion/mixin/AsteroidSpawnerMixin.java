@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = AsteroidSpawner.class, remap = false)
 public abstract class AsteroidSpawnerMixin {
 
-    @Inject(method = "onPlayerTick", at = @At("HEAD"), cancellable = true)
+    @Inject(require = 0, method = "onPlayerTick", at = @At("HEAD"), cancellable = true)
     private static void planetaryExpansion$noAsteroidsOnPlanets(PlayerTickEvent.Post event, CallbackInfo ci) {
         if (event.getEntity().level().dimension().location().getNamespace().equals(PlanetaryExpansion.MODID)) {
             ci.cancel();

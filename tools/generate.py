@@ -2221,8 +2221,13 @@ def build_advancements():
     IMPOSSIBLE = {"trigger": "minecraft:impossible"}
     SUITS = ["impact", "glacial", "hazard", "sea_diver", "thermal"]
     PLANETS = {"moon": "rocketnautics:moon", "mars": f"{NS}:mars", "venus": f"{NS}:venus", "ice_world": f"{NS}:ice_world",
-               "ignis": f"{NS}:ignis", "thalassa": f"{NS}:thalassa"}
-    JUMP_TARGETS = ["overworld", "moon", "venus", "mars", "gas_giant", "ice_world", "ignis", "thalassa"]
+               "ignis": f"{NS}:ignis", "thalassa": f"{NS}:thalassa",
+               # 1.0.4: los mundos del sistema de Ámbar y Titán (Saturno y Aurelia no tienen superficie)
+               "cerulea": f"{NS}:cerulea", "velo": f"{NS}:velo", "ferra": f"{NS}:ferra", "titan": f"{NS}:titan",
+               "fulgor": f"{NS}:fulgor"}
+    # destinos del logro "Viajero interplanetario": los ocho originales y los cuerpos nuevos de 1.0.4
+    JUMP_TARGETS_OLD = ["overworld", "moon", "venus", "mars", "gas_giant", "ice_world", "ignis", "thalassa"]
+    JUMP_TARGETS = JUMP_TARGETS_OLD + ["saturn", "titan", "cerulea", "velo", "ferra", "aurelia", "fulgor"]
 
     # (id, padre, icono, marco, criterios, requisitos o None, xp, EN título, EN descripción, ES título, ES descripción)
     A = [
@@ -2258,6 +2263,19 @@ def build_advancements():
          {"deep": where(f"{NS}:thalassa", max_y=-30.0, head=f"{NS}:sea_diver_helmet")}, None, 0,
          "Pressure Point", "Reach the bottom of Thalassa's ocean wearing the Sea Diver helmet",
          "Punto de presión", "Llega al fondo del mar de Thalassa con el casco de la Sea Diver"),
+        ("hydrocarbon_seas", "warp_speed", f"{NS}:methane_bucket", "task", {"titan": dim(f"{NS}:titan")}, None, 0,
+         "Hydrocarbon Seas", "Set foot on Titan, the moon of methane lakes", "Mares de hidrocarburo",
+         "Pisa Titán, la luna de los lagos de metano"),
+        ("amber_dawn", "beyond_the_sun", f"{NS}:cerulean_grass_block", "task", {"cerulea": dim(f"{NS}:cerulea")}, None, 0,
+         "Amber Dawn", "Set foot on Cerulea, under the light of a second star", "Amanecer ámbar",
+         "Pisa Cerúlea, bajo la luz de una segunda estrella"),
+        ("glass_moon", "amber_dawn", f"{NS}:velo_rock", "task", {"velo": dim(f"{NS}:velo")}, None, 0,
+         "Glass Moon", "Set foot on Velo, the crystal moon", "Luna de cristal", "Pisa Velo, la luna de cristal"),
+        ("rust_moon", "amber_dawn", f"{NS}:ferra_rock", "task", {"ferra": dim(f"{NS}:ferra")}, None, 0,
+         "Rust Moon", "Set foot on Ferra, the moon of rust", "Luna oxidada", "Pisa Ferra, la luna de óxido"),
+        ("storm_chaser", "beyond_the_sun", f"{NS}:fulgurite", "task", {"fulgor": dim(f"{NS}:fulgor")}, None, 0,
+         "Storm Chaser", "Set foot on Fulgor, the moon of electric storms", "Cazatormentas",
+         "Pisa Fulgor, la luna de las tormentas eléctricas"),
         ("grand_tour", "space_race", "minecraft:map", "challenge", {k: dim(v) for k, v in PLANETS.items()}, None, 500,
          "Grand Tour", "Set foot on every planet and moon", "Gran gira", "Pisa todos los planetas y lunas"),
         ("suit_up", "space_race", f"{NS}:impact_chestplate", "task", {p: suit(p) for p in SUITS}, [SUITS], 0,
@@ -2277,9 +2295,12 @@ def build_advancements():
          "Space Folding", "Build a Warp Drive", "Doblando el espacio", "Construye un motor de distorsión"),
         ("warp_speed", "space_folding", "minecraft:ender_eye", "goal", {"jumped": IMPOSSIBLE}, None, 0,
          "Warp Speed", "Jump to another planet with the Warp Drive", "Velocidad de distorsión", "Salta a otro planeta con el motor de distorsión"),
-        ("interplanetary_commuter", "warp_speed", "minecraft:nether_star", "challenge", {t: IMPOSSIBLE for t in JUMP_TARGETS},
-         # al menos 5 de los 8: en cada grupo de 4 destinos tiene que haber al menos uno visitado
-         [list(c) for c in itertools.combinations(JUMP_TARGETS, len(JUMP_TARGETS) - 5 + 1)], 500,
+        ("interplanetary_commuter", "warp_speed", "minecraft:nether_star", "challenge",
+         {**{t: IMPOSSIBLE for t in JUMP_TARGETS}, "five": IMPOSSIBLE},
+         # 5 destinos distintos de los 15. Minecraft no sabe contar "5 de N" sin listar todas las combinaciones (1365 grupos
+         # con 15 destinos), así que el código da el criterio "five" al llegar a 5 (Achievements.checkCommuter). Los grupos
+         # originales (5 de los 8 primeros) se mantienen, con "five" en cada uno: quien ya lo tenía completado lo sigue teniendo.
+         [list(c) + ["five"] for c in itertools.combinations(JUMP_TARGETS_OLD, len(JUMP_TARGETS_OLD) - 5 + 1)], 500,
          "Interplanetary Commuter", "Warp to five different destinations", "Viajero interplanetario", "Salta a cinco destinos distintos"),
         ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
          "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",
@@ -4541,8 +4562,8 @@ def build_methane_engine():
     data("loot_table/blocks/methane_thruster_mount", {"type": "minecraft:block", "pools": [{
         "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl("methane_thruster_mount")}],
         "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl("blocks/methane_thruster_mount")})
-    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl("methane_thruster_mount"))
-    tag_add("data/create/tags/block/wrench_pickup.json", rl("methane_thruster_mount"))
+    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", {"id": rl("methane_thruster_mount"), "required": False})
+    tag_add("data/create/tags/block/wrench_pickup.json", {"id": rl("methane_thruster_mount"), "required": False})
     # receta (cuadrícula 3x3): mejora del soporte de Cosmonautics, que va en el centro. Láminas de aleación de titanio en las
     # esquinas, tubería de fluidos arriba, láminas de plomo a los lados y una tobera de titanio abajo. No depende de otros mods.
     data("recipe/methane_thruster_mount", {
@@ -5205,10 +5226,12 @@ logoBlur=false
 displayURL="https://github.com/Antme08s/planetary_expansion"
 description=\'\'\'
 Landable worlds for Create: Cosmonautics, each with its own dimension, terrain, weather, creatures and dangers:
-Mars, Venus, Thalassa, Ignis and the Ice World around the Sun, and Cerulea with its moons Velo and Ferra
-around Amber, a second star reached with the Stellar Warp Drive.
+Mars, Venus, Thalassa, Ignis and the Ice World around the Sun, plus Saturn (with rings) and its moon Titan,
+with methane lakes and liquid methane as rocket fuel. Around Amber, a second star reached with the Stellar Warp
+Drive: Cerulea with its moons Velo and Ferra, and the gas giant Aurelia with its stormy moon Fulgor.
 Planet suits with upgrade templates (Impact, Glacial, Hazard, Sea Diver and Thermal), survival kits,
-and ship machines: Warp Drive with Navigation Console, Gravity Generator and Inertial Dampener.
+and ship machines: Warp Drive with Navigation Console, Gravity Generator, Inertial Dampener and the Methane
+Thruster Mount.
 \'\'\'
 
 [[dependencies.{NS}]]
@@ -5268,6 +5291,7 @@ side="BOTH"
         "minVersion": "0.8",
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
+        "plugin": "dev.antme08.planetaryexpansion.PlanetaryMixinPlugin",
         "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin"],
         "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},

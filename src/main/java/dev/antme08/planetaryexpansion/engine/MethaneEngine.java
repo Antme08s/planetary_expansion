@@ -40,7 +40,14 @@ public final class MethaneEngine {
             BLOCK_ENTITIES.register("methane_thruster_mount", () ->
                     BlockEntityType.Builder.of(MethaneThrusterMountBlockEntity::new, MOUNT.get()).build(null));
 
-    public static void register(IEventBus modBus) {
+    /** Registra el soporte solo si Cosmonautics sigue teniendo las clases y miembros que hereda (ver MethaneEngineCompat). */
+    public static void registerIfCompatible(IEventBus modBus) {
+        if (MethaneEngineCompat.compatible()) {
+            register(modBus);
+        }
+    }
+
+    private static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         BLOCK_ENTITIES.register(modBus);

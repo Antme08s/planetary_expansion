@@ -32,6 +32,27 @@ public final class Achievements {
         }
     }
 
+    /**
+     * "Viajero interplanetario": cuenta los destinos distintos ya visitados (criterios del propio logro, salvo "five") y,
+     * al llegar a 5, da el criterio "five" que completa el logro. Minecraft no sabe contar "5 de N" sin listar todas las
+     * combinaciones. Se llama justo después de dar el destino.
+     */
+    public static void checkCommuter(ServerPlayer player) {
+        if (player == null || player.getServer() == null) return;
+        try {
+            AdvancementHolder holder = player.getServer().getAdvancements()
+                    .get(ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "space/interplanetary_commuter"));
+            if (holder == null) return;
+            int visited = 0;
+            for (String c : player.getAdvancements().getOrStartProgress(holder).getCompletedCriteria()) {
+                if (!c.equals("five")) visited++;
+            }
+            if (visited >= 5) player.getAdvancements().award(holder, "five");
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.debug("[Logros] No se pudo contar los destinos de {}", player.getScoreboardName(), t);
+        }
+    }
+
     /** A todos los jugadores de la dimensión. */
     public static void awardAll(ServerLevel level, String id, String criterion) {
         for (ServerPlayer p : level.players()) if (p.isAlive()) award(p, id, criterion);

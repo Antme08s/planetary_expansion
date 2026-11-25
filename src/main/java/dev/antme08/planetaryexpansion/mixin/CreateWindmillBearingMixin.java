@@ -40,7 +40,7 @@ public abstract class CreateWindmillBearingMixin extends MechanicalBearingBlockE
         super(type, pos, state);
     }
 
-    @Inject(method = "getGeneratedSpeed", at = @At("RETURN"), cancellable = true)
+    @Inject(require = 0, method = "getGeneratedSpeed", at = @At("RETURN"), cancellable = true)
     private void planetaryExpansion$stormSpeed(CallbackInfoReturnable<Float> cir) {
         // Sin aspas montadas Create devuelve la última velocidad guardada, que ya incluye el
         // factor: no se vuelve a multiplicar.
@@ -48,7 +48,7 @@ public abstract class CreateWindmillBearingMixin extends MechanicalBearingBlockE
         cir.setReturnValue(cir.getReturnValue() * planetaryExpansion$stormMultiplier);
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(require = 0, method = "tick", at = @At("RETURN"))
     private void planetaryExpansion$checkStorm(CallbackInfo ci) {
         if (level == null || level.isClientSide || level.getGameTime() % 20 != 0) return;
         BlockState state = getBlockState();

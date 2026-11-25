@@ -599,6 +599,7 @@ public class WarpDriveBlockEntity extends BlockEntity {
         for (ServerPlayer p : playersAboard(sl, inst)) {
             dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "warp_speed", "jumped");
             dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "interplanetary_commuter", target);
+            dev.antme08.planetaryexpansion.advancement.Achievements.checkCommuter(p);
             if (interstellarJump) dev.antme08.planetaryexpansion.advancement.Achievements.award(p, "beyond_the_sun", "jumped");
         }
         Vector3d c = Warp.toWorld(sl, worldPosition);

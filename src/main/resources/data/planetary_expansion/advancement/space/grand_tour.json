@@ -50,6 +50,36 @@
       "conditions": {
         "to": "planetary_expansion:thalassa"
       }
+    },
+    "cerulea": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:cerulea"
+      }
+    },
+    "velo": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:velo"
+      }
+    },
+    "ferra": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:ferra"
+      }
+    },
+    "titan": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:titan"
+      }
+    },
+    "fulgor": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:fulgor"
+      }
     }
   },
   "requirements": [
@@ -70,6 +100,21 @@
     ],
     [
       "thalassa"
+    ],
+    [
+      "cerulea"
+    ],
+    [
+      "velo"
+    ],
+    [
+      "ferra"
+    ],
+    [
+      "titan"
+    ],
+    [
+      "fulgor"
     ]
   ],
   "parent": "planetary_expansion:space/space_race",

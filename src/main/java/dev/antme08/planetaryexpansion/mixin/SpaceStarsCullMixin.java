@@ -21,20 +21,20 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  */
 @Mixin(value = SkyHandler.class, remap = false)
 public abstract class SpaceStarsCullMixin {
-    @ModifyConstant(method = "renderSpaceStars", constant = @Constant(floatValue = 0.35f), remap = false)
+    @ModifyConstant(require = 0, method = "renderSpaceStars", constant = @Constant(floatValue = 0.35f), remap = false)
     private static float planetaryExpansion$noStarCulling(float original) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level != null && mc.level.dimension() != Level.OVERWORLD) return -2.0f;
         return original;
     }
 
-    @ModifyVariable(method = "renderSpaceStars", at = @At("HEAD"), argsOnly = true, ordinal = 0, remap = false)
+    @ModifyVariable(require = 0, method = "renderSpaceStars", at = @At("HEAD"), argsOnly = true, ordinal = 0, remap = false)
     private static float planetaryExpansion$fadeStars(float visibility) {
         return visibility * UniverseSky.starFade();
     }
 
     // renderCosmicNebula(PoseStack, Camera, float celestialAngle, float visibility): la visibilidad es el 2.º float
-    @ModifyVariable(method = "renderCosmicNebula", at = @At("HEAD"), argsOnly = true, ordinal = 1, remap = false)
+    @ModifyVariable(require = 0, method = "renderCosmicNebula", at = @At("HEAD"), argsOnly = true, ordinal = 1, remap = false)
     private static float planetaryExpansion$fadeNebula(float visibility) {
         return visibility * UniverseSky.starFade();
     }

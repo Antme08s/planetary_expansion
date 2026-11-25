@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:methane_bucket"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.hydrocarbon_seas.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.hydrocarbon_seas.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "titan": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "planetary_expansion:titan"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "titan"
+    ]
+  ],
+  "parent": "planetary_expansion:space/warp_speed"
+}

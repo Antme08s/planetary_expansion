@@ -76,7 +76,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.ferra.FerraBlocks.register(modBus); // 1.0.3: Ferra, luna de óxido de Cerúlea
         dev.antme08.planetaryexpansion.titan.TitanBlocks.register(modBus); // 1.0.4: Titán, luna de Saturno
         dev.antme08.planetaryexpansion.fulgor.FulgorBlocks.register(modBus); // 1.0.4: Fulgor, luna de tormentas de Aurelia
-        dev.antme08.planetaryexpansion.engine.MethaneEngine.register(modBus); // 1.0.4: soporte de motor de metano
+        dev.antme08.planetaryexpansion.engine.MethaneEngine.registerIfCompatible(modBus); // 1.0.4: soporte de motor de metano
         dev.antme08.planetaryexpansion.ferra.mobs.FerraMobs.register(modBus); // 1.0.3: gusano de óxido y rastreador ciego
         dev.antme08.planetaryexpansion.cerulea.CeruleaSea.register(modBus); // 1.0.3: plantas del mar de Cerúlea
         if (FMLEnvironment.dist == Dist.CLIENT) {

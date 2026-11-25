@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(value = DeepSpaceHandler.class, remap = false)
 public abstract class NightSunMixin {
-    @Inject(method = "renderPlanet", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(require = 0, method = "renderPlanet", at = @At("HEAD"), cancellable = true, remap = false)
     private static void planetaryExpansion$noSunAtNight(CubePlanet planet, Vector3D pos, PoseStack poseStack, AbsoluteDate date,
                                                        float a, float b, CallbackInfoReturnable<Boolean> cir) {
         var level = Minecraft.getInstance().level;

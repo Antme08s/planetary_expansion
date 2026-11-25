@@ -33,6 +33,12 @@ CP="$CP:$LIBS/net/neoforged/mergetool/2.0.0/mergetool-2.0.0-api.jar"
 CP="$CP:$LIBS/net/fabricmc/sponge-mixin/0.15.5+mixin.0.8.7/sponge-mixin-0.15.5+mixin.0.8.7.jar"
 CP="$CP:$COSMO:$SUBM:$SABLE:$SABLE_COMPANION:$CREATE"
 for j in "$CREATE_NESTED"/*.jar; do CP="$CP:$j"; done
+# ASM (solo para compilar PlanetaryMixinPlugin; en el juego lo trae Mixin). Si no está en libraries, se busca el de Gradle.
+for a in asm asm-tree; do
+  f=$(find "$LIBS/org/ow2/asm/$a" -name "$a-*.jar" 2>/dev/null | head -1 || true)
+  [ -z "$f" ] && f=$(ls /opt/gradle-*/lib/$a-9*.jar 2>/dev/null | head -1 || true)
+  if [ -n "$f" ]; then CP="$CP:$f"; fi
+done
 
 OUT="$ROOT/build"
 rm -rf "$OUT/classes" "$OUT/stubs" && mkdir -p "$OUT/classes" "$OUT/stubs"

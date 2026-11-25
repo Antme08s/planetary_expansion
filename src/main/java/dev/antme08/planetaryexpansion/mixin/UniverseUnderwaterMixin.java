@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(value = DeepSpaceHandler.class, remap = false)
 public abstract class UniverseUnderwaterMixin {
-    @Inject(method = "renderUniverseForLevel", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(require = 0, method = "renderUniverseForLevel", at = @At("HEAD"), cancellable = true, remap = false)
     private static void planetaryExpansion$hideUnderwater(Level level, Vec3 position, PoseStack poseStack, float partialDelta,
                                                          float partialTick, Camera camera, CallbackInfo ci) {
         if (level.dimension() == Level.OVERWORLD) return;
