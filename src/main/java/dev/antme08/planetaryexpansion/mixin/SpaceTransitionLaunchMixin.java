@@ -9,6 +9,8 @@ import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
 import dev.devce.rocketnautics.content.physics.SpaceTransitionHandler;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.world.level.Level;
+import dev.devce.rocketnautics.shaded.orekit.utils.TimeStampedPVCoordinates;
+import it.unimi.dsi.fastutil.Pair;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
@@ -34,7 +36,25 @@ public abstract class SpaceTransitionLaunchMixin {
     private static Quaterniond planetaryExpansion$setOrbit(DeepSpaceInstance inst, Vector3dc pos, Vector3dc vel, CubePlanet planet, Level level,
                                                            Operation<Quaterniond> original, @Local ServerSubLevel ship) {
         Quaterniond q = original.call(inst, pos, vel, planet, level);
-        SpaceLaunch.onTransition(ship, inst);
+        // subida con el transportador: órbita elegida y la nave llega derecha (sin el giro de la cara del cubo)
+        if (SpaceLaunch.onTransition(ship, inst)) {
+            try {
+                return SpaceLaunch.levelingRotation(ship.logicalPose().orientation());
+            } catch (Throwable ignored) {
+            }
+        }
         return q;
+    }
+
+    /** Bajada con el transportador: que la nave llegue derecha al planeta (el giro lo aplica igual que el suyo). */
+    @WrapOperation(method = "exitDeepSpace", require = 0,
+            at = @At(value = "INVOKE", target = "Ldev/devce/rocketnautics/api/orbit/DeepSpaceHelper;globalPositionToLocalPositionAndRotation(Ldev/devce/rocketnautics/shaded/orekit/utils/TimeStampedPVCoordinates;Ldev/devce/rocketnautics/content/orbit/universe/CubePlanet;Lnet/minecraft/world/level/Level;)Lit/unimi/dsi/fastutil/Pair;"))
+    private static Pair<Vector3d, Quaterniond> planetaryExpansion$levelOnLanding(TimeStampedPVCoordinates pv, CubePlanet planet, Level level,
+                                                                                Operation<Pair<Vector3d, Quaterniond>> original,
+                                                                                @Local(argsOnly = true) DeepSpaceInstance inst) {
+        Pair<Vector3d, Quaterniond> out = original.call(pv, planet, level);
+        Quaterniond fix = SpaceLaunch.descentRotation(inst);
+        if (fix != null && out != null && out.right() != null) out.right().set(fix);
+        return out;
     }
 }

@@ -306,7 +306,7 @@ public class SpaceTransporterBlockEntity extends KineticBlockEntity {
             charge = 0;
             sentCharge = -1;
             setChanged();
-            SpaceLaunch.descending(ship, planet.linkedDimension().key());
+            SpaceLaunch.descending(ship, inst.getId(), planet.linkedDimension().key());
             inst.collectOnlinePlayers(sl.getServer(), pl -> pl.displayClientMessage(Component.translatable(
                     "message.planetary_expansion.transporter_descending", name).withStyle(ChatFormatting.LIGHT_PURPLE), true));
             Vector3d c = Warp.toWorld(sl, worldPosition);

@@ -24,6 +24,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.joml.Quaterniond;
+import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 
 import java.util.Iterator;
@@ -53,7 +55,7 @@ public final class SpaceLaunch {
     /** Naves recién subidas a las que se les quita la velocidad unos ticks (como al saltar con el motor de distorsión). */
     private static final Map<UUID, Integer> STOP = new ConcurrentHashMap<>();
     /** Bajadas en curso: nave -> dimensión del planeta y tick límite; al aparecer allí se le quita la velocidad. */
-    private record Descent(ResourceKey<Level> dim, int deadline, int[] stops) {}
+    private record Descent(ResourceKey<Level> dim, long instance, int deadline, int[] stops) {}
     private static final Map<UUID, Descent> DESCENDING = new ConcurrentHashMap<>();
     private static boolean warned;
 
@@ -65,9 +67,46 @@ public final class SpaceLaunch {
         return ship != null && DESCENDING.containsKey(ship.getUniqueId());
     }
 
-    static void descending(ServerSubLevel ship, ResourceKey<Level> dim) {
+    static void descending(ServerSubLevel ship, long instance, ResourceKey<Level> dim) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        DESCENDING.put(ship.getUniqueId(), new Descent(dim, (server == null ? 0 : server.getTickCount()) + 400, new int[]{STOP_TICKS}));
+        DESCENDING.put(ship.getUniqueId(), new Descent(dim, instance, (server == null ? 0 : server.getTickCount()) + 400, new int[]{STOP_TICKS}));
+    }
+
+    /**
+     * Giro que deja la nave derecha (solo conserva su rumbo) y, si ya lo está, no la gira nada. Cosmonautics gira la nave
+     * al pasar al espacio o al planeta según la cara del cubo; con ese giro la nave podía quedar de lado y lo que estaba en
+     * las esquinas (jugadores, animales) acababa dentro de los bloques o fuera de la nave. Se aplica igual que el suyo:
+     * orientación nueva = giro * orientación.
+     */
+    public static Quaterniond levelingRotation(Quaterniondc orientation) {
+        Quaterniond o = new Quaterniond(orientation).normalize();
+        Vector3d f = o.transform(new Vector3d(0, 0, 1));
+        double yaw;
+        if (Math.hypot(f.x, f.z) > 1e-3) {
+            yaw = Math.atan2(f.x, f.z);
+        } else {
+            Vector3d g = o.transform(new Vector3d(1, 0, 0));   // la nave apunta hacia arriba o abajo
+            yaw = Math.atan2(-g.z, g.x);
+        }
+        Quaterniond level = new Quaterniond().rotationY(yaw);
+        return level.mul(new Quaterniond(o).conjugate(), new Quaterniond());
+    }
+
+    /** Lo llama el mixin al bajar (exitDeepSpace): giro para que la nave llegue derecha, o null si no es una bajada nuestra. */
+    public static Quaterniond descentRotation(DeepSpaceInstance inst) {
+        if (inst == null || DESCENDING.isEmpty()) return null;
+        try {
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            ServerLevel space = server == null ? null : server.getLevel(DEEP_SPACE);
+            for (Map.Entry<UUID, Descent> e : DESCENDING.entrySet()) {
+                if (e.getValue().instance() != inst.getId()) continue;
+                SubLevel s = space == null ? null : SubLevelContainer.getContainer(space).getSubLevel(e.getKey());
+                if (s instanceof ServerSubLevel ship) return levelingRotation(ship.logicalPose().orientation());
+            }
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.warn("[Transportador] No se pudo enderezar la nave al bajar", t);
+        }
+        return null;
     }
 
     static void request(ServerLevel level, ServerSubLevel ship, BlockPos transporter, String planet, double altitudeKm, FluidStack fuel) {
@@ -82,17 +121,17 @@ public final class SpaceLaunch {
     }
 
     /** Lo llama el mixin justo después de que Cosmonautics cree la órbita de la nave al salir del planeta. */
-    public static void onTransition(ServerSubLevel ship, DeepSpaceInstance inst) {
-        if (ship == null || inst == null) return;
+    public static boolean onTransition(ServerSubLevel ship, DeepSpaceInstance inst) {
+        if (ship == null || inst == null) return false;
         Pending p = PENDING.remove(ship.getUniqueId());
-        if (p == null) return;
+        if (p == null) return false;
         try {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             DeepSpaceData data = DeepSpaceData.getInstance(server);
             WarpDriveBlockEntity.Arrival a = WarpDriveBlockEntity.arrival(data.getUniverse(), p.planet(), p.altitudeKm());
             if (a == null) {
                 PlanetaryExpansion.LOGGER.warn("[Transportador] No se encontró {}; la nave se queda con la órbita de Cosmonautics", p.planet());
-                return;
+                return true;
             }
             DeepSpacePosition pos = inst.getPosition();
             TimeStampedPVCoordinates cur = pos.getCurrentPVCoords();
@@ -126,6 +165,7 @@ public final class SpaceLaunch {
         } catch (Throwable t) {
             PlanetaryExpansion.LOGGER.error("[Transportador] Falló al poner la nave en órbita", t);
         }
+        return true;
     }
 
     @SubscribeEvent
