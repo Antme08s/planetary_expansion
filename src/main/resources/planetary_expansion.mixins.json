@@ -23,7 +23,8 @@
     "IceWorldAquiferMixin",
     "PlanetWeatherMixin",
     "RocketFuelPropertiesMixin",
-    "DeepSpacePositionFreezeMixin"
+    "DeepSpacePositionFreezeMixin",
+    "SpaceTransitionLaunchMixin"
   ],
   "client": [
     "HologramTableRendererMixin",

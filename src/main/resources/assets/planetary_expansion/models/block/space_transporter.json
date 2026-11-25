@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "planetary_expansion:block/space_transporter_end",
+    "side": "planetary_expansion:block/space_transporter_side",
+    "particle": "planetary_expansion:block/space_transporter_side"
+  }
+}

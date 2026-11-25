@@ -7,9 +7,12 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Servidor → cliente: estado del motor de la nave de la consola. {@code orbit}: cuerpo que se orbita ahora ("" si no se sabe); {@code stellar}: motor estelar (1.0.3). */
+/**
+ * Servidor → cliente: estado del motor de la nave de la consola. {@code orbit}: cuerpo que se orbita ahora ("" si no se sabe); {@code stellar}: motor estelar (1.0.3).
+ * {@code transporter} (1.0.4): en la superficie de un planeta, el estado es el del transportador espacial de la nave.
+ */
 public record NavStatusPayload(BlockPos console, int status, float charge, float heat, int nitrogen, float rpm, String orbit,
-                               boolean stellar)
+                               boolean stellar, boolean transporter)
         implements CustomPacketPayload {
     public static final Type<NavStatusPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(PlanetaryExpansion.MODID, "nav_status"));
     public static final StreamCodec<FriendlyByteBuf, NavStatusPayload> CODEC = StreamCodec.ofMember(NavStatusPayload::write, NavStatusPayload::read);
@@ -23,11 +26,12 @@ public record NavStatusPayload(BlockPos console, int status, float charge, float
         buf.writeFloat(rpm);
         buf.writeUtf(orbit, 64);
         buf.writeBoolean(stellar);
+        buf.writeBoolean(transporter);
     }
 
     private static NavStatusPayload read(FriendlyByteBuf buf) {
         return new NavStatusPayload(buf.readBlockPos(), buf.readVarInt(), buf.readFloat(), buf.readFloat(), buf.readVarInt(),
-                buf.readFloat(), buf.readUtf(64), buf.readBoolean());
+                buf.readFloat(), buf.readUtf(64), buf.readBoolean(), buf.readBoolean());
     }
 
     public WarpStatus warpStatus() {

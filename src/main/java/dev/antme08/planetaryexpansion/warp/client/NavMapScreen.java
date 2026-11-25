@@ -683,9 +683,19 @@ public class NavMapScreen extends Screen {
             line = Component.translatable(K + "status_wait").withStyle(ChatFormatting.GRAY);
         } else {
             WarpStatus s = st.warpStatus();
-            line = Component.translatable(K + (st.stellar() ? "drive_stellar" : "drive")).withStyle(st.stellar() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY)
+            line = Component.translatable(K + (st.transporter() ? "transporter" : st.stellar() ? "drive_stellar" : "drive"))
+                    .withStyle(st.transporter() ? ChatFormatting.LIGHT_PURPLE : st.stellar() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY)
                     .append(" ").append(s.text());
-            if (s != WarpStatus.NO_DRIVE) {
+            if (st.transporter()) {
+                // 1.0.4: transportador espacial (en la superficie de un planeta): sin calor
+                line = line.copy().append(Component.literal("   "))
+                        .append(Component.translatable(K + "charge", (int) (st.charge() * 100)).withStyle(st.charge() >= 1 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.WHITE))
+                        .append(Component.literal("   "))
+                        .append(Component.translatable(K + "nitrogen", st.nitrogen(), dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.TANK_CAPACITY)
+                                .withStyle(st.nitrogen() >= dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.LAUNCH_MB ? ChatFormatting.AQUA : ChatFormatting.RED))
+                        .append(Component.literal("   "))
+                        .append(Component.translatable(K + "rpm", (int) st.rpm()).withStyle(ChatFormatting.WHITE));
+            } else if (s != WarpStatus.NO_DRIVE) {
                 line = line.copy().append(Component.literal("   "))
                         .append(Component.translatable(K + "charge", (int) (st.charge() * 100)).withStyle(st.charge() >= 1 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.WHITE))
                         .append(Component.literal("   "))
@@ -704,7 +714,9 @@ public class NavMapScreen extends Screen {
 
     private List<Component> popupItems() {
         List<Component> items = new ArrayList<>();
-        items.add(Component.translatable(K + (popup != null && interstellar(popup) ? "travel_interstellar" : "travel")));
+        NavStatusPayload st = WarpClient.lastStatus;
+        boolean up = st != null && st.transporter() && popup != null && popup.equals(currentBody());
+        items.add(Component.translatable(K + (up ? "travel_up" : popup != null && interstellar(popup) ? "travel_interstellar" : "travel")));
         items.add(Component.translatable(K + "read"));
         return items;
     }
@@ -713,8 +725,11 @@ public class NavMapScreen extends Screen {
     private Component travelBlocked(String id) {
         NavStatusPayload st = WarpClient.lastStatus;
         if (st == null || !st.console().equals(console)) return Component.translatable(K + "status_wait");
+        // 1.0.4: transportador espacial: desde la superficie solo se sube a la órbita de este mismo planeta
+        if (st.transporter() && !id.equals(currentBody())) return WarpStatus.ONLY_THIS_PLANET.text();
         // 1.0.4: ya no se bloquea el astro que ya orbitas ni las estrellas: se puede cambiar de distancia y orbitar el Sol
         if (st.warpStatus() != WarpStatus.READY) return st.warpStatus().text();
+        if (st.transporter()) return null;
         // 1.0.3: saltos entre estrellas (motor estelar, 200 % de carga y más nitrógeno)
         String[] sys = systems(id);
         if (sys != null) return WarpDriveBlockEntity.interstellarProblem(st.stellar(), st.charge(), st.nitrogen(), sys[0], sys[1]);

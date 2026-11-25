@@ -19,6 +19,7 @@
     "planetary_expansion:titan_lapis_ore",
     "planetary_expansion:titan_redstone_ore",
     "planetary_expansion:fulgor_redstone_ore",
-    "planetary_expansion:time_freezer"
+    "planetary_expansion:time_freezer",
+    "planetary_expansion:space_transporter"
   ]
 }

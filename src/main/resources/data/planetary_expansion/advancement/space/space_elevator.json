@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "planetary_expansion:space_transporter"
+    },
+    "title": {
+      "translate": "advancements.planetary_expansion.space_elevator.title"
+    },
+    "description": {
+      "translate": "advancements.planetary_expansion.space_elevator.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "launched": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "launched"
+    ]
+  ],
+  "parent": "planetary_expansion:space/space_race"
+}

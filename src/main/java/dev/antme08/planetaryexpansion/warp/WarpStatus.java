@@ -16,7 +16,10 @@ public enum WarpStatus {
     CHARGING(ChatFormatting.YELLOW),
     NEEDS_NITROGEN(ChatFormatting.RED),
     NOT_ON_SHIP(ChatFormatting.RED),
-    NOT_IN_SPACE(ChatFormatting.GOLD);
+    NOT_IN_SPACE(ChatFormatting.GOLD),
+    // 1.0.4: transportador espacial
+    NO_PLANET(ChatFormatting.RED),
+    ONLY_THIS_PLANET(ChatFormatting.GOLD);
 
     public final ChatFormatting color;
 

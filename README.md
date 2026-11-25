@@ -1183,3 +1183,10 @@ Regla añadida (1.0.4): si la nave tiene **algún motor estelar**, los saltos en
 - `/rn timescale` también funciona con la nave congelada: el nuevo valor pasa a ser el ritmo del reloj.
 - Si la nave cambia de sitio estando congelada (salto del motor de distorsión, rescate de órbita), se queda fija en el punto nuevo; el amortiguador inercial cambia la velocidad guardada como si fuera empuje.
 - Receta: `APA/HCH/APA` (A = placa de aleación de titanio, P = mecanismo de precisión, H = cristal de helio-3, C = reloj). Logro `time_freezer`.
+
+## 1.0.4 — Transportador espacial
+- Bloque `space_transporter` (Space Transporter). Montado en una nave en la superficie de un planeta, sube la nave a la órbita de ese planeta sin usar motores. La altura se elige en el mapa de la consola de navegación ("Subir a la órbita" sobre el planeta en el que estás). Desde la superficie solo se puede subir a la órbita del mismo planeta.
+- Coste: se carga con un eje de Create (32 SU por RPM; a 256 RPM, 30 s) y cada subida gasta 1000 mB de nitrógeno líquido (tanque de 8000 mB, por tuberías o cubo).
+- Cómo funciona: `SpaceTransitionLaunchMixin` (en `SpaceTransitionHandler.lambda$init$2`, el tick de física de cada planeta) hace que la comprobación de altura de transición dé "sí" para la nave con subida pendiente; Cosmonautics la pasa al espacio como siempre y, justo después de `initInstance`, `SpaceLaunch.onTransition` pone una órbita circular a la altura elegida, encima del punto de despegue. Si la transición no ocurre en 3 s se devuelve el nitrógeno.
+- Con transportador a bordo y en la superficie, la consola muestra su estado (carga, nitrógeno, RPM) en lugar del motor de distorsión.
+- Receta: `APA/ECE/AHA` (A = placa de aleación de titanio, P = mecanismo de precisión, E = perla de Ender, C = casco de latón, H = cristal de helio-3). Logro `space_elevator` ("Ascensor orbital").

@@ -56,12 +56,18 @@ public final class WarpClient {
             event.registerBlockEntityRenderer(Warp.DRIVE_BE.get(), WarpDriveRenderer::new);
             event.registerBlockEntityRenderer(Warp.CONSOLE_BE.get(), NavConsoleRenderer::new);
             event.registerBlockEntityRenderer(Warp.DRIVE_INPUT_BE.get(), ShaftRenderer::new);
+            event.registerBlockEntityRenderer(dev.antme08.planetaryexpansion.transporter.SpaceTransporter.BLOCK_ENTITY.get(), ShaftRenderer::new);
         });
-        modBus.addListener((FMLClientSetupEvent event) -> event.enqueueWork(() ->
-                SimpleBlockEntityVisualizer.builder(Warp.DRIVE_INPUT_BE.get())
-                        .factory(ShaftVisual::new)
-                        .skipVanillaRender(be -> true)
-                        .apply()));
+        modBus.addListener((FMLClientSetupEvent event) -> event.enqueueWork(() -> {
+            SimpleBlockEntityVisualizer.builder(Warp.DRIVE_INPUT_BE.get())
+                    .factory(ShaftVisual::new)
+                    .skipVanillaRender(be -> true)
+                    .apply();
+            SimpleBlockEntityVisualizer.builder(dev.antme08.planetaryexpansion.transporter.SpaceTransporter.BLOCK_ENTITY.get())
+                    .factory(ShaftVisual::new)
+                    .skipVanillaRender(be -> true)
+                    .apply();
+        }));
         NeoForge.EVENT_BUS.register(WarpEffectOverlay.class);
     }
 

@@ -174,22 +174,38 @@ public final class Warp {
     private static void onStatusRequest(NavStatusRequestPayload p, IPayloadContext ctx) {
         if (!(ctx.player() instanceof ServerPlayer player) || !nearConsole(player, p.console())) return;
         ServerLevel level = player.serverLevel();
+        // 1.0.4: en la superficie de un planeta, si la nave lleva transportador espacial, manda él
+        var transporter = onSurface(level) ? dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.findFor(level, p.console()) : null;
+        if (transporter != null) {
+            PacketDistributor.sendToPlayer(player, transporter.statusFor(level, p.console(), p.target()));
+            return;
+        }
         WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(level, p.console(), p.target());
         NavStatusPayload out = drive == null
-                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false)
+                ? new NavStatusPayload(p.console(), WarpStatus.NO_DRIVE.ordinal(), 0, 0, 0, 0, "", false, false)
                 : new NavStatusPayload(p.console(), drive.status(level).ordinal(), (float) drive.charge(), (float) drive.heat(),
-                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level), drive.isStellar());
+                drive.nitrogen(), (float) drive.rpm(), drive.currentOrbit(level), drive.isStellar(), false);
         PacketDistributor.sendToPlayer(player, out);
     }
 
     private static void onJumpRequest(WarpJumpRequestPayload p, IPayloadContext ctx) {
         if (!(ctx.player() instanceof ServerPlayer player) || !nearConsole(player, p.console())) return;
-        WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(player.serverLevel(), p.console(), p.target());
+        ServerLevel level = player.serverLevel();
+        var transporter = onSurface(level) ? dev.antme08.planetaryexpansion.transporter.SpaceTransporterBlockEntity.findFor(level, p.console()) : null;
+        if (transporter != null) {
+            transporter.tryLaunch(player, p.target(), Double.isFinite(p.altitudeKm()) ? p.altitudeKm() : 0);
+            return;
+        }
+        WarpDriveBlockEntity drive = WarpDriveBlockEntity.findFor(level, p.console(), p.target());
         if (drive == null) {
             player.displayClientMessage(WarpStatus.NO_DRIVE.text(), true);
             return;
         }
         drive.tryJump(player, p.target(), Double.isFinite(p.altitudeKm()) ? p.altitudeKm() : 0);
+    }
+
+    private static boolean onSurface(ServerLevel level) {
+        return !level.dimension().location().equals(WarpDriveBlockEntity.DEEP_SPACE);
     }
 
     static boolean isPart(Block b) {

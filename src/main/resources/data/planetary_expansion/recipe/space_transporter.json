@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "APA",
+    "ECE",
+    "AHA"
+  ],
+  "key": {
+    "A": {
+      "tag": "c:plates/titanium_alloy"
+    },
+    "P": {
+      "item": "create:precision_mechanism"
+    },
+    "E": {
+      "item": "minecraft:ender_pearl"
+    },
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "H": {
+      "item": "planetary_expansion:helium3_crystal"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:space_transporter",
+    "count": 1
+  }
+}

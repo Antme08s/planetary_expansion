@@ -2116,7 +2116,13 @@ def build_warp():
             ("status.charging", "Charging", "Cargando"),
             ("status.needs_nitrogen", "Needs 4000 mB of liquid nitrogen", "Necesita 4000 mB de nitrógeno líquido"),
             ("status.not_on_ship", "Must be built on a ship", "Tiene que estar montado en una nave"),
-            ("status.not_in_space", "Only works in deep space", "Solo funciona en el espacio profundo")]:
+            ("status.not_in_space", "Only works in deep space", "Solo funciona en el espacio profundo"),
+            # 1.0.4: transportador espacial (en la superficie de un planeta)
+            ("transporter", "Space transporter:", "Transportador espacial:"),
+            ("travel_up", "Go up to orbit", "Subir a la órbita"),
+            ("status.no_planet", "Not on a planet you can leave", "No estás en un planeta del que se pueda salir"),
+            ("status.only_this_planet", "From the surface you can only go up to this planet's orbit",
+             "Desde la superficie solo se puede subir a la órbita de este planeta")]:
         LANG_EN[n + key] = en
         LANG_ES[n + key] = es
     # Fichas de los astros (la gravedad, el radio y la distancia los calcula el juego)
@@ -2308,6 +2314,9 @@ def build_advancements():
         ("time_freezer", "space_race", f"{NS}:time_freezer", "goal", {"froze": IMPOSSIBLE}, None, 0,
          "Time Out", "Hold a ship in place over the body it orbits with a Space Time Freezer", "Tiempo muerto",
          "Deja una nave fija sobre el cuerpo que orbita con un congelador del tiempo espacial"),
+        ("space_elevator", "space_race", f"{NS}:space_transporter", "goal", {"launched": IMPOSSIBLE}, None, 0,
+         "Going Up", "Reach orbit with a Space Transporter, no engines needed", "Ascensor orbital",
+         "Sube a la órbita con un transportador espacial, sin usar motores"),
         ("beyond_the_sun", "warp_speed", f"{NS}:stellar_warp_core", "challenge", {"jumped": IMPOSSIBLE}, None, 500,
          "Beyond the Sun", "Jump to another star system with a Stellar Warp Drive",
          "Más allá del Sol", "Salta a otro sistema solar con el motor de distorsión estelar"),
@@ -5307,7 +5316,7 @@ side="BOTH"
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
         "plugin": "dev.antme08.planetaryexpansion.PlanetaryMixinPlugin",
-        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin", "DeepSpacePositionFreezeMixin"],
+        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin", "DeepSpacePositionFreezeMixin", "SpaceTransitionLaunchMixin"],
         "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},
     })
@@ -5427,6 +5436,51 @@ def build_time_freezer():
     LANG_ES[f"message.{NS}.freezer_no_space"] = "Solo funciona en el espacio profundo"
 
 
+# --------------------------------------------------------------------------
+# 1.0.4: Transportador espacial (transporter/SpaceTransporter.java). Idea del usuario: desde la superficie de un planeta,
+# subir la nave a su orbita sin motores, eligiendo la altura en el mapa de la consola. Se carga con un eje de Create y gasta
+# nitrogeno liquido, como el motor de distorsion.
+# --------------------------------------------------------------------------
+def build_space_transporter():
+    name = "space_transporter"
+    src = os.path.join(DESIGNS, "space_transporter")
+    for f in ("side", "end"):
+        write_bytes(f"assets/{NS}/textures/block/{name}_{f}.png", open(os.path.join(src, f + ".png"), "rb").read())
+    write(f"assets/{NS}/models/block/{name}.json", {"parent": "minecraft:block/cube_column", "textures": {
+        "end": rl(f"block/{name}_end"), "side": rl(f"block/{name}_side"), "particle": rl(f"block/{name}_side")}})
+    write(f"assets/{NS}/models/item/{name}.json", {"parent": rl(f"block/{name}")})
+    write(f"assets/{NS}/blockstates/{name}.json", {"variants": {
+        "axis=y": {"model": rl(f"block/{name}")},
+        "axis=x": {"model": rl(f"block/{name}"), "x": 90, "y": 90},
+        "axis=z": {"model": rl(f"block/{name}"), "x": 90}}})
+    data(f"loot_table/blocks/{name}", {"type": "minecraft:block", "pools": [{
+        "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl(name)}],
+        "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl(f"blocks/{name}")})
+    tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl(name))
+    tag_add("data/minecraft/tags/block/needs_iron_tool.json", rl(name))
+    tag_add("data/create/tags/block/wrench_pickup.json", rl(name))
+    # receta: perlas de Ender (teletransporte), mecanismo de precision, cristal de helio-3 y casco de laton
+    data(f"recipe/{name}", {
+        "type": "minecraft:crafting_shaped", "category": "misc",
+        "pattern": ["APA", "ECE", "AHA"],
+        "key": {"A": {"tag": "c:plates/titanium_alloy"}, "P": {"item": "create:precision_mechanism"},
+                "E": {"item": "minecraft:ender_pearl"}, "C": {"item": "create:brass_casing"},
+                "H": {"item": rl("helium3_crystal")}},
+        "result": {"id": rl(name), "count": 1}})
+    LANG_EN[f"block.{NS}.{name}"] = "Space Transporter"
+    LANG_ES[f"block.{NS}.{name}"] = "Transportador espacial"
+    m = f"message.{NS}."
+    for key, en, es in [
+            ("transporter_summary", "Space transporter: charge %s%%, nitrogen %s/%s mB",
+             "Transportador espacial: carga %s%%, nitrógeno %s/%s mB"),
+            ("transporter_ready", "Ready: use the navigation console map", "Listo: usa el mapa de la consola de navegación"),
+            ("transporter_not_ready", "Space transporter not ready: %s", "El transportador espacial no está listo: %s"),
+            ("transporter_arrived", "In orbit at %s km", "En órbita a %s km"),
+            ("transporter_failed", "The transport failed; the nitrogen was returned", "El transporte falló; se devolvió el nitrógeno")]:
+        LANG_EN[m + key] = en
+        LANG_ES[m + key] = es
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -5447,6 +5501,7 @@ if __name__ == "__main__":
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
     build_ore_crushing()     # 1.0.4: trituracion de Create para las menas del mod
     build_time_freezer()     # 1.0.4: congelador del tiempo espacial
+    build_space_transporter()  # 1.0.4: transportador espacial
     build_no_earth_mobs()
     build_weather_data()
     build_armor()

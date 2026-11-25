@@ -6,6 +6,7 @@
       "required": false
     },
     "planetary_expansion:time_freezer",
+    "planetary_expansion:space_transporter",
     "planetary_expansion:gravity_generator",
     "planetary_expansion:inertial_dampener_core",
     "planetary_expansion:inertial_dampener_casing",
