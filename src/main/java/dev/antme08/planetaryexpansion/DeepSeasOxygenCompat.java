@@ -103,8 +103,9 @@ public final class DeepSeasOxygenCompat {
      * 1.0.4.1: Deep Seas trata cada bloque con datos (copycats, etc.) como pared entera aunque sea un panel, un escalón o
      * una viga, así que si la cabeza de un jugador o de un animal entra en el hueco libre de uno (pegado a la pared o en
      * una esquina), ese hueco no cuenta como interior y se ahoga. Si el punto cae dentro de un bloque así de la nave, se
-     * miran los huecos vecinos por las caras que ese bloque deja libres (según su forma real, con su material): si alguno
-     * es interior, se respira. Las caras tapadas por el bloque no cuentan, así que desde fuera del casco no se cuela aire.
+     * miran los huecos vecinos por las caras que ese bloque no tapa del todo (según su forma real, con su material): si
+     * alguno es interior, se respira. Las caras tapadas por el bloque no cuentan, así que desde fuera del casco no se
+     * cuela aire.
      */
     public static boolean sealed(Level level, Vec3 p) {
         if (CompartmentTracker.isInSealedExact(level, p)) return true;
@@ -122,9 +123,9 @@ public final class DeepSeasOxygenCompat {
                 if (shape.isEmpty() || net.minecraft.world.level.block.Block.isShapeFullBlock(shape)) continue;
                 Vec3 c = Vec3.atCenterOf(cell);
                 for (Direction dir : Direction.values()) {
-                    boolean positive = dir.getAxisDirection() == Direction.AxisDirection.POSITIVE;
-                    double edge = positive ? shape.max(dir.getAxis()) : shape.min(dir.getAxis());
-                    if (positive ? edge > 0.999 : edge < 0.001) continue;          // cara tapada por el bloque
+                    // 1.0.4.1 (v35): solo se descartan las caras tapadas del todo. Una rampa (copycat slope) o una
+                    // escalera tocan todas las caras, pero dejan libre parte de algunas, y por ahí sigue el aire
+                    if (net.minecraft.world.level.block.Block.isFaceFull(shape, dir)) continue;
                     Vec3 n = c.add(dir.getStepX(), dir.getStepY(), dir.getStepZ());
                     if (CompartmentTracker.isInSealedExact(level, pose.transformPosition(n))) return true;
                 }

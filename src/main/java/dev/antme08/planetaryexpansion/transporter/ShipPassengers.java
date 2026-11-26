@@ -28,9 +28,14 @@ public final class ShipPassengers {
     private static final long WATCH_MS = 30_000;
     private static final Map<UUID, Long> WATCH = new ConcurrentHashMap<>();
 
+    /** Resumen de lo que se mueve en cada viaje (se escribe en el siguiente tick). */
+    private static final Map<String, Integer> MOVED = new ConcurrentHashMap<>();
+
     public static void moving(Entity entity) {
         if (entity == null) return;
+        MOVED.merge(entity.getType().getDescriptionId(), 1, Integer::sum);
         if (entity instanceof Mob mob) mob.setPersistenceRequired();
+        if (!(entity instanceof net.minecraft.world.entity.LivingEntity) && !(entity instanceof net.minecraft.world.entity.item.ItemEntity)) return;
         WATCH.put(entity.getUUID(), System.currentTimeMillis() + WATCH_MS);
     }
 
@@ -42,6 +47,14 @@ public final class ShipPassengers {
             return false;
         }
         return true;
+    }
+
+    @SubscribeEvent
+    public static void onTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (MOVED.isEmpty()) return;
+        String list = new java.util.TreeMap<>(MOVED).toString();
+        MOVED.clear();
+        PlanetaryExpansion.LOGGER.info("[Naves] Viajan con la nave: {}", list);
     }
 
     @SubscribeEvent
