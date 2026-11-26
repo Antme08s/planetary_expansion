@@ -44,8 +44,15 @@ public final class ShipSwimmers {
         return null;
     }
 
-    /** Adónde nada cada criatura dentro del agua de una nave (en coordenadas de la nave) y hasta cuándo. */
-    private record Swim(SubLevel ship, Vec3 target, int until) {}
+    /**
+     * Paseo de una criatura en el agua de una nave, todo en coordenadas de la nave: dónde está, adónde va y hasta cuándo.
+     * {@code last} es la posición del mundo donde se la dejó el tick anterior, para notar si algo la movió (un golpe).
+     */
+    private static final class Swim {
+        SubLevel ship;
+        Vec3 pos, target, last;
+        int until;
+    }
     private static final java.util.Map<Mob, Swim> SWIM = new java.util.WeakHashMap<>();
 
     /**
@@ -86,31 +93,57 @@ public final class ShipSwimmers {
         return null;
     }
 
+    /**
+     * v41: en v40 los peces intentaban nadar pero algo los seguía empujando contra la pared del acuario (lo que Sable
+     * hace con las criaturas dentro de su agua). Ahora el paseo no usa la física: la posición del pez se lleva en
+     * coordenadas de la nave, se avanza hacia el objetivo a velocidad de pez y cada tick se coloca al pez en el punto
+     * del mundo que le corresponde. Así no lo empuja nada, no atraviesa paredes (los objetivos se eligen con camino recto
+     * por agua) y además sigue a la nave cuando se mueve o gira.
+     */
     private static void swim(Mob mob, SubLevel ship) {
         Level level = mob.level();
-        Vec3 center = mob.getBoundingBox().getCenter();
-        Vec3 local = ship.logicalPose().transformPositionInverse(center);
+        double half = mob.getBbHeight() / 2.0;
+        Vec3 center = mob.position().add(0, half, 0);
         Swim s = SWIM.get(mob);
-        if (s == null || s.ship() != ship || mob.tickCount > s.until()
-                || (s.target() != null && s.target().distanceToSqr(local) < 0.36)) {
-            boolean rest = s != null && s.target() != null && mob.getRandom().nextInt(3) == 0;
-            Vec3 t = rest ? null : pickTarget(level, local, mob.getRandom());
-            s = new Swim(ship, t, mob.tickCount + (t == null ? 20 + mob.getRandom().nextInt(40) : 100));
+        if (s == null || s.ship != ship || s.last == null || s.last.distanceToSqr(mob.position()) > 1.0) {
+            s = new Swim();
+            s.ship = ship;
+            s.pos = ship.logicalPose().transformPositionInverse(center);
             SWIM.put(mob, s);
         }
-        if (s.target() == null) return;
-        Vec3 d = ship.logicalPose().transformPosition(s.target()).subtract(center);
-        double len = d.length();
-        if (len < 1.0E-3) return;
-        double speed = 0.012 * mob.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) / 0.1;
-        Vec3 v = mob.getDeltaMovement().add(d.scale(Math.min(speed, len) / len));
-        double max = 0.12;
-        if (v.lengthSqr() > max * max) v = v.normalize().scale(max);
-        mob.setDeltaMovement(v);
-        float yaw = (float) (net.minecraft.util.Mth.atan2(d.z, d.x) * (180F / Math.PI)) - 90.0F;
-        mob.setYRot(net.minecraft.util.Mth.approachDegrees(mob.getYRot(), yaw, 12.0F));
-        mob.yBodyRot = mob.getYRot();
-        mob.yHeadRot = mob.getYRot();
+        if (!level.getFluidState(BlockPos.containing(s.pos)).is(net.minecraft.tags.FluidTags.WATER)) {
+            SWIM.remove(mob);                                     // salió del agua de la nave: vuelve a lo normal
+            return;
+        }
+        if (mob.tickCount > s.until || (s.target != null && s.target.distanceToSqr(s.pos) < 0.01)) {
+            boolean rest = s.target != null && mob.getRandom().nextInt(3) == 0;
+            s.target = rest ? null : pickTarget(level, s.pos, mob.getRandom());
+            s.until = mob.tickCount + (s.target == null ? 20 + mob.getRandom().nextInt(40) : 120);
+        }
+        Vec3 dir = Vec3.ZERO;
+        if (s.target != null) {
+            Vec3 d = s.target.subtract(s.pos);
+            double len = d.length();
+            double speed = 0.05 * mob.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) / 0.1;
+            speed = Math.min(Math.max(speed, 0.02), 0.12);
+            double step = Math.min(len, speed * Math.min(1.0, 0.3 + len));    // frena al llegar
+            if (len > 1.0E-4) {
+                dir = d.scale(1.0 / len);
+                s.pos = s.pos.add(dir.scale(step));
+            }
+        }
+        Vec3 world = ship.logicalPose().transformPosition(s.pos).subtract(0, half, 0);
+        mob.setPos(world);
+        mob.setDeltaMovement(Vec3.ZERO);
+        mob.fallDistance = 0;
+        s.last = world;
+        if (dir != Vec3.ZERO) {
+            Vec3 wd = ship.logicalPose().transformNormal(dir);
+            float yaw = (float) (net.minecraft.util.Mth.atan2(wd.z, wd.x) * (180F / Math.PI)) - 90.0F;
+            mob.setYRot(net.minecraft.util.Mth.approachDegrees(mob.getYRot(), yaw, 15.0F));
+            mob.yBodyRot = mob.getYRot();
+            mob.yHeadRot = mob.getYRot();
+        }
     }
 
     /**
@@ -132,7 +165,7 @@ public final class ShipSwimmers {
                 mob.isEyeInFluid(net.minecraft.tags.FluidTags.WATER), water != null,
                 Sable.HELPER.getTrackingSubLevel((Entity) mob) != null, nav.isDone(), nav.getTargetPos(),
                 path == null ? "-" : (path.getNodeCount() + " nodos, fin " + path.getTarget() + (path.canReach() ? "" : " (no llega)")),
-                mob.getDeltaMovement(), mob.horizontalCollision, mob.onGround(), mob.getNoActionTime() + " paseo=" + (SWIM.get(mob) == null ? "-" : SWIM.get(mob).target()));
+                mob.getDeltaMovement(), mob.horizontalCollision, mob.onGround(), mob.getNoActionTime() + " paseo=" + (SWIM.get(mob) == null ? "-" : SWIM.get(mob).pos + " -> " + SWIM.get(mob).target));
     }
 
     @SubscribeEvent
@@ -145,7 +178,10 @@ public final class ShipSwimmers {
             // tras moverse, Sable deja de asociarla a la nave si no pisa nada: si sigue sin pisar y está en su agua, la llevamos
             SubLevel sub = waterShip(mob);
             if (sub == null) return;
-            if (mob instanceof net.minecraft.world.entity.animal.WaterAnimal) swim(mob, sub);
+            if (mob instanceof net.minecraft.world.entity.animal.WaterAnimal) {
+                swim(mob, sub);
+                if (SWIM.containsKey(mob)) return;                // el paseo ya la coloca respecto a la nave
+            }
             if (Sable.HELPER.getTrackingSubLevel((Entity) mob) != null) return;   // apoyada: ya la lleva Sable
             Vec3 local = sub.logicalPose().transformPositionInverse(mob.getBoundingBox().getCenter());
             // movimiento de la nave en este punto durante el último tick
