@@ -64,16 +64,77 @@ public final class ShipSwimmers {
     @SubscribeEvent
     public static void beforeTick(EntityTickEvent.Pre event) {
         if (failed || !(event.getEntity() instanceof net.minecraft.world.entity.animal.WaterAnimal mob)) return;
-        if (mob.level().isClientSide || !mob.isInWater() || mob.isPassenger()) return;
+        if (mob.level().isClientSide || mob.isPassenger()) return;
         try {
-            if (waterShip(mob) == null) {
-                SWIM.remove(mob);
-                return;
-            }
-            mob.getNavigation().stop();
+            if (state(mob) != null) mob.getNavigation().stop();
         } catch (Throwable t) {
             failed = true;
             PlanetaryExpansion.LOGGER.warn("[Naves] No se pudo llevar a las criaturas que nadan en las naves (¿cambió Sable?)", t);
+        }
+    }
+
+    /**
+     * El paseo de esta criatura: el que ya tenía, el que trae de un viaje de la nave, o uno nuevo si está en el agua de
+     * una nave. Null si no está en el agua de ninguna.
+     */
+    private static Swim state(Mob mob) {
+        Swim s = SWIM.get(mob);
+        if (s != null && !s.ship.isRemoved()) return s;
+        SWIM.remove(mob);
+        Arrival a = ARRIVING.get(mob.getUUID());
+        if (a != null) {
+            if (mob.level().getGameTime() > a.deadline) {
+                ARRIVING.remove(mob.getUUID());
+            } else {
+                SubLevel ship = null;
+                try {
+                    ship = (SubLevel) dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(mob.level()).getSubLevel(a.ship);
+                } catch (Throwable ignored) {
+                }
+                if (ship == null) return null;                     // la nave aún no está: se espera
+                ARRIVING.remove(mob.getUUID());
+                s = new Swim();
+                s.ship = ship;
+                s.pos = a.pos;
+                SWIM.put(mob, s);
+                return s;
+            }
+        }
+        if (!mob.isInWater()) return null;
+        SubLevel ship = waterShip(mob);
+        if (ship == null) return null;
+        s = new Swim();
+        s.ship = ship;
+        s.pos = ship.logicalPose().transformPositionInverse(mob.position().add(0, mob.getBbHeight() / 2.0, 0));
+        SWIM.put(mob, s);
+        return s;
+    }
+
+    /** Peces que están cambiando de dimensión con su nave: nave nueva y su sitio en ella. */
+    private record Arrival(java.util.UUID ship, Vec3 pos, long deadline) {}
+    private static final java.util.Map<java.util.UUID, Arrival> ARRIVING = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * v42: al cambiar de dimensión, Cosmonautics recoloca a las criaturas que van fuera de los bloques de la nave por su
+     * posición en el mundo, y la nave puede girar (se endereza) y caer en cuanto llega: un pez de un acuario pequeño
+     * acababa fuera del agua y caía (en la prueba se ahogaron todos). Aquí se apunta su sitio dentro de la nave nueva
+     * (mismo desplazamiento que los bloques) para volver a ponerlo en su acuario al llegar.
+     */
+    public static void beforeTransfer(Entity entity, SubLevel oldShip,
+                                      java.util.Map<java.util.UUID, dev.egg.DimensionalSable.Pair<java.util.UUID, net.minecraft.core.Vec3i>> map) {
+        if (!(entity instanceof net.minecraft.world.entity.animal.WaterAnimal mob) || oldShip == null || map == null) return;
+        try {
+            Swim s = SWIM.get(mob);
+            Vec3 local = s != null && s.ship == oldShip ? s.pos
+                    : oldShip.logicalPose().transformPositionInverse(mob.position().add(0, mob.getBbHeight() / 2.0, 0));
+            if (s == null && mob.level().getFluidState(BlockPos.containing(local)).isEmpty()) return;   // no está en su agua
+            var pair = map.get(oldShip.getUniqueId());
+            if (pair == null || pair.first() == null || pair.second() == null) return;
+            net.minecraft.core.Vec3i off = pair.second();
+            ARRIVING.put(mob.getUUID(), new Arrival(pair.first(), local.add(off.getX(), off.getY(), off.getZ()),
+                    mob.level().getGameTime() + 200));
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.warn("[Naves] No se pudo apuntar el sitio de un pez en la nave", t);
         }
     }
 
@@ -100,18 +161,24 @@ public final class ShipSwimmers {
      * del mundo que le corresponde. Así no lo empuja nada, no atraviesa paredes (los objetivos se eligen con camino recto
      * por agua) y además sigue a la nave cuando se mueve o gira.
      */
-    private static void swim(Mob mob, SubLevel ship) {
+    private static void swim(Mob mob, Swim s) {
         Level level = mob.level();
+        SubLevel ship = s.ship;
         double half = mob.getBbHeight() / 2.0;
-        Vec3 center = mob.position().add(0, half, 0);
-        Swim s = SWIM.get(mob);
-        if (s == null || s.ship != ship || s.last == null || s.last.distanceToSqr(mob.position()) > 1.0) {
-            s = new Swim();
-            s.ship = ship;
-            s.pos = ship.logicalPose().transformPositionInverse(center);
-            SWIM.put(mob, s);
+        // si algo lo ha movido de verdad (un golpe fuerte), sigue desde donde esté
+        if (s.last != null && s.last.distanceToSqr(mob.position()) > 4.0) {
+            Vec3 now = ship.logicalPose().transformPositionInverse(mob.position().add(0, half, 0));
+            if (level.getFluidState(BlockPos.containing(now)).is(net.minecraft.tags.FluidTags.WATER)) s.pos = now;
         }
-        if (!level.getFluidState(BlockPos.containing(s.pos)).is(net.minecraft.tags.FluidTags.WATER)) {
+        BlockPos here = BlockPos.containing(s.pos);
+        if (!level.isLoaded(here)) {                              // recién llegada: la nave aún carga, se le guarda el sitio
+            Vec3 w = ship.logicalPose().transformPosition(s.pos).subtract(0, half, 0);
+            mob.setPos(w);
+            mob.setDeltaMovement(Vec3.ZERO);
+            s.last = w;
+            return;
+        }
+        if (!level.getFluidState(here).is(net.minecraft.tags.FluidTags.WATER)) {
             SWIM.remove(mob);                                     // salió del agua de la nave: vuelve a lo normal
             return;
         }
@@ -173,15 +240,19 @@ public final class ShipSwimmers {
         if (failed || !(event.getEntity() instanceof Mob mob)) return;
         Level level = mob.level();
         if (!level.isClientSide) try { debug(mob, "post"); } catch (Throwable ignored) {}
-        if (level.isClientSide || !mob.isInWater() || mob.isPassenger()) return;
+        if (level.isClientSide || mob.isPassenger()) return;
         try {
+            if (mob instanceof net.minecraft.world.entity.animal.WaterAnimal) {
+                Swim st = state(mob);
+                if (st != null) {
+                    swim(mob, st);                                // el paseo la coloca respecto a la nave
+                    return;
+                }
+            }
+            if (!mob.isInWater()) return;
             // tras moverse, Sable deja de asociarla a la nave si no pisa nada: si sigue sin pisar y está en su agua, la llevamos
             SubLevel sub = waterShip(mob);
             if (sub == null) return;
-            if (mob instanceof net.minecraft.world.entity.animal.WaterAnimal) {
-                swim(mob, sub);
-                if (SWIM.containsKey(mob)) return;                // el paseo ya la coloca respecto a la nave
-            }
             if (Sable.HELPER.getTrackingSubLevel((Entity) mob) != null) return;   // apoyada: ya la lleva Sable
             Vec3 local = sub.logicalPose().transformPositionInverse(mob.getBoundingBox().getCenter());
             // movimiento de la nave en este punto durante el último tick

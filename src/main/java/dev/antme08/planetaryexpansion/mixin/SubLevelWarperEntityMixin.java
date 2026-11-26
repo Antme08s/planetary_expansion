@@ -18,6 +18,7 @@ public abstract class SubLevelWarperEntityMixin {
                                                     dev.ryanhcode.sable.sublevel.SubLevel sub,
                                                     java.util.HashMap<java.util.UUID, dev.egg.DimensionalSable.Pair<java.util.UUID, net.minecraft.core.Vec3i>> map,
                                                     java.util.Set<java.util.UUID> done, CallbackInfo ci) {
+        dev.antme08.planetaryexpansion.transporter.ShipSwimmers.beforeTransfer(entity, sub, map);
         ShipPassengers.moving(entity);
     }
 }
