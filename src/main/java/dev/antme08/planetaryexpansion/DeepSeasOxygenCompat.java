@@ -56,33 +56,78 @@ public final class DeepSeasOxygenCompat {
 
         if (sealed(entity.level(), entity.getEyePosition())) {
             event.setCanBreathe(true);
+        } else if (entity instanceof net.minecraft.server.level.ServerPlayer player) {
+            report(player);
+        }
+    }
+
+    private static final Map<UUID, Long> LAST_REPORT = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * 1.0.4.1, para encontrar fallos: si un jugador se queda sin aire pegado a una nave que tiene algún compartimento
+     * con oxígeno, se apunta en el registro qué bloque tiene en la cabeza y qué hay alrededor (como mucho cada 10 s).
+     */
+    private static void report(net.minecraft.server.level.ServerPlayer player) {
+        long now = player.level().getGameTime();
+        Long last = LAST_REPORT.get(player.getUUID());
+        if (last != null && now - last < 200) return;
+        try {
+            Level level = player.level();
+            Vec3 p = player.getEyePosition();
+            for (Map.Entry<UUID, SubLevelAccess> e : CompartmentTracker.getSubsSnapshot().entrySet()) {
+                if (!(e.getValue() instanceof dev.ryanhcode.sable.sublevel.SubLevel sub) || sub.getLevel() != level) continue;
+                AABB box = CompartmentTracker.getWorldAABB(e.getKey());
+                if (box == null || !box.inflate(1.5).contains(p) || !CompartmentTracker.hasAnySealed(e.getKey())) continue;
+                LAST_REPORT.put(player.getUUID(), now);
+                Vec3 local = sub.logicalPose().transformPositionInverse(p);
+                BlockPos cell = BlockPos.containing(local);
+                StringBuilder around = new StringBuilder();
+                for (Direction d : Direction.values()) {
+                    BlockPos n = cell.relative(d);
+                    boolean in = CompartmentTracker.isInSealedExact(level, sub.logicalPose().transformPosition(Vec3.atCenterOf(n)));
+                    around.append(' ').append(d.getName()).append('=').append(level.getBlockState(n).getBlock().getDescriptionId())
+                            .append(in ? "(aire)" : "");
+                }
+                PlanetaryExpansion.LOGGER.info("[Oxígeno] {} sin aire junto a una nave con oxígeno: cabeza en {} local {} ({}),{}",
+                        player.getName().getString(), level.getBlockState(cell), cell,
+                        String.format("%.2f %.2f %.2f", local.x - cell.getX(), local.y - cell.getY(), local.z - cell.getZ()), around);
+                return;
+            }
+        } catch (Throwable ignored) {
         }
     }
 
     /**
      * ¿Está este punto dentro de un compartimento con oxígeno?
      * <p>
-     * 1.0.4.1: Deep Seas trata cada bloque con datos (copycats, etc.) como pared entera aunque sea un panel o un
-     * escalón, así que si la cabeza de un jugador o de un animal entra en el hueco de uno (pegado a la pared o en una
-     * esquina), ese hueco no cuenta como interior y se ahoga. Si el punto no está en el interior, se mira el hueco
-     * vecino del mismo bloque de la nave por el lado donde está la cabeza: si ese es interior, se respira. Desde fuera
-     * de la nave, el lado de la cabeza da al exterior, así que no se cuela aire.
+     * 1.0.4.1: Deep Seas trata cada bloque con datos (copycats, etc.) como pared entera aunque sea un panel, un escalón o
+     * una viga, así que si la cabeza de un jugador o de un animal entra en el hueco libre de uno (pegado a la pared o en
+     * una esquina), ese hueco no cuenta como interior y se ahoga. Si el punto cae dentro de un bloque así de la nave, se
+     * miran los huecos vecinos por las caras que ese bloque deja libres (según su forma real, con su material): si alguno
+     * es interior, se respira. Las caras tapadas por el bloque no cuentan, así que desde fuera del casco no se cuela aire.
      */
     public static boolean sealed(Level level, Vec3 p) {
         if (CompartmentTracker.isInSealedExact(level, p)) return true;
         try {
             for (Map.Entry<UUID, SubLevelAccess> e : CompartmentTracker.getSubsSnapshot().entrySet()) {
-                SubLevelAccess sub = e.getValue();
-                if (sub instanceof dev.ryanhcode.sable.sublevel.SubLevel s && s.getLevel() != level) continue;
+                if (!(e.getValue() instanceof dev.ryanhcode.sable.sublevel.SubLevel sub) || sub.getLevel() != level) continue;
                 AABB box = CompartmentTracker.getWorldAABB(e.getKey());
                 if (box == null || !box.inflate(1.5).contains(p)) continue;
                 Pose3dc pose = sub.logicalPose();
                 Vec3 local = pose.transformPositionInverse(p);
-                Vec3 c = Vec3.atCenterOf(BlockPos.containing(local));
-                Vec3 d = local.subtract(c);
-                Direction dir = Direction.getNearest(d.x, d.y, d.z);
-                Vec3 n = c.add(dir.getStepX(), dir.getStepY(), dir.getStepZ());
-                if (CompartmentTracker.isInSealedExact(level, pose.transformPosition(n))) return true;
+                BlockPos cell = BlockPos.containing(local);
+                net.minecraft.world.level.block.state.BlockState st = level.getBlockState(cell);
+                if (st.isAir()) continue;
+                net.minecraft.world.phys.shapes.VoxelShape shape = st.getCollisionShape(level, cell);
+                if (shape.isEmpty() || net.minecraft.world.level.block.Block.isShapeFullBlock(shape)) continue;
+                Vec3 c = Vec3.atCenterOf(cell);
+                for (Direction dir : Direction.values()) {
+                    boolean positive = dir.getAxisDirection() == Direction.AxisDirection.POSITIVE;
+                    double edge = positive ? shape.max(dir.getAxis()) : shape.min(dir.getAxis());
+                    if (positive ? edge > 0.999 : edge < 0.001) continue;          // cara tapada por el bloque
+                    Vec3 n = c.add(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+                    if (CompartmentTracker.isInSealedExact(level, pose.transformPosition(n))) return true;
+                }
             }
         } catch (Throwable ignored) {
         }

@@ -25,7 +25,8 @@
     "RocketFuelPropertiesMixin",
     "DeepSpacePositionFreezeMixin",
     "SpaceTransitionLaunchMixin",
-    "SubLevelTemplateHeightMixin"
+    "SubLevelTemplateHeightMixin",
+    "SubLevelWarperEntityMixin"
   ],
   "client": [
     "HologramTableRendererMixin",

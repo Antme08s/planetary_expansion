@@ -5368,7 +5368,7 @@ side="BOTH"
         "package": "dev.antme08.planetaryexpansion.mixin",
         "compatibilityLevel": "JAVA_21",
         "plugin": "dev.antme08.planetaryexpansion.PlanetaryMixinPlugin",
-        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin", "DeepSpacePositionFreezeMixin", "SpaceTransitionLaunchMixin", "SubLevelTemplateHeightMixin"],
+        "mixins": ["CreateWindmillBearingMixin", "BearingContraptionSailMixin", "AsteroidSpawnerMixin", "GlobalSpacePhysicsMixin", "SableRemovalMassGuardMixin", "SablePhysicsRemovalMassGuardMixin", "VenusWaterMixin", "EntityGravityMixin", "DeepSpaceThrustMixin", "DiverPressureMixin", "DiverPressureAccessor", "ThalassaFluidPickerMixin", "SableSnatchPointerMixin", "BedBlockMixin", "SpaceBedNaturalMixin", "IceWorldAquiferMixin", "PlanetWeatherMixin", "RocketFuelPropertiesMixin", "DeepSpacePositionFreezeMixin", "SpaceTransitionLaunchMixin", "SubLevelTemplateHeightMixin", "SubLevelWarperEntityMixin"],
         "client": ["HologramTableRendererMixin", "HologramLineStripMixin", "JetpackLayerMixin", "AirlessStarsMixin", "SpaceStarsCullMixin", "UniverseSkyMixin", "PlanetSkyColorMixin", "UniverseUnderwaterMixin", "NightSunMixin", "StarTintMixin", "SaturnRingsMixin"],
         "injectors": {"defaultRequire": 1},
     })
