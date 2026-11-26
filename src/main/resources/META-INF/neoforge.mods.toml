@@ -7,7 +7,7 @@ config="planetary_expansion.mixins.json"
 
 [[mods]]
 modId="planetary_expansion"
-version="1.0.4"
+version="1.0.4.1"
 displayName="Cosmonautics: Planetary Expansion"
 authors="Antme08"
 logoFile="logo.png"

@@ -22,7 +22,7 @@ import shutil
 import sys
 
 NS = "planetary_expansion"
-MOD_VERSION = "1.0.4"
+MOD_VERSION = "1.0.4.1"
 
 VANILLA = sys.argv[1]
 OUT = sys.argv[2]
