@@ -227,6 +227,10 @@ public class TholinRuminant extends Animal {
         if (isBaby()) ageUp(60);
     }
 
+    /** Nativo de Titán (-179 °C): el frío no le hace nada. */
+    @Override
+    public boolean canFreeze() { return false; }
+
     // ------------------------------------------------------------------ sonidos
 
     @Override

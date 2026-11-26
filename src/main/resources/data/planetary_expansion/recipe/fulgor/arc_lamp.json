@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "CGC",
+    "GAG",
+    "CGC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "A": {
+      "item": "planetary_expansion:arc_gland"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:arc_lamp",
+    "count": 2
+  }
+}

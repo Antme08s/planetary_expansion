@@ -52,6 +52,8 @@ public final class FulgorStorms {
     private static final int CANDIDATES = 7;
     /** Alcance de atracción de un pararrayos, igual que en las tormentas de la Tierra. */
     private static final int ROD_RANGE = 128;
+    /** 1.0.4: alcance del pararrayos de tormenta. */
+    private static final int STORM_ROD_RANGE = 256;
 
     private static void strike(ServerLevel level, ServerPlayer player, RandomSource rng) {
         // 1) Varios puntos al azar entre 8 y 56 bloques del jugador; se queda con el de superficie más alta.
@@ -67,10 +69,16 @@ public final class FulgorStorms {
         }
         if (best == null) return;
         // 2) Un pararrayos a menos de 128 bloques de ese punto atrae el rayo (solo si es lo más alto de su columna).
+        //    1.0.4: el pararrayos de tormenta atrae desde 256 bloques; sin pararrayos, un atrapa-rayos a menos de 24 bloques.
+        final BlockPos from = best;
+        java.util.function.Predicate<BlockPos> onTop = pos -> pos.getY() == level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - 1;
         BlockPos target = level.getPoiManager().findClosest(
-                poi -> poi.is(PoiTypes.LIGHTNING_ROD),
-                pos -> pos.getY() == level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - 1,
-                best, ROD_RANGE, PoiManager.Occupancy.ANY).map(BlockPos::above).orElse(best);
+                        poi -> poi.is(dev.antme08.planetaryexpansion.fulgor.mobs.FulgorMobs.STORM_ROD_POI.getKey()),
+                        onTop, from, STORM_ROD_RANGE, PoiManager.Occupancy.ANY)
+                .or(() -> level.getPoiManager().findClosest(poi -> poi.is(PoiTypes.LIGHTNING_ROD), onTop, from, ROD_RANGE, PoiManager.Occupancy.ANY))
+                .map(BlockPos::above)
+                .or(() -> dev.antme08.planetaryexpansion.fulgor.mobs.FulgorMobs.catcherNear(level, from))
+                .orElse(best);
         LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
         if (bolt == null) return;
         bolt.moveTo(Vec3.atBottomCenterOf(target));

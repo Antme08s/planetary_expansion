@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "A",
+    "R",
+    "C"
+  ],
+  "key": {
+    "A": {
+      "item": "planetary_expansion:copper_antenna"
+    },
+    "R": {
+      "item": "minecraft:lightning_rod"
+    },
+    "C": {
+      "item": "minecraft:copper_block"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:storm_rod",
+    "count": 1
+  }
+}

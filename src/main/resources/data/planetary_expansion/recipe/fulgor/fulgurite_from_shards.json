@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "planetary_expansion:fulgurite_shard"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:fulgurite",
+    "count": 1
+  }
+}

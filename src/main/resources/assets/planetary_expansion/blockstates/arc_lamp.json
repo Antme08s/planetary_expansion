@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "storm=false": {
+      "model": "planetary_expansion:block/arc_lamp"
+    },
+    "storm=true": {
+      "model": "planetary_expansion:block/arc_lamp_storm"
+    }
+  }
+}

@@ -342,5 +342,94 @@
     "sounds": [
       "planetary_expansion:titan/mist_stalker/death1"
     ]
+  },
+  "entity.arc_crawler.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.arc_crawler.ambient",
+    "sounds": [
+      "planetary_expansion:fulgor/arc_crawler/ambient1",
+      "planetary_expansion:fulgor/arc_crawler/ambient2",
+      "planetary_expansion:fulgor/arc_crawler/ambient3"
+    ]
+  },
+  "entity.arc_crawler.zap": {
+    "subtitle": "subtitles.planetary_expansion.entity.arc_crawler.zap",
+    "sounds": [
+      "planetary_expansion:fulgor/arc_crawler/zap1",
+      "planetary_expansion:fulgor/arc_crawler/zap2"
+    ]
+  },
+  "entity.arc_crawler.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.arc_crawler.hurt",
+    "sounds": [
+      "planetary_expansion:fulgor/arc_crawler/hurt1",
+      "planetary_expansion:fulgor/arc_crawler/hurt2"
+    ]
+  },
+  "entity.arc_crawler.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.arc_crawler.death",
+    "sounds": [
+      "planetary_expansion:fulgor/arc_crawler/death1"
+    ]
+  },
+  "entity.fulgurite_strider.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.fulgurite_strider.ambient",
+    "sounds": [
+      "planetary_expansion:fulgor/fulgurite_strider/ambient1",
+      "planetary_expansion:fulgor/fulgurite_strider/ambient2",
+      "planetary_expansion:fulgor/fulgurite_strider/ambient3"
+    ]
+  },
+  "entity.fulgurite_strider.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.fulgurite_strider.hurt",
+    "sounds": [
+      "planetary_expansion:fulgor/fulgurite_strider/hurt1",
+      "planetary_expansion:fulgor/fulgurite_strider/hurt2"
+    ]
+  },
+  "entity.fulgurite_strider.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.fulgurite_strider.death",
+    "sounds": [
+      "planetary_expansion:fulgor/fulgurite_strider/death1"
+    ]
+  },
+  "entity.fulgurite_strider.charge": {
+    "subtitle": "subtitles.planetary_expansion.entity.fulgurite_strider.charge",
+    "sounds": [
+      "planetary_expansion:fulgor/fulgurite_strider/charge1"
+    ]
+  },
+  "entity.spire_catcher.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.spire_catcher.ambient",
+    "sounds": [
+      "planetary_expansion:fulgor/spire_catcher/ambient1",
+      "planetary_expansion:fulgor/spire_catcher/ambient2",
+      "planetary_expansion:fulgor/spire_catcher/ambient3"
+    ]
+  },
+  "entity.spire_catcher.leap": {
+    "subtitle": "subtitles.planetary_expansion.entity.spire_catcher.leap",
+    "sounds": [
+      "planetary_expansion:fulgor/spire_catcher/leap1",
+      "planetary_expansion:fulgor/spire_catcher/leap2"
+    ]
+  },
+  "entity.spire_catcher.charge": {
+    "subtitle": "subtitles.planetary_expansion.entity.spire_catcher.charge",
+    "sounds": [
+      "planetary_expansion:fulgor/spire_catcher/charge1"
+    ]
+  },
+  "entity.spire_catcher.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.spire_catcher.hurt",
+    "sounds": [
+      "planetary_expansion:fulgor/spire_catcher/hurt1",
+      "planetary_expansion:fulgor/spire_catcher/hurt2"
+    ]
+  },
+  "entity.spire_catcher.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.spire_catcher.death",
+    "sounds": [
+      "planetary_expansion:fulgor/spire_catcher/death1"
+    ]
   }
 }

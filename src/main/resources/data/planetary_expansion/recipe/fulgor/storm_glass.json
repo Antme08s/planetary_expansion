@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "GGG",
+    "GFG",
+    "GGG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "F": {
+      "item": "planetary_expansion:crystal_filament"
+    }
+  },
+  "result": {
+    "id": "planetary_expansion:storm_glass",
+    "count": 8
+  }
+}

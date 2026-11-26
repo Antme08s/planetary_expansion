@@ -1406,6 +1406,7 @@ def build_moon_fix():
 # ==========================================================================
 PLANET_MOBS = ["lantern_fish", "vent_crab", "king_crab", "abyssal_stalker", "magma_snail", "magma_titan"]
 TITAN_MOBS = ["tholin_ruminant", "methane_eel", "mist_stalker"]   # 1.0.4
+FULGOR_MOBS = ["arc_crawler", "fulgurite_strider", "spire_catcher"]   # 1.0.4
 CERULEA_MOBS = ["grazer", "hopper", "glider", "lurker", "croaker", "ribbonfin", "runner", "ironjaw"]   # 1.0.3
 
 
@@ -1419,7 +1420,7 @@ def build_no_earth_mobs():
         "biomes": f"#{NS}:planet_biomes",
         # 0.7.61: todo menos las criaturas propias de los planetas (las de Thalassa)
         "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS + ["rust_worm", "blind_stalker"]
-                                                             + TITAN_MOBS]},
+                                                             + TITAN_MOBS + FULGOR_MOBS]},
     })
 
 
@@ -2933,6 +2934,19 @@ def build_cerulea_creatures():
         for v in range(1, count + 1):
             write_bytes(f"assets/{NS}/sounds/titan/{mob}/{kind}{v}.ogg", open(os.path.join(tdir, mob, f"{kind}{v}.ogg"), "rb").read())
             files.append(rl(f"titan/{mob}/{kind}{v}"))
+        sub = f"subtitles.{NS}.entity.{name}"
+        sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
+        LANG_EN[sub] = en
+        LANG_ES[sub] = es
+    # 1.0.4: criaturas de Fulgor (tools/designs/fulgor_sounds.py → tools/designs/mobs/sounds_fulgor)
+    import fulgor_sounds  # noqa: E402
+    fsdir = os.path.join(mobs, "sounds_fulgor")
+    for name, (_fn, count, en, es) in fulgor_sounds.SOUNDS.items():
+        mob, kind = name.split(".")
+        files = []
+        for v in range(1, count + 1):
+            write_bytes(f"assets/{NS}/sounds/fulgor/{mob}/{kind}{v}.ogg", open(os.path.join(fsdir, mob, f"{kind}{v}.ogg"), "rb").read())
+            files.append(rl(f"fulgor/{mob}/{kind}{v}"))
         sub = f"subtitles.{NS}.entity.{name}"
         sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
         LANG_EN[sub] = en
@@ -5200,8 +5214,17 @@ def build_fulgor():
     sky, fog = rgb(58, 48, 92), rgb(84, 72, 120)
     common = dict(temperature=0.2, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(60, 60, 110),
                   water_fog=rgb(30, 30, 64), carvers=[])
+    # 1.0.4: criaturas de Fulgor (fulgor/mobs): arcos en la ceniza y el basalto, zancudos en los campos de fulgurita,
+    # atrapa-rayos en las agujas (las reglas finas están en FulgorMobs.spawnPlacements)
+    arcs = (rl("arc_crawler"), 10, 2, 4)
+    fulgor_spawns = {
+        "fulgor_ash_flats": spawners(creature=[arcs]),
+        "fulgor_basalt_plains": spawners(creature=[arcs]),
+        "fulgor_spires": spawners(monster=[(rl("spire_catcher"), 8, 1, 1)]),
+        "fulgor_fulgurite_fields": spawners(creature=[(rl("fulgurite_strider"), 10, 2, 3)]),
+    }
     for nm in ("fulgor_ash_flats", "fulgor_basalt_plains", "fulgor_spires", "fulgor_fulgurite_fields"):
-        biome(nm, feats=features(underground_ores=ores_f), **common)
+        biome(nm, feats=features(underground_ores=ores_f), spawn=fulgor_spawns[nm], **common)
     name("fulgor_ash_flats", "Ash Flats", "Llanuras de ceniza")
     name("fulgor_basalt_plains", "Basalt Plains", "Llanuras de basalto")
     name("fulgor_spires", "Basalt Spires", "Agujas de basalto")
@@ -5633,6 +5656,105 @@ def build_titan_mobs():
         drop(rl("frost_fang"), 0, 2), drop(rl("mist_lantern"), 1, 1, chance=0.15)]})
 
 
+def build_fulgor_mobs():
+    """1.0.4: criaturas de Fulgor (arco, zancudo de fulgurita, atrapa-rayos), sus objetos y bloques."""
+    mobs = os.path.join(DESIGNS, "mobs")
+    fdir = os.path.join(DESIGNS, "fulgor")
+    items = os.path.join(fdir, "items")
+    for m, en, es in (("arc_crawler", "Arc Crawler", "Arco"), ("fulgurite_strider", "Fulgurite Strider", "Zancudo de fulgurita"),
+                      ("spire_catcher", "Spire Catcher", "Atrapa-rayos")):
+        write_bytes(f"assets/{NS}/mob_models/{m}.json", open(os.path.join(mobs, f"{m}.json"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}.png", open(os.path.join(mobs, f"{m}.png"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}_glow.png", open(os.path.join(mobs, f"{m}_glow.png"), "rb").read())
+        LANG_EN[f"entity.{NS}.{m}"] = en
+        LANG_ES[f"entity.{NS}.{m}"] = es
+        write(f"assets/{NS}/models/item/{m}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
+        LANG_EN[f"item.{NS}.{m}_spawn_egg"] = f"{en} Spawn Egg"
+        LANG_ES[f"item.{NS}.{m}_spawn_egg"] = f"Huevo generador de {es.lower()}"
+    names = {"arc_gland": ("Arc Gland", "Glándula de arco"), "crystal_filament": ("Crystal Filament", "Filamento de cristal"),
+             "copper_antenna": ("Copper Antenna", "Antena de cobre"), "fulgurite_shard": ("Fulgurite Shard", "Fragmento de fulgurita")}
+    for it, (en, es) in names.items():
+        write_bytes(f"assets/{NS}/textures/item/{it}.png", open(os.path.join(items, f"{it}.png"), "rb").read())
+        write(f"assets/{NS}/models/item/{it}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": rl(f"item/{it}")}})
+        LANG_EN[f"item.{NS}.{it}"] = en
+        LANG_ES[f"item.{NS}.{it}"] = es
+
+    def block_loot(b):
+        data(f"loot_table/blocks/{b}", {"type": "minecraft:block", "pools": [{
+            "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl(b)}],
+            "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl(f"blocks/{b}")})
+        tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl(b))
+    # lámpara de arco: dos estados (normal / tormenta), cada uno con su textura animada
+    write_bytes(f"assets/{NS}/textures/block/arc_lamp.png", open(os.path.join(items, "arc_lamp.png"), "rb").read())
+    write(f"assets/{NS}/textures/block/arc_lamp.png.mcmeta", {"animation": {"frametime": 4, "interpolate": True}})
+    write_bytes(f"assets/{NS}/textures/block/arc_lamp_storm.png", open(os.path.join(items, "arc_lamp_storm.png"), "rb").read())
+    write(f"assets/{NS}/textures/block/arc_lamp_storm.png.mcmeta", {"animation": {"frametime": 2}})
+    for n in ("arc_lamp", "arc_lamp_storm"):
+        write(f"assets/{NS}/models/block/{n}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{n}")}})
+    write(f"assets/{NS}/models/item/arc_lamp.json", {"parent": rl("block/arc_lamp")})
+    write(f"assets/{NS}/blockstates/arc_lamp.json", {"variants": {"storm=false": {"model": rl("block/arc_lamp")},
+                                                                  "storm=true": {"model": rl("block/arc_lamp_storm")}}})
+    block_loot("arc_lamp")
+    # vidrio de tormenta (translúcido)
+    write_bytes(f"assets/{NS}/textures/block/storm_glass.png", open(os.path.join(items, "storm_glass.png"), "rb").read())
+    write(f"assets/{NS}/models/block/storm_glass.json", {"parent": "minecraft:block/cube_all", "render_type": "minecraft:translucent",
+                                                         "textures": {"all": rl("block/storm_glass")}})
+    write(f"assets/{NS}/models/item/storm_glass.json", {"parent": rl("block/storm_glass")})
+    write(f"assets/{NS}/blockstates/storm_glass.json", {"variants": {"": {"model": rl("block/storm_glass")}}})
+    block_loot("storm_glass")
+    tag_add("data/minecraft/tags/block/impermeable.json", rl("storm_glass"))
+    # pararrayos de tormenta: modelo 3D (tools/designs/storm_rod_model.py)
+    write_bytes(f"assets/{NS}/textures/block/storm_rod_3d.png", open(os.path.join(fdir, "storm_rod_3d.png"), "rb").read())
+    blk = json.load(open(os.path.join(fdir, "storm_rod_3d_block.json")))
+    itm = json.load(open(os.path.join(fdir, "storm_rod_3d_item.json")))
+    write(f"assets/{NS}/models/block/storm_rod.json", blk)
+    write(f"assets/{NS}/models/item/storm_rod.json", itm)
+    write(f"assets/{NS}/blockstates/storm_rod.json", {"variants": {"powered=false": {"model": rl("block/storm_rod")},
+                                                                   "powered=true": {"model": rl("block/storm_rod")}}})
+    block_loot("storm_rod")
+    for b, (en, es) in {"arc_lamp": ("Arc Lamp", "Lámpara de arco"), "storm_glass": ("Storm Glass", "Vidrio de tormenta"),
+                        "storm_rod": ("Storm Rod", "Pararrayos de tormenta")}.items():
+        LANG_EN[f"block.{NS}.{b}"] = en
+        LANG_ES[f"block.{NS}.{b}"] = es
+    LANG_EN[f"block.{NS}.storm_rod.desc"] = "Attracts Fulgor's lightning from 256 blocks away and gives a redstone pulse when struck. Spire catchers keep away from it"
+    LANG_ES[f"block.{NS}.storm_rod.desc"] = "Atrae los rayos de Fulgor desde 256 bloques y da un pulso de redstone al recibir uno. Los atrapa-rayos se alejan de él"
+    LANG_EN[f"block.{NS}.arc_lamp.desc"] = "Shines brighter and flickers during storms"
+    LANG_ES[f"block.{NS}.arc_lamp.desc"] = "Brilla más y parpadea durante las tormentas"
+    # recetas
+    data("recipe/fulgor/arc_lamp", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["CGC", "GAG", "CGC"],
+                                    "key": {"C": {"item": "minecraft:copper_ingot"}, "G": {"item": "minecraft:glass"},
+                                            "A": {"item": rl("arc_gland")}}, "result": {"id": rl("arc_lamp"), "count": 2}})
+    data("recipe/fulgor/fulgurite_from_shards", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["SS", "SS"],
+                                                 "key": {"S": {"item": rl("fulgurite_shard")}}, "result": {"id": rl("fulgurite"), "count": 1}})
+    data("recipe/fulgor/fulgurite_shards", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                            "ingredients": [{"item": rl("fulgurite")}], "result": {"id": rl("fulgurite_shard"), "count": 4}})
+    data("recipe/fulgor/storm_glass", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["GGG", "GFG", "GGG"],
+                                       "key": {"G": {"item": "minecraft:glass"}, "F": {"item": rl("crystal_filament")}},
+                                       "result": {"id": rl("storm_glass"), "count": 8}})
+    data("recipe/fulgor/storm_rod", {"type": "minecraft:crafting_shaped", "category": "redstone", "pattern": ["A", "R", "C"],
+                                     "key": {"A": {"item": rl("copper_antenna")}, "R": {"item": "minecraft:lightning_rod"},
+                                             "C": {"item": "minecraft:copper_block"}}, "result": {"id": rl("storm_rod"), "count": 1}})
+
+    # botín
+    def drop(item, lo, hi, chance=None, looting=1):
+        fns = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}}]
+        if looting:
+            fns.append({"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                        "count": {"type": "minecraft:uniform", "min": 0, "max": looting}})
+        p = {"rolls": 1, "entries": [{"type": "minecraft:item", "name": item, "functions": fns}]}
+        if chance is not None:
+            p["conditions"] = [{"condition": "minecraft:random_chance_with_enchanted_bonus", "enchantment": "minecraft:looting",
+                                "unenchanted_chance": chance, "enchanted_chance": {"type": "minecraft:linear", "base": chance + 0.1,
+                                                                                    "per_level_above_first": 0.1}}]
+        return p
+    data("loot_table/entities/arc_crawler", {"type": "minecraft:entity", "pools": [
+        drop(rl("arc_gland"), 1, 1, chance=0.6, looting=0), drop("minecraft:raw_copper", 0, 1)]})
+    data("loot_table/entities/fulgurite_strider", {"type": "minecraft:entity", "pools": [
+        drop(rl("fulgurite_shard"), 1, 2), drop(rl("crystal_filament"), 0, 1)]})
+    data("loot_table/entities/spire_catcher", {"type": "minecraft:entity", "pools": [
+        drop(rl("copper_antenna"), 1, 1, chance=0.5, looting=0), drop("minecraft:raw_copper", 0, 2)]})
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -5651,6 +5773,7 @@ if __name__ == "__main__":
     build_titan_mobs()       # 1.0.4: criaturas de Titán
     build_aurelia()          # 1.0.4: gigante gaseoso de Ámbar
     build_fulgor()           # 1.0.4: su luna de tormentas Fulgor
+    build_fulgor_mobs()      # 1.0.4: criaturas de Fulgor
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)
     build_ore_crushing()     # 1.0.4: trituracion de Create para las menas del mod
     build_time_freezer()     # 1.0.4: congelador del tiempo espacial

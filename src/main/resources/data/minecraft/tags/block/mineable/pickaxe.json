@@ -103,6 +103,9 @@
     "planetary_expansion:fulgor_basalt_slab",
     "planetary_expansion:fulgor_basalt_brick_slab",
     "planetary_expansion:polished_fulgor_basalt_slab",
+    "planetary_expansion:arc_lamp",
+    "planetary_expansion:storm_glass",
+    "planetary_expansion:storm_rod",
     {
       "id": "planetary_expansion:methane_thruster_mount",
       "required": false

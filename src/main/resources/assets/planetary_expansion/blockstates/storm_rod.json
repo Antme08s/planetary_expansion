@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "planetary_expansion:block/storm_rod"
+    },
+    "powered=true": {
+      "model": "planetary_expansion:block/storm_rod"
+    }
+  }
+}

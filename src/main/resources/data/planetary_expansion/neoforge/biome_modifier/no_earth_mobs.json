@@ -22,7 +22,10 @@
       "planetary_expansion:blind_stalker",
       "planetary_expansion:tholin_ruminant",
       "planetary_expansion:methane_eel",
-      "planetary_expansion:mist_stalker"
+      "planetary_expansion:mist_stalker",
+      "planetary_expansion:arc_crawler",
+      "planetary_expansion:fulgurite_strider",
+      "planetary_expansion:spire_catcher"
     ]
   }
 }

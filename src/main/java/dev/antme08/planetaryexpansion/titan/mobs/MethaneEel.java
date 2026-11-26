@@ -118,6 +118,10 @@ public class MethaneEel extends PathfinderMob {
         target = null;
     }
 
+    /** Nativo de Titán (-179 °C): el frío no le hace nada. */
+    @Override
+    public boolean canFreeze() { return false; }
+
     @Override
     public boolean isPushedByFluid() { return false; }
 

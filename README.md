@@ -1209,3 +1209,28 @@ Elegidas por el usuario ("solo Titán primero", sin jefes, el acechador atraído
 - Recetas: daga de hielo (colmillo + palo; congela y ralentiza), flechas de hielo (colmillo + 4 flechas), lámpara de bruma (linterna + vidrio + pepitas de hierro; luz 15, parpadea), tónico criogénico (frasco + escama + grasa; 4 min de "Adaptación criogénica": el frío de los planetas congela 4 veces más despacio, en `GlacialArmor.coldFactor`).
 
 - Modelos más detallados tras la primera prueba (el usuario: "se sienten demasiado simples"): rumiador con cuello, frente acorazada, mejillas, mandíbula, cuernos de tres tramos, orejas, lomo de placas escalonadas, hombros, caderas, faldón, patas con rodillera y dos dedos, cola con maza y velas con espina; anguila con tramos que adelgazan, cresta dorsal, aleta ventral, aletas pectorales, cola de dos lóbulos, hocico, mandíbula, barbillas y agallas; acechador con caparazón, collar, abdomen de cuatro tramos, cristales de hielo, cuatro ojos, mandíbulas laterales, linterna en una jaula y patas de cuatro tramos con rótulas. `titan_mobs.py` comprueba al construir que no haya caras de dos piezas en el mismo plano (eso parpadea en el juego).
+
+## 1.0.4 — criaturas de Fulgor
+
+Las tres son nativas de Fulgor: no respiran, son inmunes al fuego y la lava, y los rayos no les hacen daño sino que las
+cargan (aviso a las criaturas a 24 bloques de cada rayo de verdad; cada una decide su distancia). Las de Titán, además,
+ya no se congelan (`canFreeze = false`).
+
+- **Arco** (`arc_crawler`, llanuras de ceniza y de basalto, grupos de 2-4): pequeño y neutral. Si lo golpeas te suelta
+  una descarga de 2 + 1,5 por pieza de armadura de metal (hierro, malla, oro, netherita, cobre), el doble si está cargado,
+  y huye. Un rayo a menos de 16 bloques lo carga 1 min (brilla y corre más); en tormenta corre más y se junta junto a
+  los pararrayos. Se cría con redstone. Botín: glándula de arco (60 %), cobre en bruto.
+- **Zancudo de fulgurita** (`fulgurite_strider`, campos de fulgurita): pasivo, se cría con fragmentos de fulgurita. Un
+  rayo a menos de 10 bloques lo sobrecarga 3 min: brilla, +40 % de velocidad, calambre de 2 a lo que lo toque y suelta
+  fragmentos de vez en cuando; muerto sobrecargado suelta un filamento y un fragmento extra. Botín: 1-2 fragmentos,
+  0-1 filamento de cristal.
+- **Atrapa-rayos** (`spire_catcher`, agujas): monstruo; sin presa sube a lo más alto que haya cerca; ataca con saltos
+  largos y garras. Si no hay pararrayos, atrae los rayos que caigan a menos de 24 bloques; un rayo a menos de 6 bloques
+  lo cura 10 y le da +50 % de daño durante 2 min. Se aleja de los pararrayos a menos de 16 bloques. Botín: antena de
+  cobre (50 %), 0-2 cobre en bruto.
+
+Bloques nuevos: **lámpara de arco** (luz 11, 15 y parpadeo con tormenta), **vidrio de tormenta** (translúcido, más
+resistente a explosiones) y **pararrayos de tormenta** (modelo 3D; en Fulgor atrae los rayos desde 256 bloques, antes que
+el pararrayos normal, y da un pulso de redstone de 1 s al recibir uno). Recetas: lámpara (glándula + cobre + vidrio),
+4 fragmentos ⇄ fulgurita, 8 vidrios + filamento → 8 vidrios de tormenta, antena + pararrayos + bloque de cobre →
+pararrayos de tormenta. Fuentes: `tools/designs/fulgor_mobs.py`, `fulgor_items.py`, `storm_rod_model.py`, `fulgor_sounds.py`.
