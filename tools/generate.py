@@ -2148,14 +2148,14 @@ def build_warp():
                   "desc": ("A scorching world under amber clouds, with basalt plains, shield volcanoes and rivers of lava.",
                            "Un mundo abrasador bajo nubes ámbar, con llanuras de basalto, volcanes en escudo y ríos de lava."),
                   "air": ("Toxic, not breathable", "Tóxico, irrespirable"), "temp": ("Scorching", "Abrasadora"),
-                  "hazards": ("Heat, acid rain, lava", "Calor, lluvia ácida, lava"), "armor": ("Hazard Armor", "Hazard Armor"),
+                  "hazards": ("Heat, acid rain, lava", "Calor, lluvia ácida, lava"), "armor": ("Hazard Armor", "Armadura Hazard"),
                   "resources": ("Uranium, thorium, lead and nitrate (Create Nuclear), iron, copper, gold",
                                 "Uranio, torio, plomo y nitrato (Create Nuclear), hierro, cobre, oro")},
         "mars": {"type": ("Rocky planet", "Planeta rocoso"),
                  "desc": ("A cold red desert with canyons, polar caps and violent dust storms.",
                           "Un desierto rojo y frío con cañones, casquetes polares y violentas tormentas de arena."),
                  "air": ("Thin, not breathable", "Fino, irrespirable"), "temp": ("Cold", "Fría"),
-                 "hazards": ("Dust storms", "Tormentas de arena"), "armor": ("Impact Armor", "Impact Armor"),
+                 "hazards": ("Dust storms", "Tormentas de arena"), "armor": ("Impact Armor", "Armadura de impacto"),
                  "resources": ("Zinc, iron and huge crimsite and ochrum veins", "Zinc, hierro y vetas enormes de crimsita y ocrum")},
         "gas_giant": {"type": ("Gas giant", "Gigante gaseoso"),
                       "desc": ("No surface to land on, but two moons orbit it: Ignis and Thalassa.",
@@ -2172,12 +2172,12 @@ def build_warp():
                               "Una corteza helada sobre un océano profundo con enormes cuevas submarinas y chimeneas hidrotermales."),
                      "air": ("Only a thin layer just above the ice", "Solo una capa fina justo encima del hielo"),
                      "temp": ("Freezing", "Helada"), "hazards": ("Blizzards, deep-sea pressure", "Ventiscas, presión del fondo del mar"),
-                     "armor": ("Sea Diver Armor", "Sea Diver Armor"), "resources": ("Titanium, iron and diamond", "Titanio, hierro y diamante")},
+                     "armor": ("Sea Diver Armor", "Armadura Sea Diver"), "resources": ("Titanium, iron and diamond", "Titanio, hierro y diamante")},
         "ice_world": {"type": ("Ice planet", "Planeta helado"),
                       "desc": ("The farthest planet: endless ice fields swept by blizzards, under an eternal night.",
                                "El planeta más lejano: campos de hielo sin fin barridos por ventiscas, bajo una noche eterna."),
                       "air": ("Breathable near the surface", "Respirable cerca de la superficie"), "temp": ("Freezing", "Helada"),
-                      "hazards": ("Blizzards, strong gravity", "Ventiscas, gravedad fuerte"), "armor": ("Glacial Armor", "Glacial Armor"),
+                      "hazards": ("Blizzards, strong gravity", "Ventiscas, gravedad fuerte"), "armor": ("Glacial Armor", "Armadura glacial"),
                       "resources": ("Huge asurine veins, zinc and diamond", "Vetas enormes de asurina, zinc y diamante")},
     }
     for body, fields in bodies.items():
@@ -4960,7 +4960,7 @@ def build_titan():
                      "Una luna helada bajo una espesa bruma naranja, con dunas de tolina y lagos de metano líquido."),
             "air": ("Dense, not breathable", "Densa, no respirable"), "temp": ("Freezing (-179 °C)", "Helada (-179 °C)"),
             "hazards": ("Extreme cold, liquid methane", "Frío extremo, metano líquido"),
-            "armor": ("Glacial Armor", "Glacial Armor"),
+            "armor": ("Glacial Armor", "Armadura glacial"),
             "resources": ("Huge amounts of coal, redstone, lapis lazuli and sulfur; bitumen and liquid methane as fuel",
                           "Muchísimo carbón, redstone, lapislázuli y azufre; bitumen y metano líquido como combustible")}.items():
         LANG_EN[f"{n}body.{P}.{field}"] = en
@@ -5306,8 +5306,8 @@ Mars, Venus, Thalassa, Ignis and the Ice World around the Sun, plus Saturn (with
 with methane lakes and liquid methane as rocket fuel. Around Amber, a second star reached with the Stellar Warp
 Drive: Cerulea with its moons Velo and Ferra, and the gas giant Aurelia with its stormy moon Fulgor.
 Planet suits with upgrade templates (Impact, Glacial, Hazard, Sea Diver and Thermal), survival kits,
-and ship machines: Warp Drive with Navigation Console, Gravity Generator, Inertial Dampener and the Methane
-Thruster Mount.
+and ship machines: Warp Drive with Navigation Console, Space Transporter, Space Time Freezer, Gravity Generator,
+Inertial Dampener and the Methane Thruster Mount.
 \'\'\'
 
 [[dependencies.{NS}]]
@@ -5659,6 +5659,14 @@ def build_titan_mobs():
 
 def build_fulgor_mobs():
     """1.0.4: criaturas de Fulgor (arco, zancudo de fulgurita, atrapa-rayos), sus objetos y bloques."""
+    # (1.0.4) mensajes del comando de prueba del leviatán de Thalassa, antes fijos en inglés
+    for k, en, es in (("not_thalassa", "The leviathan only lives in Thalassa.", "El leviatán solo vive en Thalassa."),
+                      ("not_underwater", "Dive into the water first.", "Métete primero en el agua."),
+                      ("spawned", "Something huge is moving in the dark... (%s)", "Algo enorme se mueve en la oscuridad... (%s)"),
+                      ("no_room", "Not enough open water around here (try deeper or away from the floor).",
+                       "No hay bastante agua abierta aquí (prueba más hondo o lejos del fondo).")):
+        LANG_EN[f"command.{NS}.leviathan.{k}"] = en
+        LANG_ES[f"command.{NS}.leviathan.{k}"] = es
     mobs = os.path.join(DESIGNS, "mobs")
     fdir = os.path.join(DESIGNS, "fulgor")
     items = os.path.join(fdir, "items")

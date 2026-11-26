@@ -234,6 +234,9 @@ public final class StormManager {
         if (type == null) return;
         float intensity = intensity(type);
         if (intensity <= 0.01f) return;
+        // 1.0.4: sin jugadores en el planeta las entidades no se mueven (Minecraft deja de actualizarlas), así que no
+        // hace falta recorrerlas todas cada tick para empujarlas
+        if (level.players().isEmpty()) return;
 
         double angle = windAngle(type);
         double dx = Math.cos(angle), dz = Math.sin(angle);

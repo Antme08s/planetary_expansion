@@ -213,6 +213,8 @@ public class Glider extends PathfinderMob {
         private BlockPos log;
         private int ticks;
 
+        private int noTreeUntil;
+
         ClimbTreeGoal(Glider mob) {
             this.mob = mob;
             setFlags(EnumSet.of(Flag.MOVE));
@@ -221,19 +223,14 @@ public class Glider extends PathfinderMob {
         @Override
         public boolean canUse() {
             if (mob.isGliding() || mob.onLeaves || !mob.onGround() || mob.random.nextInt(20) != 0) return false;
+            // 1.0.4: sin árbol cerca no vuelve a buscar en 10 s (antes recorría 3125 bloques cada segundo)
+            if (mob.tickCount < noTreeUntil) return false;
             BlockPos base = mob.blockPosition();
-            BlockPos best = null;
-            double bd = 1e9;
-            for (BlockPos q : BlockPos.betweenClosed(base.offset(-12, -1, -12), base.offset(12, 3, 12))) {
-                if (mob.level().getBlockState(q).is(BlockTags.LOGS) && mob.level().getBlockState(q.above(4)).is(BlockTags.LOGS)) {
-                    double d = q.distSqr(base);
-                    if (d < bd) {
-                        bd = d;
-                        best = q.immutable();
-                    }
-                }
-            }
-            log = best;
+            // del más cercano al más lejano: se para en el primer tronco alto que encuentra
+            log = BlockPos.findClosestMatch(base, 12, 4, q -> q.getY() >= base.getY() - 1 && q.getY() <= base.getY() + 3
+                    && mob.level().getBlockState(q).is(BlockTags.LOGS) && mob.level().getBlockState(q.above(4)).is(BlockTags.LOGS))
+                    .map(BlockPos::immutable).orElse(null);
+            if (log == null) noTreeUntil = mob.tickCount + 200;
             return log != null;
         }
 

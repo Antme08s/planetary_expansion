@@ -290,11 +290,11 @@ public final class ThalassaLeviathan {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || !inThalassa(mc.level)) {
-            ctx.getSource().sendFailure(Component.literal("The leviathan only lives in Thalassa."));
+            ctx.getSource().sendFailure(Component.translatable("command.planetary_expansion.leviathan.not_thalassa"));
             return 0;
         }
         if (!player.isEyeInFluid(FluidTags.WATER)) {
-            ctx.getSource().sendFailure(Component.literal("Dive into the water first."));
+            ctx.getSource().sendFailure(Component.translatable("command.planetary_expansion.leviathan.not_underwater"));
             return 0;
         }
         active = null;
@@ -302,10 +302,10 @@ public final class ThalassaLeviathan {
         for (int attempt = 0; attempt < 8; attempt++)
             for (Variant v : order)
                 if (trySpawn(v, mc.level, player, attempt >= 5)) { // los últimos intentos, más cerca
-                    ctx.getSource().sendSuccess(() -> Component.literal("Something huge is moving in the dark... (" + v.name().toLowerCase() + ")"), false);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("command.planetary_expansion.leviathan.spawned", v.name().toLowerCase()), false);
                     return 1;
                 }
-        ctx.getSource().sendFailure(Component.literal("Not enough open water around here (try deeper or away from the floor)."));
+        ctx.getSource().sendFailure(Component.translatable("command.planetary_expansion.leviathan.no_room"));
         return 0;
     }
 
