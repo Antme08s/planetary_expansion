@@ -95,6 +95,7 @@ public final class PlanetaryExpansion {
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThalassaLeviathan.class); // 0.7.54
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThalassaAmbience.class); // 0.7.58
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.DeepSpaceSound.class); // 1.0.3
+            NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ShipWallGuard.class); // 1.0.4.1
             dev.antme08.planetaryexpansion.creatures.client.CreaturesClient.register(modBus); // 0.7.61
             dev.antme08.planetaryexpansion.cerulea.mobs.client.CeruleaMobsClient.register(modBus); // 1.0.3
             dev.antme08.planetaryexpansion.ferra.mobs.client.FerraMobsClient.register(modBus); // 1.0.3
