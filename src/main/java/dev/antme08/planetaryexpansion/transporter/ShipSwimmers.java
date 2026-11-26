@@ -32,6 +32,13 @@ public final class ShipSwimmers {
 
     private static boolean failed;
 
+    /** ¿Está este punto (coordenadas de la nave) dentro de la caja de bloques de la nave, con un margen? */
+    private static boolean insideBounds(SubLevel ship, Vec3 local, double margin) {
+        var b = ship.getPlot().getBoundingBox();
+        return local.x >= b.minX() - margin && local.y >= b.minY() - margin && local.z >= b.minZ() - margin
+                && local.x <= b.maxX() + 1 + margin && local.y <= b.maxY() + 1 + margin && local.z <= b.maxZ() + 1 + margin;
+    }
+
     /** La nave en cuya agua está la criatura, o null. */
     private static SubLevel waterShip(Mob mob) {
         Level level = mob.level();
@@ -110,7 +117,7 @@ public final class ShipSwimmers {
         return s;
     }
 
-    /** Peces que están cambiando de dimensión con su nave: nave nueva y su sitio en ella. */
+    /** Criaturas y objetos que están cambiando de dimensión con su nave: nave nueva y su sitio en ella. */
     private record Arrival(java.util.UUID ship, Vec3 pos, long deadline) {}
     private static final java.util.Map<java.util.UUID, Arrival> ARRIVING = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -122,20 +129,52 @@ public final class ShipSwimmers {
      */
     public static void beforeTransfer(Entity entity, SubLevel oldShip,
                                       java.util.Map<java.util.UUID, dev.egg.DimensionalSable.Pair<java.util.UUID, net.minecraft.core.Vec3i>> map) {
-        if (!(entity instanceof net.minecraft.world.entity.animal.WaterAnimal mob) || oldShip == null || map == null) return;
+        if (oldShip == null || map == null || entity instanceof net.minecraft.world.entity.player.Player) return;
+        if (!(entity instanceof net.minecraft.world.entity.LivingEntity) && !(entity instanceof net.minecraft.world.entity.item.ItemEntity)) return;
         try {
-            Swim s = SWIM.get(mob);
+            Swim s = entity instanceof Mob m ? SWIM.get(m) : null;
             Vec3 local = s != null && s.ship == oldShip ? s.pos
-                    : oldShip.logicalPose().transformPositionInverse(mob.position().add(0, mob.getBbHeight() / 2.0, 0));
-            if (s == null && mob.level().getFluidState(BlockPos.containing(local)).isEmpty()) return;   // no está en su agua
+                    : oldShip.logicalPose().transformPositionInverse(entity.position().add(0, entity.getBbHeight() / 2.0, 0));
+            if (s == null && !insideBounds(oldShip, local, 0.5)) return;   // no va dentro de la nave
             var pair = map.get(oldShip.getUniqueId());
             if (pair == null || pair.first() == null || pair.second() == null) return;
             net.minecraft.core.Vec3i off = pair.second();
-            ARRIVING.put(mob.getUUID(), new Arrival(pair.first(), local.add(off.getX(), off.getY(), off.getZ()),
-                    mob.level().getGameTime() + 200));
+            ARRIVING.put(entity.getUUID(), new Arrival(pair.first(), local.add(off.getX(), off.getY(), off.getZ()),
+                    entity.level().getGameTime() + 200));
         } catch (Throwable t) {
-            PlanetaryExpansion.LOGGER.warn("[Naves] No se pudo apuntar el sitio de un pez en la nave", t);
+            PlanetaryExpansion.LOGGER.warn("[Naves] No se pudo apuntar el sitio de una criatura en la nave", t);
         }
+    }
+
+    /**
+     * Al llegar a la otra dimensión, cualquier criatura u objeto que iba dentro de la nave (no peces: esos siguen con su
+     * paseo) se vuelve a poner en su sitio de la nave nueva, sin velocidad ni caída acumulada.
+     */
+    private static boolean placeArrival(Entity e) {
+        Arrival a = ARRIVING.get(e.getUUID());
+        if (a == null) return false;
+        if (e.level().getGameTime() > a.deadline()) {
+            ARRIVING.remove(e.getUUID());
+            return false;
+        }
+        SubLevel ship;
+        try {
+            ship = (SubLevel) dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(e.level()).getSubLevel(a.ship());
+        } catch (Throwable t) {
+            return false;
+        }
+        if (ship == null || !e.level().isLoaded(BlockPos.containing(a.pos()))) return false;   // aún no está: se espera
+        ARRIVING.remove(e.getUUID());
+        e.setPos(ship.logicalPose().transformPosition(a.pos()).subtract(0, e.getBbHeight() / 2.0, 0));
+        e.setDeltaMovement(Vec3.ZERO);
+        e.fallDistance = 0;
+        return true;
+    }
+
+    @SubscribeEvent
+    public static void onItemTick(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof net.minecraft.world.entity.item.ItemEntity item && !item.level().isClientSide
+                && !ARRIVING.isEmpty()) placeArrival(item);
     }
 
     /** Punto de agua de la nave al que nadar desde {@code from} (coordenadas de la nave), o null. */
@@ -249,9 +288,19 @@ public final class ShipSwimmers {
                     return;
                 }
             }
-            if (!mob.isInWater()) return;
-            // tras moverse, Sable deja de asociarla a la nave si no pisa nada: si sigue sin pisar y está en su agua, la llevamos
-            SubLevel sub = waterShip(mob);
+            if (!ARRIVING.isEmpty() && placeArrival(mob)) return;
+            SubLevel sub;
+            if (mob.isInWater()) {
+                // tras moverse, Sable deja de asociarla a la nave si no pisa nada: si está en su agua, la llevamos
+                sub = waterShip(mob);
+            } else {
+                // v43: lo que vuela o salta dentro de la nave (pájaros, abejas, murciélagos…) tampoco pisa nada: si lo
+                // último que pisó fue esta nave y sigue dentro de su caja, la nave lo lleva igual que a lo que nada
+                if (mob.onGround()) return;
+                var last = Sable.HELPER.getLastTrackingSubLevel((Entity) mob);
+                sub = last instanceof SubLevel l && !l.isRemoved()
+                        && insideBounds(l, l.logicalPose().transformPositionInverse(mob.getBoundingBox().getCenter()), 0.0) ? l : null;
+            }
             if (sub == null) return;
             if (Sable.HELPER.getTrackingSubLevel((Entity) mob) != null) return;   // apoyada: ya la lleva Sable
             Vec3 local = sub.logicalPose().transformPositionInverse(mob.getBoundingBox().getCenter());
