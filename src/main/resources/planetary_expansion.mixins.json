@@ -24,7 +24,8 @@
     "PlanetWeatherMixin",
     "RocketFuelPropertiesMixin",
     "DeepSpacePositionFreezeMixin",
-    "SpaceTransitionLaunchMixin"
+    "SpaceTransitionLaunchMixin",
+    "SubLevelTemplateHeightMixin"
   ],
   "client": [
     "HologramTableRendererMixin",

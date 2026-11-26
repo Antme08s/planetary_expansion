@@ -57,6 +57,13 @@ public final class SpaceLaunch {
     /** Bajadas en curso: nave -> dimensión del planeta y tick límite; al aparecer allí se le quita la velocidad. */
     private record Descent(ResourceKey<Level> dim, long instance, int deadline, int[] stops) {}
     private static final Map<UUID, Descent> DESCENDING = new ConcurrentHashMap<>();
+
+    /** 1.0.4: al cambiar de dimensión la nave recibe otro id (ShipHeightFix lo avisa). */
+    static void renamed(UUID oldId, UUID newId) {
+        if (oldId == null || newId == null || oldId.equals(newId)) return;
+        Descent d = DESCENDING.remove(oldId);
+        if (d != null) DESCENDING.put(newId, d);
+    }
     private static boolean warned;
 
     public static boolean isPending(ServerSubLevel ship) {
