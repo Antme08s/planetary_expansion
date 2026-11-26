@@ -252,33 +252,10 @@ public final class ShipSwimmers {
         }
     }
 
-    /**
-     * Para encontrar el fallo de los peces (v39): cada 5 s, por cada pez cerca de una nave, una línea en el registro con
-     * su estado (agua, nave de seguimiento, camino, movimiento).
-     */
-    private static void debug(Mob mob, String when) {
-        if (!(mob instanceof net.minecraft.world.entity.animal.WaterAnimal) || (mob.tickCount + mob.getId()) % 100 != 0) return;
-        Level level = mob.level();
-        boolean nearShip = false;
-        for (SubLevel sub : Sable.HELPER.getAllIntersecting(level, new BoundingBox3d(mob.getBoundingBox().inflate(2)))) nearShip |= !sub.isRemoved();
-        if (!nearShip) return;
-        SubLevel water = null;
-        try { water = waterShip(mob); } catch (Throwable ignored) {}
-        var nav = mob.getNavigation();
-        var path = nav.getPath();
-        PlanetaryExpansion.LOGGER.info("[Peces] {} {} pos={} agua={} ojos={} naveAgua={} seguimiento={} navTerminada={} destino={} camino={} vel={} choque={} suelo={} sinAcción={}",
-                when, mob.getType().getDescriptionId(), mob.position(), mob.isInWater(),
-                mob.isEyeInFluid(net.minecraft.tags.FluidTags.WATER), water != null,
-                Sable.HELPER.getTrackingSubLevel((Entity) mob) != null, nav.isDone(), nav.getTargetPos(),
-                path == null ? "-" : (path.getNodeCount() + " nodos, fin " + path.getTarget() + (path.canReach() ? "" : " (no llega)")),
-                mob.getDeltaMovement(), mob.horizontalCollision, mob.onGround(), mob.getNoActionTime() + " paseo=" + (SWIM.get(mob) == null ? "-" : SWIM.get(mob).pos + " -> " + SWIM.get(mob).target));
-    }
-
     @SubscribeEvent
     public static void onTick(EntityTickEvent.Post event) {
         if (failed || !(event.getEntity() instanceof Mob mob)) return;
         Level level = mob.level();
-        if (!level.isClientSide) try { debug(mob, "post"); } catch (Throwable ignored) {}
         if (level.isClientSide || mob.isPassenger()) return;
         try {
             if (mob instanceof net.minecraft.world.entity.animal.WaterAnimal) {
