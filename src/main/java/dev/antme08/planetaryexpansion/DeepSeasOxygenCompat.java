@@ -62,6 +62,43 @@ public final class DeepSeasOxygenCompat {
     }
 
     private static final Map<UUID, Long> LAST_REPORT = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<UUID, Long> LAST_AIR_REPORT = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * 1.0.4.1, para encontrar fallos (temporal): si un jugador pierde aire dentro de la caja de una nave, por la razón
+     * que sea, se apunta qué tiene en la cabeza (bloque y fluido de la nave), si el juego cree que tiene los ojos en el
+     * agua, si la falta de aire viene del espacio y si el compartimento cuenta como sellado. Como mucho cada 5 s.
+     */
+    @SubscribeEvent
+    public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) || player.tickCount % 20 != 0) return;
+        if (player.getAirSupply() >= player.getMaxAirSupply()) return;
+        long now = player.level().getGameTime();
+        Long last = LAST_AIR_REPORT.get(player.getUUID());
+        if (last != null && now - last < 100) return;
+        try {
+            Level level = player.level();
+            Vec3 p = player.getEyePosition();
+            for (Map.Entry<UUID, SubLevelAccess> e : CompartmentTracker.getSubsSnapshot().entrySet()) {
+                dev.ryanhcode.sable.sublevel.SubLevel sub = serverSide(level, e.getKey(), e.getValue());
+                if (sub == null) continue;
+                AABB box = CompartmentTracker.getWorldAABB(e.getKey());
+                if (box == null || !box.inflate(1.5).contains(p)) continue;
+                LAST_AIR_REPORT.put(player.getUUID(), now);
+                Vec3 local = sub.logicalPose().transformPositionInverse(p);
+                BlockPos cell = BlockPos.containing(local);
+                EnumSet<AtmosphereFlags> flags = GlobalSpacePhysicsHandler.getFlags(player);
+                PlanetaryExpansion.LOGGER.info("[Oxígeno] {} pierde aire ({}/{}) en una nave: cabeza en {} fluido={} ({}), ojosEnAgua={} espacio={} sellado={} selladoExacto={} conOxígeno={}",
+                        player.getName().getString(), player.getAirSupply(), player.getMaxAirSupply(), level.getBlockState(cell),
+                        level.getFluidState(cell).getType(), String.format("%.2f %.2f %.2f", local.x - cell.getX(), local.y - cell.getY(), local.z - cell.getZ()),
+                        player.isEyeInFluid(net.minecraft.tags.FluidTags.WATER), flags != null && flags.contains(AtmosphereFlags.DROWNING),
+                        sealed(level, p), CompartmentTracker.isInSealedExact(level, p), CompartmentTracker.hasAnySealed(e.getKey()));
+                return;
+            }
+        } catch (Throwable t) {
+            PlanetaryExpansion.LOGGER.warn("[Oxígeno] informe fallido", t);
+        }
+    }
 
     /**
      * 1.0.4.1, para encontrar fallos: si un jugador se queda sin aire pegado a una nave que tiene algún compartimento
@@ -75,7 +112,8 @@ public final class DeepSeasOxygenCompat {
             Level level = player.level();
             Vec3 p = player.getEyePosition();
             for (Map.Entry<UUID, SubLevelAccess> e : CompartmentTracker.getSubsSnapshot().entrySet()) {
-                if (!(e.getValue() instanceof dev.ryanhcode.sable.sublevel.SubLevel sub) || sub.getLevel() != level) continue;
+                dev.ryanhcode.sable.sublevel.SubLevel sub = serverSide(level, e.getKey(), e.getValue());
+                if (sub == null) continue;
                 AABB box = CompartmentTracker.getWorldAABB(e.getKey());
                 if (box == null || !box.inflate(1.5).contains(p) || !CompartmentTracker.hasAnySealed(e.getKey())) continue;
                 LAST_REPORT.put(player.getUUID(), now);
@@ -98,6 +136,25 @@ public final class DeepSeasOxygenCompat {
     }
 
     /**
+     * 1.0.4.1 (v45): Deep Seas guarda en una sola lista (estática, compartida en un mundo de un jugador) las naves del
+     * servidor y las del cliente, con la misma UUID, así que a ratos lo que hay ahí es la copia del cliente. Antes se
+     * saltaba la nave cuando no era la del servidor y, mientras tanto, el hueco del copycat dejaba de contar como
+     * interior (por eso el aire bajaba a tirones y nada lo apuntaba). Ahora se busca la nave por su dimensión y se usa
+     * siempre la copia del mundo que se está mirando.
+     */
+    private static dev.ryanhcode.sable.sublevel.SubLevel serverSide(Level level, UUID id, SubLevelAccess access) {
+        if (!(access instanceof dev.ryanhcode.sable.sublevel.SubLevel sub) || sub.isRemoved()) return null;
+        if (sub.getLevel() == level) return sub;
+        if (sub.getLevel() == null || sub.getLevel().dimension() != level.dimension()) return null;
+        try {
+            SubLevelAccess own = dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(level).getSubLevel(id);
+            if (own instanceof dev.ryanhcode.sable.sublevel.SubLevel s && !s.isRemoved()) return s;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
      * ¿Está este punto dentro de un compartimento con oxígeno?
      * <p>
      * 1.0.4.1: Deep Seas trata cada bloque con datos (copycats, etc.) como pared entera aunque sea un panel, un escalón o
@@ -111,7 +168,8 @@ public final class DeepSeasOxygenCompat {
         if (CompartmentTracker.isInSealedExact(level, p)) return true;
         try {
             for (Map.Entry<UUID, SubLevelAccess> e : CompartmentTracker.getSubsSnapshot().entrySet()) {
-                if (!(e.getValue() instanceof dev.ryanhcode.sable.sublevel.SubLevel sub) || sub.getLevel() != level) continue;
+                dev.ryanhcode.sable.sublevel.SubLevel sub = serverSide(level, e.getKey(), e.getValue());
+                if (sub == null) continue;
                 AABB box = CompartmentTracker.getWorldAABB(e.getKey());
                 if (box == null || !box.inflate(1.5).contains(p)) continue;
                 Pose3dc pose = sub.logicalPose();
