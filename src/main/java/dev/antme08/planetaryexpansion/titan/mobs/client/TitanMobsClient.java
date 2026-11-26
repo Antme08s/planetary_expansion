@@ -61,10 +61,14 @@ public final class TitanMobsClient {
         add(m.part("leg_l1"), b, 0, 0);
         float eat = e.headDown(age - e.tickCount);
         ModelPart head = m.part("head");
+        ModelPart neck = m.part("neck");
         if (eat > 0) {
-            add(head, 0.65F * eat + Mth.sin(age * 0.9F) * 0.05F * eat, 0, 0);
+            add(neck, 0.35F * eat, 0, 0);
+            add(head, 0.45F * eat + Mth.sin(age * 0.9F) * 0.05F * eat, 0, 0);
+            if (head != null) head.y += 1.6F * eat;   // la cabeza baja con el cuello
         } else {
-            add(head, hp * Mth.DEG_TO_RAD * 0.5F, hy * Mth.DEG_TO_RAD * 0.5F, 0);
+            add(neck, hp * Mth.DEG_TO_RAD * 0.2F, hy * Mth.DEG_TO_RAD * 0.25F, 0);
+            add(head, hp * Mth.DEG_TO_RAD * 0.4F, hy * Mth.DEG_TO_RAD * 0.4F, 0);
         }
         add(m.part("sails"), Mth.sin(age * 0.05F) * 0.03F, 0, Mth.sin(age * 0.09F) * 0.07F);
         add(m.part("tail"), 0, Mth.sin(age * 0.1F) * 0.25F, 0);
