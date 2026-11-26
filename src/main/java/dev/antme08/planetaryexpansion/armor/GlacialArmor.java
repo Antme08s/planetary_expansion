@@ -101,7 +101,8 @@ public final class GlacialArmor {
     /** Multiplicador de la congelación de las ventiscas: 1 sin traje, 0 con el traje completo. */
     public static float coldFactor(LivingEntity entity) {
         // 0.7.66: el calentador químico deja pasar solo el 40 %
-        return Math.max(0f, 1f - 0.25f * coldPieces(entity)) * SurvivalKits.coldFactor(entity);
+        float tonic = entity.hasEffect(dev.antme08.planetaryexpansion.titan.mobs.TitanMobs.CRYO_ADAPTATION) ? 0.25f : 1f;   // 1.0.4: tónico criogénico
+        return Math.max(0f, 1f - 0.25f * coldPieces(entity)) * SurvivalKits.coldFactor(entity) * tonic;
     }
 
     /** Multiplicador del empuje del viento de las tormentas: 1 sin traje, 0.2 con el traje completo. */

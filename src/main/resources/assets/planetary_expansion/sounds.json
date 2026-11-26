@@ -286,5 +286,61 @@
     "sounds": [
       "planetary_expansion:ferra/blind_stalker/death1"
     ]
+  },
+  "entity.tholin_ruminant.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.tholin_ruminant.ambient",
+    "sounds": [
+      "planetary_expansion:titan/tholin_ruminant/ambient1",
+      "planetary_expansion:titan/tholin_ruminant/ambient2",
+      "planetary_expansion:titan/tholin_ruminant/ambient3"
+    ]
+  },
+  "entity.tholin_ruminant.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.tholin_ruminant.hurt",
+    "sounds": [
+      "planetary_expansion:titan/tholin_ruminant/hurt1",
+      "planetary_expansion:titan/tholin_ruminant/hurt2"
+    ]
+  },
+  "entity.tholin_ruminant.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.tholin_ruminant.death",
+    "sounds": [
+      "planetary_expansion:titan/tholin_ruminant/death1"
+    ]
+  },
+  "entity.mist_stalker.ambient": {
+    "subtitle": "subtitles.planetary_expansion.entity.mist_stalker.ambient",
+    "sounds": [
+      "planetary_expansion:titan/mist_stalker/ambient1",
+      "planetary_expansion:titan/mist_stalker/ambient2",
+      "planetary_expansion:titan/mist_stalker/ambient3"
+    ]
+  },
+  "entity.mist_stalker.lure": {
+    "subtitle": "subtitles.planetary_expansion.entity.mist_stalker.lure",
+    "sounds": [
+      "planetary_expansion:titan/mist_stalker/lure1",
+      "planetary_expansion:titan/mist_stalker/lure2"
+    ]
+  },
+  "entity.mist_stalker.attack": {
+    "subtitle": "subtitles.planetary_expansion.entity.mist_stalker.attack",
+    "sounds": [
+      "planetary_expansion:titan/mist_stalker/attack1",
+      "planetary_expansion:titan/mist_stalker/attack2"
+    ]
+  },
+  "entity.mist_stalker.hurt": {
+    "subtitle": "subtitles.planetary_expansion.entity.mist_stalker.hurt",
+    "sounds": [
+      "planetary_expansion:titan/mist_stalker/hurt1",
+      "planetary_expansion:titan/mist_stalker/hurt2"
+    ]
+  },
+  "entity.mist_stalker.death": {
+    "subtitle": "subtitles.planetary_expansion.entity.mist_stalker.death",
+    "sounds": [
+      "planetary_expansion:titan/mist_stalker/death1"
+    ]
   }
 }

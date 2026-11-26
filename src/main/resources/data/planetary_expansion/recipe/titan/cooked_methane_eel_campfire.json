@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": {
+    "item": "planetary_expansion:raw_methane_eel"
+  },
+  "result": {
+    "id": "planetary_expansion:cooked_methane_eel"
+  },
+  "experience": 0.35,
+  "cookingtime": 600
+}

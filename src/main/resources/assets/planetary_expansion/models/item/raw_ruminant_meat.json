@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "planetary_expansion:item/raw_ruminant_meat"
+  }
+}

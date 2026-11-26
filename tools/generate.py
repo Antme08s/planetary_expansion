@@ -1405,6 +1405,7 @@ def build_moon_fix():
 # Sin mobs de la Tierra en los planetas
 # ==========================================================================
 PLANET_MOBS = ["lantern_fish", "vent_crab", "king_crab", "abyssal_stalker", "magma_snail", "magma_titan"]
+TITAN_MOBS = ["tholin_ruminant", "methane_eel", "mist_stalker"]   # 1.0.4
 CERULEA_MOBS = ["grazer", "hopper", "glider", "lurker", "croaker", "ribbonfin", "runner", "ironjaw"]   # 1.0.3
 
 
@@ -1417,7 +1418,8 @@ def build_no_earth_mobs():
         "type": "neoforge:remove_spawns",
         "biomes": f"#{NS}:planet_biomes",
         # 0.7.61: todo menos las criaturas propias de los planetas (las de Thalassa)
-        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS + ["rust_worm", "blind_stalker"]]},
+        "entity_types": {"type": "neoforge:not", "value": [rl(m) for m in PLANET_MOBS + CERULEA_MOBS + ["rust_worm", "blind_stalker"]
+                                                             + TITAN_MOBS]},
     })
 
 
@@ -2918,6 +2920,19 @@ def build_cerulea_creatures():
         for v in range(1, count + 1):
             write_bytes(f"assets/{NS}/sounds/ferra/{mob}/{kind}{v}.ogg", open(os.path.join(fdir, mob, f"{kind}{v}.ogg"), "rb").read())
             files.append(rl(f"ferra/{mob}/{kind}{v}"))
+        sub = f"subtitles.{NS}.entity.{name}"
+        sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
+        LANG_EN[sub] = en
+        LANG_ES[sub] = es
+    # 1.0.4: criaturas de Titán (tools/designs/titan_sounds.py → tools/designs/mobs/sounds_titan)
+    import titan_sounds  # noqa: E402
+    tdir = os.path.join(mobs, "sounds_titan")
+    for name, (_fn, count, en, es) in titan_sounds.SOUNDS.items():
+        mob, kind = name.split(".")
+        files = []
+        for v in range(1, count + 1):
+            write_bytes(f"assets/{NS}/sounds/titan/{mob}/{kind}{v}.ogg", open(os.path.join(tdir, mob, f"{kind}{v}.ogg"), "rb").read())
+            files.append(rl(f"titan/{mob}/{kind}{v}"))
         sub = f"subtitles.{NS}.entity.{name}"
         sounds_json[f"entity.{name}"] = {"subtitle": sub, "sounds": files}
         LANG_EN[sub] = en
@@ -4869,8 +4884,18 @@ def build_titan():
     sky, fog = rgb(140, 84, 38), rgb(170, 104, 48)
     common = dict(temperature=-0.5, downfall=0.0, precipitation=False, sky=sky, fog=fog, water=rgb(20, 70, 82),
                   water_fog=rgb(8, 30, 38), carvers=[])
+    # 1.0.4: criaturas de Titán (titan/mobs): rumiadores en las dunas y las llanuras, anguilas en los lagos, acechadores
+    # en las tierras altas de hielo (de noche; las reglas están en TitanMobs.spawnPlacements)
+    herd = (rl("tholin_ruminant"), 10, 3, 5)
+    titan_spawns = {
+        "titan_dunes": spawners(creature=[herd]),
+        "titan_tholin_plains": spawners(creature=[herd]),
+        "titan_ice_highlands": spawners(monster=[(rl("mist_stalker"), 8, 1, 1)]),
+        "titan_methane_shore": spawners(),
+        "titan_methane_lake": spawners(water_ambient=[(rl("methane_eel"), 10, 2, 4)]),
+    }
     for nm in ("titan_dunes", "titan_tholin_plains", "titan_ice_highlands", "titan_methane_shore", "titan_methane_lake"):
-        biome(nm, feats=features(underground_ores=ores_t), **common)
+        biome(nm, feats=features(underground_ores=ores_t), spawn=titan_spawns[nm], **common)
     name("titan_dunes", "Tholin Dunes", "Dunas de tolina")
     name("titan_tholin_plains", "Tholin Plains", "Llanuras de tolina")
     name("titan_ice_highlands", "Ice Highlands", "Tierras altas de hielo")
@@ -5487,6 +5512,127 @@ def build_space_transporter():
         LANG_ES[m + key] = es
 
 
+# --------------------------------------------------------------------------
+# 1.0.4: Criaturas de Titán (titan/mobs). Modelos: tools/designs/titan_mobs.py; objetos: titan_items.py.
+# --------------------------------------------------------------------------
+def build_titan_mobs():
+    mobs = os.path.join(DESIGNS, "mobs")
+    items = os.path.join(DESIGNS, "titan", "items")
+    for m, en, es in (("tholin_ruminant", "Tholin Ruminant", "Rumiador de tolina"), ("methane_eel", "Methane Eel", "Anguila de metano"),
+                      ("mist_stalker", "Mist Stalker", "Acechador de bruma")):
+        write_bytes(f"assets/{NS}/mob_models/{m}.json", open(os.path.join(mobs, f"{m}.json"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}.png", open(os.path.join(mobs, f"{m}.png"), "rb").read())
+        write_bytes(f"assets/{NS}/textures/entity/{m}_glow.png", open(os.path.join(mobs, f"{m}_glow.png"), "rb").read())
+        LANG_EN[f"entity.{NS}.{m}"] = en
+        LANG_ES[f"entity.{NS}.{m}"] = es
+        write(f"assets/{NS}/models/item/{m}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
+        LANG_EN[f"item.{NS}.{m}_spawn_egg"] = f"{en} Spawn Egg"
+        LANG_ES[f"item.{NS}.{m}_spawn_egg"] = f"Huevo generador de {es.lower()}"
+    # objetos
+    names = {
+        "raw_ruminant_meat": ("Raw Ruminant Meat", "Carne de rumiador cruda"),
+        "cooked_ruminant_meat": ("Cooked Ruminant Meat", "Carne de rumiador asada"),
+        "bitumen_tallow": ("Bitumen Tallow", "Grasa de bitumen"),
+        "tholin_plate": ("Tholin Plate", "Placa de tolina"),
+        "raw_methane_eel": ("Raw Methane Eel", "Anguila de metano cruda"),
+        "cooked_methane_eel": ("Cooked Methane Eel", "Anguila de metano asada"),
+        "cryo_scale": ("Cryogenic Scale", "Escama criogénica"),
+        "frost_fang": ("Frost Fang", "Colmillo de escarcha"),
+        "ice_dagger": ("Ice Dagger", "Daga de hielo"),
+        "ice_arrow": ("Ice Arrow", "Flecha de hielo"),
+        "mist_lantern": ("Mist Lantern", "Linterna de bruma"),
+        "cryo_tonic": ("Cryogenic Tonic", "Tónico criogénico"),
+    }
+    for it, (en, es) in names.items():
+        write_bytes(f"assets/{NS}/textures/item/{it}.png", open(os.path.join(items, f"{it}.png"), "rb").read())
+        parent = "minecraft:item/handheld" if it == "ice_dagger" else "minecraft:item/generated"
+        write(f"assets/{NS}/models/item/{it}.json", {"parent": parent, "textures": {"layer0": rl(f"item/{it}")}})
+        LANG_EN[f"item.{NS}.{it}"] = en
+        LANG_ES[f"item.{NS}.{it}"] = es
+    LANG_EN[f"item.{NS}.cryo_tonic.desc"] = "The cold of the planets freezes you 4 times slower for 4 minutes"
+    LANG_ES[f"item.{NS}.cryo_tonic.desc"] = "El frío de los planetas te congela 4 veces más despacio durante 4 minutos"
+    write_bytes(f"assets/{NS}/textures/entity/projectiles/ice_arrow.png", open(os.path.join(items, "entity_ice_arrow.png"), "rb").read())
+    LANG_EN[f"entity.{NS}.ice_arrow"] = "Ice Arrow"
+    LANG_ES[f"entity.{NS}.ice_arrow"] = "Flecha de hielo"
+    # efecto del tónico (icono 18x18 a partir de la escama)
+    from PIL import Image
+    import io
+    icon = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
+    icon.paste(Image.open(os.path.join(items, "cryo_scale.png")).convert("RGBA"), (1, 1))
+    buf = io.BytesIO()
+    icon.save(buf, format="PNG")
+    write_bytes(f"assets/{NS}/textures/mob_effect/cryo_adaptation.png", buf.getvalue())
+    LANG_EN[f"effect.{NS}.cryo_adaptation"] = "Cryogenic Adaptation"
+    LANG_ES[f"effect.{NS}.cryo_adaptation"] = "Adaptación criogénica"
+    # bloques: lámpara de bruma (textura animada) y bloque de placas de tolina
+    write_bytes(f"assets/{NS}/textures/block/mist_lamp.png", open(os.path.join(items, "mist_lamp.png"), "rb").read())
+    write(f"assets/{NS}/textures/block/mist_lamp.png.mcmeta", {"animation": {"frametime": 3, "interpolate": True,
+                                                                             "frames": [0, 1, 2, 1, 0, 3, 0, 2]}})
+    write_bytes(f"assets/{NS}/textures/block/tholin_plate_block.png", open(os.path.join(items, "tholin_plate_block.png"), "rb").read())
+    for b, (en, es) in {"mist_lamp": ("Mist Lamp", "Lámpara de bruma"),
+                        "tholin_plate_block": ("Tholin Plate Block", "Bloque de placas de tolina")}.items():
+        write(f"assets/{NS}/models/block/{b}.json", {"parent": "minecraft:block/cube_all", "textures": {"all": rl(f"block/{b}")}})
+        write(f"assets/{NS}/models/item/{b}.json", {"parent": rl(f"block/{b}")})
+        write(f"assets/{NS}/blockstates/{b}.json", {"variants": {"": {"model": rl(f"block/{b}")}}})
+        data(f"loot_table/blocks/{b}", {"type": "minecraft:block", "pools": [{
+            "rolls": 1.0, "bonus_rolls": 0.0, "entries": [{"type": "minecraft:item", "name": rl(b)}],
+            "conditions": [{"condition": "minecraft:survives_explosion"}]}], "random_sequence": rl(f"blocks/{b}")})
+        tag_add("data/minecraft/tags/block/mineable/pickaxe.json", rl(b))
+        LANG_EN[f"block.{NS}.{b}"] = en
+        LANG_ES[f"block.{NS}.{b}"] = es
+    # recetas
+    def cook(raw, out, xp):
+        for kind, t, suf in (("minecraft:smelting", 200, ""), ("minecraft:smoking", 100, "_smoking"),
+                             ("minecraft:campfire_cooking", 600, "_campfire")):
+            data(f"recipe/titan/{out}{suf}", {"type": kind, "category": "food", "ingredient": {"item": rl(raw)},
+                                              "result": {"id": rl(out)}, "experience": xp, "cookingtime": t})
+    cook("raw_ruminant_meat", "cooked_ruminant_meat", 0.35)
+    cook("raw_methane_eel", "cooked_methane_eel", 0.35)
+    data("recipe/titan/ice_dagger", {"type": "minecraft:crafting_shaped", "category": "equipment", "pattern": ["F", "S"],
+                                     "key": {"F": {"item": rl("frost_fang")}, "S": {"item": "minecraft:stick"}},
+                                     "result": {"id": rl("ice_dagger"), "count": 1}})
+    data("recipe/titan/ice_arrow", {"type": "minecraft:crafting_shapeless", "category": "equipment",
+                                    "ingredients": [{"item": rl("frost_fang")}] + [{"item": "minecraft:arrow"}] * 4,
+                                    "result": {"id": rl("ice_arrow"), "count": 4}})
+    data("recipe/titan/mist_lamp", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": [" N ", "GLG", " N "],
+                                    "key": {"N": {"item": "minecraft:iron_nugget"}, "G": {"item": "minecraft:glass"},
+                                            "L": {"item": rl("mist_lantern")}}, "result": {"id": rl("mist_lamp"), "count": 2}})
+    data("recipe/titan/tholin_plate_block", {"type": "minecraft:crafting_shaped", "category": "building", "pattern": ["PP", "PP"],
+                                             "key": {"P": {"item": rl("tholin_plate")}}, "result": {"id": rl("tholin_plate_block"), "count": 1}})
+    data("recipe/titan/tholin_plate_from_block", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                                  "ingredients": [{"item": rl("tholin_plate_block")}], "result": {"id": rl("tholin_plate"), "count": 4}})
+    data("recipe/titan/cryo_tonic", {"type": "minecraft:crafting_shapeless", "category": "misc",
+                                     "ingredients": [{"item": "minecraft:glass_bottle"}, {"item": rl("cryo_scale")}, {"item": rl("bitumen_tallow")}],
+                                     "result": {"id": rl("cryo_tonic"), "count": 1}})
+    datamap_add("data/neoforge/data_maps/item/furnace_fuels.json", {rl("bitumen_tallow"): {"burn_time": 4800}})
+    tag_add("data/minecraft/tags/item/arrows.json", rl("ice_arrow"))
+    tag_add("data/minecraft/tags/item/swords.json", rl("ice_dagger"))
+    tag_add("data/minecraft/tags/item/meat.json", rl("raw_ruminant_meat"))
+    tag_add("data/minecraft/tags/item/meat.json", rl("cooked_ruminant_meat"))
+    tag_add("data/minecraft/tags/item/fishes.json", rl("raw_methane_eel"))
+    tag_add("data/minecraft/tags/item/fishes.json", rl("cooked_methane_eel"))
+
+    # botín
+    def drop(item, lo, hi, chance=None, smelt=None, looting=1):
+        fns = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}}]
+        if looting:
+            fns.append({"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                        "count": {"type": "minecraft:uniform", "min": 0, "max": looting}})
+        if smelt:
+            fns.append({"function": "minecraft:furnace_smelt", "conditions": [{"condition": "minecraft:entity_properties",
+                        "entity": "this", "predicate": {"flags": {"is_on_fire": True}}}]})
+        p = {"rolls": 1, "entries": [{"type": "minecraft:item", "name": item, "functions": fns}]}
+        if chance is not None:
+            p["conditions"] = [{"condition": "minecraft:killed_by_player"}, {"condition": "minecraft:random_chance", "chance": chance}]
+        return p
+    data("loot_table/entities/tholin_ruminant", {"type": "minecraft:entity", "pools": [
+        drop(rl("raw_ruminant_meat"), 1, 3, smelt=True), drop(rl("bitumen_tallow"), 0, 2), drop(rl("tholin_plate"), 0, 2)]})
+    data("loot_table/entities/methane_eel", {"type": "minecraft:entity", "pools": [
+        drop(rl("raw_methane_eel"), 1, 1, smelt=True, looting=0), drop(rl("cryo_scale"), 1, 1, chance=0.08)]})
+    data("loot_table/entities/mist_stalker", {"type": "minecraft:entity", "pools": [
+        drop(rl("frost_fang"), 0, 2), drop(rl("mist_lantern"), 1, 1, chance=0.15)]})
+
+
 if __name__ == "__main__":
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
@@ -5502,6 +5648,7 @@ if __name__ == "__main__":
     build_ferra()            # 1.0.3: luna de óxido de Cerúlea
     build_saturn()           # 1.0.4: Saturno con anillos
     build_titan()            # 1.0.4: su luna Titán
+    build_titan_mobs()       # 1.0.4: criaturas de Titán
     build_aurelia()          # 1.0.4: gigante gaseoso de Ámbar
     build_fulgor()           # 1.0.4: su luna de tormentas Fulgor
     build_methane_engine()   # 1.0.4: soporte de motor de metano (receta con la palanca de Simulated)

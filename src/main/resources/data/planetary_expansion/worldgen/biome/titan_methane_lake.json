@@ -15,7 +15,14 @@
     "misc": [],
     "monster": [],
     "underground_water_creature": [],
-    "water_ambient": [],
+    "water_ambient": [
+      {
+        "type": "planetary_expansion:methane_eel",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
     "water_creature": []
   },
   "spawn_costs": {},

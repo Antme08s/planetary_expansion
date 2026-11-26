@@ -80,6 +80,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.fulgor.FulgorBlocks.register(modBus); // 1.0.4: Fulgor, luna de tormentas de Aurelia
         dev.antme08.planetaryexpansion.engine.MethaneEngine.registerIfCompatible(modBus); // 1.0.4: soporte de motor de metano
         dev.antme08.planetaryexpansion.ferra.mobs.FerraMobs.register(modBus); // 1.0.3: gusano de óxido y rastreador ciego
+        dev.antme08.planetaryexpansion.titan.mobs.TitanMobs.register(modBus); // 1.0.4: criaturas de Titán
         dev.antme08.planetaryexpansion.cerulea.CeruleaSea.register(modBus); // 1.0.3: plantas del mar de Cerúlea
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientStormEffects.register();
@@ -97,6 +98,7 @@ public final class PlanetaryExpansion {
             dev.antme08.planetaryexpansion.cerulea.mobs.client.CeruleaMobsClient.register(modBus); // 1.0.3
             dev.antme08.planetaryexpansion.ferra.mobs.client.FerraMobsClient.register(modBus); // 1.0.3
             dev.antme08.planetaryexpansion.titan.client.TitanClient.register(modBus); // 1.0.4
+            dev.antme08.planetaryexpansion.titan.mobs.client.TitanMobsClient.register(modBus); // 1.0.4: criaturas de Titán
             NeoForge.EVENT_BUS.register(dev.antme08.planetaryexpansion.client.ThermalLavaVision.class); // 0.7.64
         }
 

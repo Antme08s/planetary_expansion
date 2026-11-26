@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:glass_bottle"
+    },
+    {
+      "item": "planetary_expansion:cryo_scale"
+    },
+    {
+      "item": "planetary_expansion:bitumen_tallow"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:cryo_tonic",
+    "count": 1
+  }
+}

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "planetary_expansion:ice_dagger",
     "planetary_expansion:fang_dagger"
   ]
 }

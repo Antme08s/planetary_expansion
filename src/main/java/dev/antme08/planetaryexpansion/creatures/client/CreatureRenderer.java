@@ -78,8 +78,11 @@ public class CreatureRenderer<T extends Mob> extends MobRenderer<T, JsonMobModel
             if (entity.isInvisible()) return;   // 1.0.3: el gusano enterrado (invisible) no deja sus fosas brillando en el aire
             float a = (float) Mth.clamp(strength == null ? 1.0 : strength.applyAsDouble(entity), 0.0, 1.0);
             if (a <= 0.01F) return;
+            float old = getParentModel().alpha;   // 1.0.4: lo que brilla se ve siempre entero (la linterna del acechador)
+            getParentModel().alpha = 1.0F;
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(tex)), 0xF000F0, OverlayTexture.NO_OVERLAY,
                     FastColor.ARGB32.colorFromFloat(1.0F, a, a, a));
+            getParentModel().alpha = old;
         }
     }
 }

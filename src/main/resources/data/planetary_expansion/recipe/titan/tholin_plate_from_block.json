@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "planetary_expansion:tholin_plate_block"
+    }
+  ],
+  "result": {
+    "id": "planetary_expansion:tholin_plate",
+    "count": 4
+  }
+}

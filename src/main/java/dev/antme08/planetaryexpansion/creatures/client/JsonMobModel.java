@@ -117,8 +117,15 @@ public class JsonMobModel<T extends Entity> extends EntityModel<T> {
         if (animator != null) animator.animate(this, entity, limbSwing, limbSwingAmount, age, headYaw, headPitch);
     }
 
+    /** 1.0.4: transparencia de todo el modelo (el acechador de bruma se funde con la bruma); 1 = opaco. */
+    public float alpha = 1.0F;
+
     @Override
     public void renderToBuffer(PoseStack pose, VertexConsumer buffer, int light, int overlay, int color) {
+        if (alpha < 0.999F) {
+            int a = Math.round(((color >>> 24) & 0xFF) * alpha);
+            color = (a << 24) | (color & 0x00FFFFFF);
+        }
         root.render(pose, buffer, light, overlay, color);
     }
 }

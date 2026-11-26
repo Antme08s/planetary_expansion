@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
+    "planetary_expansion:raw_methane_eel",
+    "planetary_expansion:cooked_methane_eel",
     "planetary_expansion:ribbonfin",
     "planetary_expansion:cooked_ribbonfin"
   ]
