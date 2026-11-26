@@ -251,7 +251,7 @@ def spawners(**cats):
 
 
 def biome(name, *, temperature, downfall, precipitation, sky, fog, water, water_fog,
-          carvers, feats, spawn=None, particle=None, grass=None, foliage=None):
+          carvers, feats, spawn=None, particle=None, grass=None, foliage=None, creature_chance=None):
     effects = {"sky_color": sky, "fog_color": fog, "water_color": water, "water_fog_color": water_fog}
     if grass is not None:
         effects["grass_color"] = grass
@@ -267,6 +267,7 @@ def biome(name, *, temperature, downfall, precipitation, sky, fog, water, water_
         "effects": effects,
         "spawners": spawn or spawners(),
         "spawn_costs": {},
+        **({"creature_spawn_probability": creature_chance} if creature_chance is not None else {}),
         "carvers": {"air": carvers},
         "features": feats,
     })
@@ -4900,16 +4901,16 @@ def build_titan():
                   water_fog=rgb(8, 30, 38), carvers=[])
     # 1.0.4: criaturas de Titán (titan/mobs): rumiadores en las dunas y las llanuras, anguilas en los lagos, acechadores
     # en las tierras altas de hielo (de noche; las reglas están en TitanMobs.spawnPlacements)
-    herd = (rl("tholin_ruminant"), 10, 3, 5)
+    herd = (rl("tholin_ruminant"), 10, 2, 4)
     titan_spawns = {
         "titan_dunes": spawners(creature=[herd]),
         "titan_tholin_plains": spawners(creature=[herd]),
         "titan_ice_highlands": spawners(monster=[(rl("mist_stalker"), 8, 1, 1)]),
         "titan_methane_shore": spawners(),
-        "titan_methane_lake": spawners(water_ambient=[(rl("methane_eel"), 10, 2, 4)]),
+        "titan_methane_lake": spawners(water_ambient=[(rl("methane_eel"), 10, 1, 3)]),
     }
     for nm in ("titan_dunes", "titan_tholin_plains", "titan_ice_highlands", "titan_methane_shore", "titan_methane_lake"):
-        biome(nm, feats=features(underground_ores=ores_t), spawn=titan_spawns[nm], **common)
+        biome(nm, feats=features(underground_ores=ores_t), spawn=titan_spawns[nm], creature_chance=0.02, **common)
     name("titan_dunes", "Tholin Dunes", "Dunas de tolina")
     name("titan_tholin_plains", "Tholin Plains", "Llanuras de tolina")
     name("titan_ice_highlands", "Ice Highlands", "Tierras altas de hielo")
@@ -5216,15 +5217,15 @@ def build_fulgor():
                   water_fog=rgb(30, 30, 64), carvers=[])
     # 1.0.4: criaturas de Fulgor (fulgor/mobs): arcos en la ceniza y el basalto, zancudos en los campos de fulgurita,
     # atrapa-rayos en las agujas (las reglas finas están en FulgorMobs.spawnPlacements)
-    arcs = (rl("arc_crawler"), 10, 2, 4)
+    arcs = (rl("arc_crawler"), 10, 1, 3)
     fulgor_spawns = {
         "fulgor_ash_flats": spawners(creature=[arcs]),
         "fulgor_basalt_plains": spawners(creature=[arcs]),
         "fulgor_spires": spawners(monster=[(rl("spire_catcher"), 8, 1, 1)]),
-        "fulgor_fulgurite_fields": spawners(creature=[(rl("fulgurite_strider"), 10, 2, 3)]),
+        "fulgor_fulgurite_fields": spawners(creature=[(rl("fulgurite_strider"), 10, 1, 2)]),
     }
     for nm in ("fulgor_ash_flats", "fulgor_basalt_plains", "fulgor_spires", "fulgor_fulgurite_fields"):
-        biome(nm, feats=features(underground_ores=ores_f), spawn=fulgor_spawns[nm], **common)
+        biome(nm, feats=features(underground_ores=ores_f), spawn=fulgor_spawns[nm], creature_chance=0.02, **common)
     name("fulgor_ash_flats", "Ash Flats", "Llanuras de ceniza")
     name("fulgor_basalt_plains", "Basalt Plains", "Llanuras de basalto")
     name("fulgor_spires", "Basalt Spires", "Agujas de basalto")

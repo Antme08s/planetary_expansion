@@ -2,6 +2,7 @@ package dev.antme08.planetaryexpansion.fulgor.mobs;
 
 import com.google.common.collect.ImmutableSet;
 import dev.antme08.planetaryexpansion.PlanetaryExpansion;
+import dev.antme08.planetaryexpansion.creatures.SpawnLimits;
 import dev.antme08.planetaryexpansion.weather.StormManager;
 import dev.antme08.planetaryexpansion.weather.StormType;
 import net.minecraft.core.BlockPos;
@@ -204,17 +205,16 @@ public final class FulgorMobs {
 
     private static void spawnPlacements(RegisterSpawnPlacementsEvent event) {
         var op = RegisterSpawnPlacementsEvent.Operation.REPLACE;
+        // 1.0.4: límites (SpawnLimits): pocos grupos por zona y un atrapa-rayos cada vez
         event.register(ARC.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inFulgor(level) && level.getBlockState(pos.below()).isSolid()
-                        && (reason != MobSpawnType.NATURAL
-                        || level.getEntitiesOfClass(ArcCrawler.class, new AABB(pos).inflate(32)).size() < 8), op);
+                        && SpawnLimits.allow(level, reason, pos, random, ArcCrawler.class, 48, 4, 0.3F, 0.35F), op);
         event.register(STRIDER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (t, level, reason, pos, random) -> inFulgor(level) && level.getBlockState(pos.below()).isSolid(), op);
-        // atrapa-rayos: 1 de cada 2 intentos y nunca más de 3 a 48 bloques (de día o de noche: en Fulgor siempre hay tormenta)
+                (t, level, reason, pos, random) -> inFulgor(level) && level.getBlockState(pos.below()).isSolid()
+                        && SpawnLimits.allow(level, reason, pos, random, FulguriteStrider.class, 64, 3, 0.3F, 0.35F), op);
         event.register(CATCHER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inFulgor(level) && level.getBlockState(pos.below()).isSolid()
-                        && (reason != MobSpawnType.NATURAL || (random.nextInt(2) == 0
-                        && level.getEntitiesOfClass(SpireCatcher.class, new AABB(pos).inflate(48)).size() < 3)), op);
+                        && SpawnLimits.allow(level, reason, pos, random, SpireCatcher.class, 80, 1, 0.08F, 0.0F), op);
     }
 
     private static void creativeTab(BuildCreativeModeTabContentsEvent event) {

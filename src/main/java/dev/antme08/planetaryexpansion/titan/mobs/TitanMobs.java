@@ -1,6 +1,7 @@
 package dev.antme08.planetaryexpansion.titan.mobs;
 
 import dev.antme08.planetaryexpansion.PlanetaryExpansion;
+import dev.antme08.planetaryexpansion.creatures.SpawnLimits;
 import dev.antme08.planetaryexpansion.titan.TitanBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -169,19 +170,18 @@ public final class TitanMobs {
 
     private static void spawnPlacements(RegisterSpawnPlacementsEvent event) {
         var op = RegisterSpawnPlacementsEvent.Operation.REPLACE;
+        // 1.0.4: límites (SpawnLimits): una manada por zona, pocas anguilas, un acechador cada vez
         event.register(RUMINANT.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inTitan(level) && level.getBlockState(pos.below()).isSolid()
-                        && level.getFluidState(pos).isEmpty(), op);
-        // anguilas: dentro del metano, y no más de 10 a 32 bloques
+                        && level.getFluidState(pos).isEmpty()
+                        && SpawnLimits.allow(level, reason, pos, random, TholinRuminant.class, 64, 5, 0.3F, 0.35F), op);
         event.register(EEL.get(), SpawnPlacementTypes.NO_RESTRICTIONS, Heightmap.Types.OCEAN_FLOOR,
                 (t, level, reason, pos, random) -> inTitan(level) && isMethane(level, pos) && isMethane(level, pos.above())
-                        && (reason != MobSpawnType.NATURAL
-                        || level.getEntitiesOfClass(MethaneEel.class, new AABB(pos).inflate(32)).size() < 10), op);
-        // acechador: de noche (o a oscuras), 1 de cada 3 intentos y nunca más de 2 a 48 bloques
+                        && SpawnLimits.allow(level, reason, pos, random, MethaneEel.class, 40, 5, 0.25F, 0.5F), op);
         event.register(STALKER.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (t, level, reason, pos, random) -> inTitan(level) && level.getBlockState(pos.below()).isSolid()
-                        && (reason != MobSpawnType.NATURAL || (random.nextInt(3) == 0 && dark(level, pos)
-                        && level.getEntitiesOfClass(MistStalker.class, new AABB(pos).inflate(48)).size() < 2)), op);
+                        && (reason != MobSpawnType.NATURAL || dark(level, pos))
+                        && SpawnLimits.allow(level, reason, pos, random, MistStalker.class, 80, 1, 0.08F, 0.0F), op);
     }
 
     private static boolean dark(ServerLevelAccessor level, BlockPos pos) {

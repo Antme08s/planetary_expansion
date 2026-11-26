@@ -1234,3 +1234,14 @@ resistente a explosiones) y **pararrayos de tormenta** (modelo 3D; en Fulgor atr
 el pararrayos normal, y da un pulso de redstone de 1 s al recibir uno). Recetas: lámpara (glándula + cobre + vidrio),
 4 fragmentos ⇄ fulgurita, 8 vidrios + filamento → 8 vidrios de tormenta, antena + pararrayos + bloque de cobre →
 pararrayos de tormenta. Fuentes: `tools/designs/fulgor_mobs.py`, `fulgor_items.py`, `storm_rod_model.py`, `fulgor_sounds.py`.
+
+## 1.0.4 — menos criaturas en Titán y Fulgor
+Tras probar, saturaban sus mundos: sus reglas de aparición solo pedían suelo sólido (en la Tierra los animales necesitan
+hierba y luz), así que casi todos los intentos salían bien, y los animales no desaparecen al alejarte.
+- `creatures/SpawnLimits`: en la aparición natural solo cuenta una fracción de los intentos y nunca si ya hay bastantes
+  de esa criatura cerca; en la generación del chunk solo una fracción de los grupos; huevos y comandos sin límite.
+  Rumiador: 30 %, máx. 5 a 64 bloques. Anguila: 25 %, máx. 5 a 40. Acechador: 8 %, máx. 1 a 80. Arco: 30 %, máx. 4 a 48.
+  Zancudo: 30 %, máx. 3 a 64. Atrapa-rayos: 8 %, máx. 1 a 80.
+- Grupos más pequeños (rumiadores 2-4, anguilas 1-3, arcos 1-3, zancudos 1-2) y `creature_spawn_probability` 0,02 en
+  los biomas de Titán y Fulgor (antes 0,1 por defecto).
+- Las criaturas que ya aparecieron siguen ahí: `/kill @e[type=planetary_expansion:tholin_ruminant]` (etc.) para limpiar.

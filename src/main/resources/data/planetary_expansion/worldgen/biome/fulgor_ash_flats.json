@@ -15,8 +15,8 @@
       {
         "type": "planetary_expansion:arc_crawler",
         "weight": 10,
-        "minCount": 2,
-        "maxCount": 4
+        "minCount": 1,
+        "maxCount": 3
       }
     ],
     "misc": [],
@@ -26,6 +26,7 @@
     "water_creature": []
   },
   "spawn_costs": {},
+  "creature_spawn_probability": 0.02,
   "carvers": {
     "air": []
   },
