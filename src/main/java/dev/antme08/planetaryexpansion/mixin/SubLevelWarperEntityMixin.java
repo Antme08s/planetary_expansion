@@ -6,6 +6,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -32,5 +35,31 @@ public abstract class SubLevelWarperEntityMixin {
             require = 0)
     private static java.util.Collection<dev.ryanhcode.sable.sublevel.SubLevel> planetaryExpansion$group(dev.ryanhcode.sable.sublevel.SubLevel start) {
         return dev.antme08.planetaryexpansion.transporter.ShipGroups.chain(start);
+    }
+
+    /**
+     * 1.0.5: al bajar a un planeta Cosmonautics gira cada nave para que llegue derecha (gira su orientación), pero deja
+     * la posición de las naves unidas donde estaba respecto a la principal, sin girar. Con una sola nave da igual; con
+     * un grupo, las piezas giradas quedan al otro lado (las patas por fuera, del revés). Aquí se gira también la
+     * posición de cada nave del grupo alrededor de la principal, con el mismo giro, para que el grupo gire entero.
+     */
+    @WrapOperation(method = "WarpSubLevels",
+            at = @At(value = "INVOKE", target = "Ldev/ryanhcode/sable/api/physics/PhysicsPipeline;teleport(Ldev/ryanhcode/sable/api/physics/PhysicsPipelineBody;Lorg/joml/Vector3dc;Lorg/joml/Quaterniondc;)V"),
+            require = 0)
+    private static void planetaryExpansion$rotateGroup(dev.ryanhcode.sable.api.physics.PhysicsPipeline pipeline,
+                                                       dev.ryanhcode.sable.api.physics.PhysicsPipelineBody body,
+                                                       org.joml.Vector3dc pos, org.joml.Quaterniondc rot,
+                                                       Operation<Void> original,
+                                                       @Local(argsOnly = true, ordinal = 1) org.joml.Vector3d to) {
+        org.joml.Vector3dc p = pos;
+        try {
+            org.joml.Quaterniondc r = dev.devce.rocketnautics.content.physics.SpaceTransitionHandler.PREMUL_ROTATION;
+            if (r != null && to != null && pos != null) {
+                org.joml.Vector3d rel = new org.joml.Vector3d(pos).sub(to);
+                if (rel.lengthSquared() > 1.0e-6) p = r.transform(rel, new org.joml.Vector3d()).add(to);
+            }
+        } catch (Throwable ignored) {
+        }
+        original.call(pipeline, body, p, rot);
     }
 }
