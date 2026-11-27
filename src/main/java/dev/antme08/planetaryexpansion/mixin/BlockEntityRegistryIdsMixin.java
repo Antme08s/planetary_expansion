@@ -16,6 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class BlockEntityRegistryIdsMixin {
     @Inject(method = "modifyNBT", at = @At("RETURN"), require = 0)
     private static void planetaryExpansion$remapIds(BlockEntityRegistry.BlockEntityInfo info, CallbackInfoReturnable<CompoundTag> cir) {
-        ShipGroups.remapIds(cir.getReturnValue(), info == null ? null : info.moveInfo());
+        CompoundTag tag = cir.getReturnValue();
+        ShipGroups.remapIds(tag, info == null ? null : info.moveInfo());
+        // TEMPORAL: vigilar el caminante de Let It Walk al llegar (ver WalkerWatch)
+        try {
+            if (tag != null && "let_it_walk:walker_core".equals(tag.getString("id")))
+                dev.antme08.planetaryexpansion.transporter.WalkerWatch.expect(
+                        new net.minecraft.core.BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z")));
+        } catch (Throwable ignored) {
+        }
     }
 }
