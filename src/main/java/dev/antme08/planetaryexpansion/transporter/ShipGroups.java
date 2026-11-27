@@ -61,7 +61,7 @@ public final class ShipGroups {
     public static Collection<SubLevel> group(SubLevel start, boolean log) {
         Collection<SubLevel> base = SubLevelHelper.getConnectedChain(start);
         Set<SubLevel> group = new LinkedHashSet<>(base);
-        int magnets = 0, carried = 0;
+        int magnets = 0, carried = 0, loaded = 0;
         Level level = start.getLevel();
         Map<SubLevel, Set<SubLevel>> pairs = Map.of();
         try {
@@ -78,6 +78,15 @@ public final class ShipGroups {
             Set<SubLevel> next = new LinkedHashSet<>();
             for (SubLevel other : pairs.getOrDefault(s, Set.of()))
                 if (!group.contains(other) && next.add(other)) magnets++;
+            // lo que la nave necesita cargado con ella (p. ej. las patas de un caminante de Let It Walk, que no
+            // declaran unión pero sí que se cargan juntas)
+            if (s instanceof dev.ryanhcode.sable.sublevel.ServerSubLevel ss) {
+                try {
+                    for (SubLevel other : SubLevelHelper.getLoadingDependencyChain(ss))
+                        if (!group.contains(other) && next.add(other)) loaded++;
+                } catch (Throwable ignored) {
+                }
+            }
             try {
                 for (SubLevel other : resting(level, s))
                     if (!group.contains(other) && next.add(other)) carried++;
@@ -96,10 +105,10 @@ public final class ShipGroups {
             }
         }
         if (log && group.size() > 1) {
-            PlanetaryExpansion.LOGGER.info("[Naves] Viajan juntas {} naves ({} sujetas con imanes, {} encima o dentro de otra)",
-                    group.size(), magnets, carried);
+            PlanetaryExpansion.LOGGER.info("[Naves] Viajan juntas {} naves ({} unidas, {} con imanes, {} cargadas juntas, {} encima o dentro de otra)",
+                    group.size(), base.size() - 1, magnets, loaded, carried);
         }
-        return magnets == 0 && carried == 0 ? base : group;
+        return magnets == 0 && carried == 0 && loaded == 0 ? base : group;
     }
 
     private static boolean restingFailed;
