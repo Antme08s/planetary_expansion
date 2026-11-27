@@ -280,6 +280,50 @@ public final class ShipGroups {
         }
     }
 
+    /**
+     * Let It Walk: el núcleo del caminante guarda cada pata ("legs"), con sus articulaciones: id de la pieza padre y de
+     * la hija y el punto de la unión en las coordenadas de cada una ("pp" en la padre, "cp" en la hija, como ppx/ppy/ppz),
+     * y el punto del pie ("footPlot") en la última pieza. Sin mover esos puntos, al llegar las uniones se rehacen en
+     * otro sitio y la pata se rompe en piezas.
+     */
+    private static final class WalkerCore extends BlockEntityAccessor {
+        @Override
+        public CompoundTag modifyNBT(BlockEntityRegistry.BlockEntityInfo info) {
+            CompoundTag tag = info.tag();
+            try {
+                var map = info.moveInfo().oldToNewSubLevelMap();
+                ListTag legs = tag.getList("legs", Tag.TAG_COMPOUND);
+                for (int i = 0; i < legs.size(); i++) {
+                    CompoundTag leg = legs.getCompound(i);
+                    ListTag joints = leg.getList("joints", Tag.TAG_COMPOUND);
+                    for (int j = 0; j < joints.size(); j++) {
+                        CompoundTag joint = joints.getCompound(j);
+                        offsetVec(joint, "pp", delta(map, joint, "parent"));
+                        offsetVec(joint, "cp", delta(map, joint, "child"));
+                    }
+                    ListTag segs = leg.getList("segments", Tag.TAG_COMPOUND);
+                    if (!segs.isEmpty()) offsetVec(leg, "footPlot", delta(map, segs.getCompound(segs.size() - 1), "id"));
+                }
+            } catch (Throwable t) {
+                PlanetaryExpansion.LOGGER.warn("[Naves] No se pudieron arreglar las patas del caminante de Let It Walk", t);
+            }
+            return tag;
+        }
+
+        private static Vec3i delta(HashMap<UUID, DimensionalSable.Pair<UUID, Vec3i>> map, CompoundTag tag, String key) {
+            if (!tag.hasUUID(key)) return null;
+            var to = map.get(tag.getUUID(key));
+            return to == null ? null : to.second();
+        }
+
+        private static void offsetVec(CompoundTag tag, String key, Vec3i d) {
+            if (d == null || !tag.contains(key + "x")) return;
+            tag.putDouble(key + "x", tag.getDouble(key + "x") + d.getX());
+            tag.putDouble(key + "y", tag.getDouble(key + "y") + d.getY());
+            tag.putDouble(key + "z", tag.getDouble(key + "z") + d.getZ());
+        }
+    }
+
     private static void link(String modid, String block, String idKey, String... posKeys) {
         BlockEntityRegistry.PublishCustomFixer(modid, block, new Link(idKey, posKeys));
     }
@@ -315,6 +359,8 @@ public final class ShipGroups {
             link(tl, "hydraulic_connection_head", "LinkedSubLevel", "LinkedPos");
             link(tl, "hydraulic_connection_head", "HingeSubLevel", "HingeLinkPos");
             link(tl, "hydraulic_connection_head", "HingeParentSubLevel", "HingeOwnerPos");
+            // Let It Walk (las ids de las piezas las cambia remapIds después)
+            BlockEntityRegistry.PublishCustomFixer("let_it_walk", "walker_core", new WalkerCore());
         } catch (Throwable t) {
             PlanetaryExpansion.LOGGER.warn("[Naves] No se pudieron registrar los arreglos de uniones entre naves", t);
         }
