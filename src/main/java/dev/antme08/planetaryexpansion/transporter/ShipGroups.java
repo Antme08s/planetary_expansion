@@ -37,6 +37,8 @@ import java.util.UUID;
  * <ul>
  *   <li><b>Imanes</b>: dos imanes de redstone de Simulated que se atraen no son una unión para Sable, así que la nave
  *   sujeta con imanes se quedaba atrás. Se añaden al grupo las naves con imanes emparejados con los del grupo.</li>
+ *   <li><b>Lo que va encima o dentro</b> (un vehículo de Aeronautics aparcado en la cubierta, una caja con física en
+ *   la bodega): viaja con la nave que lo lleva, aunque no esté sujeto ({@link #resting}).</li>
  *   <li><b>Uniones de otros mods</b> (Gadgets &amp; Gizmos, Absolute Kinematics, Aeronautics Utility Objects): se
  *   registran arreglos para que, al llegar, apunten a la nueva id de la otra nave y a la nueva posición de su bloque.</li>
  *   <li>Cualquier otra referencia a una nave del grupo que quede en los datos de un bloque (su id) se cambia a la id
@@ -59,34 +61,82 @@ public final class ShipGroups {
     public static Collection<SubLevel> group(SubLevel start, boolean log) {
         Collection<SubLevel> base = SubLevelHelper.getConnectedChain(start);
         Set<SubLevel> group = new LinkedHashSet<>(base);
-        int magnets = 0;
+        int magnets = 0, carried = 0;
+        Level level = start.getLevel();
+        Map<SubLevel, Set<SubLevel>> pairs = Map.of();
         try {
-            Level level = start.getLevel();
-            Map<SubLevel, Set<SubLevel>> pairs = magnetPairs(level);
-            if (!pairs.isEmpty()) {
-                ArrayDeque<SubLevel> todo = new ArrayDeque<>(group);
-                while (!todo.isEmpty() && group.size() < MAX_GROUP) {
-                    SubLevel s = todo.poll();
-                    for (SubLevel other : pairs.getOrDefault(s, Set.of())) {
-                        if (other == null || other.isRemoved() || other.getLevel() != level || group.contains(other)) continue;
-                        magnets++;
-                        for (SubLevel linked : SubLevelHelper.getConnectedChain(other)) {
-                            if (linked != null && !linked.isRemoved() && linked.getLevel() == level && group.add(linked))
-                                todo.add(linked);
-                        }
-                    }
-                }
-            }
+            pairs = magnetPairs(level);
         } catch (Throwable t) {
             if (!magnetsFailed) {
                 magnetsFailed = true;
                 PlanetaryExpansion.LOGGER.warn("[Naves] No se pudieron mirar los imanes al cambiar de dimensión", t);
             }
         }
-        if (log && group.size() > 1) {
-            PlanetaryExpansion.LOGGER.info("[Naves] Viajan juntas {} naves ({} sujetas con imanes)", group.size(), magnets);
+        ArrayDeque<SubLevel> todo = new ArrayDeque<>(group);
+        while (!todo.isEmpty() && group.size() < MAX_GROUP) {
+            SubLevel s = todo.poll();
+            Set<SubLevel> next = new LinkedHashSet<>();
+            for (SubLevel other : pairs.getOrDefault(s, Set.of()))
+                if (!group.contains(other) && next.add(other)) magnets++;
+            try {
+                for (SubLevel other : resting(level, s))
+                    if (!group.contains(other) && next.add(other)) carried++;
+            } catch (Throwable t) {
+                if (!restingFailed) {
+                    restingFailed = true;
+                    PlanetaryExpansion.LOGGER.warn("[Naves] No se pudo mirar qué va encima de la nave", t);
+                }
+            }
+            for (SubLevel other : next) {
+                if (other == null || other.isRemoved() || other.getLevel() != level) continue;
+                for (SubLevel linked : SubLevelHelper.getConnectedChain(other)) {
+                    if (linked != null && !linked.isRemoved() && linked.getLevel() == level && group.add(linked))
+                        todo.add(linked);
+                }
+            }
         }
-        return magnets == 0 ? base : group;
+        if (log && group.size() > 1) {
+            PlanetaryExpansion.LOGGER.info("[Naves] Viajan juntas {} naves ({} sujetas con imanes, {} encima o dentro de otra)",
+                    group.size(), magnets, carried);
+        }
+        return magnets == 0 && carried == 0 ? base : group;
+    }
+
+    private static boolean restingFailed;
+
+    /**
+     * Las naves (vehículos, bloques con física…) que van encima o dentro de esta, y la que la lleva a ella si es ella la
+     * que va encima de otra: se tocan (las cajas, con medio bloque de margen), la pequeña tiene el centro sobre la planta
+     * de la grande y no está por debajo de ella. "Pequeña" y "grande" por el tamaño de la caja.
+     */
+    private static Set<SubLevel> resting(Level level, SubLevel s) {
+        Set<SubLevel> out = new LinkedHashSet<>();
+        var box = s.boundingBox();
+        if (box == null) return out;
+        double m = 0.6;
+        var search = new dev.ryanhcode.sable.companion.math.BoundingBox3d(new net.minecraft.world.phys.AABB(
+                box.minX() - m, box.minY() - m, box.minZ() - m, box.maxX() + m, box.maxY() + m, box.maxZ() + m));
+        for (SubLevel other : Sable.HELPER.getAllIntersecting(level, search)) {
+            if (other == null || other == s || other.isRemoved() || other.getLevel() != level) continue;
+            var ob = other.boundingBox();
+            if (ob == null) continue;
+            double vs = volume(box), vo = volume(ob);
+            if (vo < vs ? carries(box, ob, m) : vo > vs && carries(ob, box, m)) out.add(other);
+        }
+        return out;
+    }
+
+    private static double volume(dev.ryanhcode.sable.companion.math.BoundingBox3dc b) {
+        return Math.max(0, b.maxX() - b.minX()) * Math.max(0, b.maxY() - b.minY()) * Math.max(0, b.maxZ() - b.minZ());
+    }
+
+    /** ¿La caja grande {@code big} lleva a la pequeña {@code small}? */
+    private static boolean carries(dev.ryanhcode.sable.companion.math.BoundingBox3dc big,
+                                   dev.ryanhcode.sable.companion.math.BoundingBox3dc small, double m) {
+        if (!small.intersects(big.minX() - m, big.minY() - m, big.minZ() - m, big.maxX() + m, big.maxY() + m, big.maxZ() + m))
+            return false;
+        double cx = (small.minX() + small.maxX()) / 2, cy = (small.minY() + small.maxY()) / 2, cz = (small.minZ() + small.maxZ()) / 2;
+        return cx >= big.minX() && cx <= big.maxX() && cz >= big.minZ() && cz <= big.maxZ() && cy >= big.minY();
     }
 
     /** Naves unidas por pares de imanes de Simulated que se están atrayendo (en las dos direcciones). */
