@@ -233,7 +233,19 @@ public final class SpaceLaunch {
         }
     }
 
+    /** Frena la nave y (1.0.5) las que van unidas a ella, para que el grupo llegue quieto y no se separe. */
     private static void stop(ServerSubLevel ship) {
+        if (ship == null || ship.isRemoved()) return;
+        java.util.Collection<SubLevel> group;
+        try {
+            group = ShipGroups.group(ship, false);
+        } catch (Throwable t) {
+            group = java.util.List.of(ship);
+        }
+        for (SubLevel s : group) if (s instanceof ServerSubLevel one) stopOne(one);
+    }
+
+    private static void stopOne(ServerSubLevel ship) {
         if (ship == null || ship.isRemoved()) return;
         try {
             RigidBodyHandle body = RigidBodyHandle.of(ship);

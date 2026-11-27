@@ -26,7 +26,8 @@
     "DeepSpacePositionFreezeMixin",
     "SpaceTransitionLaunchMixin",
     "SubLevelTemplateHeightMixin",
-    "SubLevelWarperEntityMixin"
+    "SubLevelWarperEntityMixin",
+    "BlockEntityRegistryIdsMixin"
   ],
   "client": [
     "HologramTableRendererMixin",

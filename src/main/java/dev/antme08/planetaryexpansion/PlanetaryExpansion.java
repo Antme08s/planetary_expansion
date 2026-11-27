@@ -83,6 +83,7 @@ public final class PlanetaryExpansion {
         dev.antme08.planetaryexpansion.titan.mobs.TitanMobs.register(modBus); // 1.0.4: criaturas de Titán
         dev.antme08.planetaryexpansion.fulgor.mobs.FulgorMobs.register(modBus); // 1.0.4: criaturas de Fulgor
         dev.antme08.planetaryexpansion.cerulea.CeruleaSea.register(modBus); // 1.0.3: plantas del mar de Cerúlea
+        dev.antme08.planetaryexpansion.transporter.ShipGroups.registerFixers(); // 1.0.5: uniones entre naves al cambiar de dimensión
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientStormEffects.register();
             modBus.addListener(dev.antme08.planetaryexpansion.client.ArmorModels::onRegisterReloadListeners);

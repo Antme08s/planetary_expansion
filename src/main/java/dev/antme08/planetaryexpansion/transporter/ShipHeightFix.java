@@ -35,6 +35,9 @@ public final class ShipHeightFix {
     private static final String SRC_MIN = "planetary_expansion:src_min_y";
     private static final String SRC_CENTER = "planetary_expansion:src_center_y";
 
+    /** El mapa de naves (vieja → nueva) del último viaje ya corregido; uno por viaje, compartido por todas sus naves. */
+    private static java.lang.ref.WeakReference<Object> lastCorrected;
+
     public static void recordSource(ServerLevelPlot plot, CompoundTag tag) {
         if (plot == null || tag == null) return;
         try {
@@ -96,11 +99,19 @@ public final class ShipHeightFix {
             }
             // lo que Cosmonautics mueve con la nave (entidades dentro del plot, referencias de los bloques con datos) usa
             // este desplazamiento: se corrige igual que los bloques
-            if (info != null && oldId != null && beDelta != 0) {
+            // 1.0.5: con varias naves unidas viajando juntas, una nave puede guardar referencias a otra que se carga
+            // después; como la corrección es la misma para todas (depende solo de las dos dimensiones), se corrigen
+            // todas las del viaje a la vez, la primera vez.
+            if (info != null && beDelta != 0) {
                 var map = info.oldToNewSubLevelMap();
-                var pair = map.get(oldId);
-                if (pair != null && pair.second() != null)
-                    map.put(oldId, dev.egg.DimensionalSable.Pair.of(pair.first(), pair.second().offset(0, beDelta, 0)));
+                if (map != null && (lastCorrected == null || lastCorrected.get() != map)) {
+                    lastCorrected = new java.lang.ref.WeakReference<>(map);
+                    for (var e : new ArrayList<>(map.entrySet())) {
+                        var pair = e.getValue();
+                        if (pair != null && pair.second() != null)
+                            e.setValue(dev.egg.DimensionalSable.Pair.of(pair.first(), pair.second().offset(0, beDelta, 0)));
+                    }
+                }
             }
             PlanetaryExpansion.LOGGER.info("[Naves] Nave pasada a {}: alturas alineadas ({} secciones; datos {} bloques){}",
                     level.dimension().location(), shift, beDelta, dropped > 0 ? " — " + dropped + " secciones fuera del mundo" : "");
