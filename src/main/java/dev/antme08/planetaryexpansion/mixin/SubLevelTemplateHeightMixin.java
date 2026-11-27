@@ -19,10 +19,12 @@ public abstract class SubLevelTemplateHeightMixin {
     @Inject(method = "save", at = @At("RETURN"), require = 0)
     private static void planetaryExpansion$recordSource(ServerLevelPlot plot, CallbackInfoReturnable<CompoundTag> cir) {
         ShipHeightFix.recordSource(plot, cir.getReturnValue());
+        dev.antme08.planetaryexpansion.transporter.ShipGroups.noteSource(plot);
     }
 
     @Inject(method = "load", at = @At("HEAD"), require = 0)
     private static void planetaryExpansion$alignHeights(ServerLevelPlot plot, CompoundTag tag, BlockEntityRegistry.MoveInfo info, CallbackInfo ci) {
         ShipHeightFix.align(plot, tag, info);
+        dev.antme08.planetaryexpansion.transporter.ShipGroups.moveRemnants(plot, info);
     }
 }

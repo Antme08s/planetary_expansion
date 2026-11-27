@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -78,6 +79,8 @@ public final class ShipGroups {
             Set<SubLevel> next = new LinkedHashSet<>();
             for (SubLevel other : pairs.getOrDefault(s, Set.of()))
                 if (!group.contains(other) && next.add(other)) magnets++;
+            for (SubLevel other : remnantPieces(level, s))
+                if (!group.contains(other) && next.add(other)) loaded++;
             // lo que la nave necesita cargado con ella (p. ej. las patas de un caminante de Let It Walk, que no
             // declaran unión pero sí que se cargan juntas)
             if (s instanceof dev.ryanhcode.sable.sublevel.ServerSubLevel ss) {
@@ -286,52 +289,56 @@ public final class ShipGroups {
      * y el punto del pie ("footPlot") en la última pieza. Sin mover esos puntos, al llegar las uniones se rehacen en
      * otro sitio y la pata se rompe en piezas.
      */
+    private static Vec3i delta(HashMap<UUID, DimensionalSable.Pair<UUID, Vec3i>> map, CompoundTag tag, String key) {
+        if (!tag.hasUUID(key)) return null;
+        var to = map.get(tag.getUUID(key));
+        return to == null ? null : to.second();
+    }
+
+    private static void offsetVec(CompoundTag tag, String key, Vec3i d) {
+        if (d == null || !tag.contains(key + "x")) return;
+        tag.putDouble(key + "x", tag.getDouble(key + "x") + d.getX());
+        tag.putDouble(key + "y", tag.getDouble(key + "y") + d.getY());
+        tag.putDouble(key + "z", tag.getDouble(key + "z") + d.getZ());
+    }
+
+    /** Mueve los puntos guardados de las patas de Let It Walk (lista "legs") con las piezas que viajan. */
+    static void moveLegs(ListTag legs, HashMap<UUID, DimensionalSable.Pair<UUID, Vec3i>> map) {
+        for (int i = 0; i < legs.size(); i++) {
+            CompoundTag runtime = legs.getCompound(i);
+            // v53: cada pata guarda su estado de marcha y, dentro, en "built", cómo está construida
+            CompoundTag leg = runtime.contains("built", Tag.TAG_COMPOUND) ? runtime.getCompound("built") : runtime;
+            // los puntos de apoyo del pie son del mundo de antes (otra dimensión, otro sitio): se olvidan y
+            // el caminante vuelve a buscar apoyo al llegar, como recién armado (sin ellos quedan en 0,0,0)
+            if (leg != runtime) {
+                for (String k : new String[]{"a", "f", "t"})
+                    for (String c : new String[]{"x", "y", "z"}) runtime.remove(k + c);
+                runtime.putBoolean("grounded", false);
+                runtime.putBoolean("swing", false);
+            }
+            ListTag joints = leg.getList("joints", Tag.TAG_COMPOUND);
+            for (int j = 0; j < joints.size(); j++) {
+                CompoundTag joint = joints.getCompound(j);
+                offsetVec(joint, "pp", delta(map, joint, "parent"));
+                offsetVec(joint, "cp", delta(map, joint, "child"));
+            }
+            ListTag segs = leg.getList("segments", Tag.TAG_COMPOUND);
+            if (!segs.isEmpty()) offsetVec(leg, "footPlot", delta(map, segs.getCompound(segs.size() - 1), "id"));
+        }
+    }
+
     private static final class WalkerCore extends BlockEntityAccessor {
         @Override
         public CompoundTag modifyNBT(BlockEntityRegistry.BlockEntityInfo info) {
             CompoundTag tag = info.tag();
             try {
-                var map = info.moveInfo().oldToNewSubLevelMap();
-                ListTag legs = tag.getList("legs", Tag.TAG_COMPOUND);
-                for (int i = 0; i < legs.size(); i++) {
-                    CompoundTag runtime = legs.getCompound(i);
-                    // v53: cada pata guarda su estado de marcha y, dentro, en "built", cómo está construida
-                    CompoundTag leg = runtime.contains("built", Tag.TAG_COMPOUND) ? runtime.getCompound("built") : runtime;
-                    // los puntos de apoyo del pie son del mundo de antes (otra dimensión, otro sitio): se olvidan y
-                    // el caminante vuelve a buscar apoyo al llegar, como recién armado (sin ellos quedan en 0,0,0)
-                    if (leg != runtime) {
-                        for (String k : new String[]{"a", "f", "t"})
-                            for (String c : new String[]{"x", "y", "z"}) runtime.remove(k + c);
-                        runtime.putBoolean("grounded", false);
-                        runtime.putBoolean("swing", false);
-                    }
-                    ListTag joints = leg.getList("joints", Tag.TAG_COMPOUND);
-                    for (int j = 0; j < joints.size(); j++) {
-                        CompoundTag joint = joints.getCompound(j);
-                        offsetVec(joint, "pp", delta(map, joint, "parent"));
-                        offsetVec(joint, "cp", delta(map, joint, "child"));
-                    }
-                    ListTag segs = leg.getList("segments", Tag.TAG_COMPOUND);
-                    if (!segs.isEmpty()) offsetVec(leg, "footPlot", delta(map, segs.getCompound(segs.size() - 1), "id"));
-                }
+                moveLegs(tag.getList("legs", Tag.TAG_COMPOUND), info.moveInfo().oldToNewSubLevelMap());
             } catch (Throwable t) {
                 PlanetaryExpansion.LOGGER.warn("[Naves] No se pudieron arreglar las patas del caminante de Let It Walk", t);
             }
             return tag;
         }
 
-        private static Vec3i delta(HashMap<UUID, DimensionalSable.Pair<UUID, Vec3i>> map, CompoundTag tag, String key) {
-            if (!tag.hasUUID(key)) return null;
-            var to = map.get(tag.getUUID(key));
-            return to == null ? null : to.second();
-        }
-
-        private static void offsetVec(CompoundTag tag, String key, Vec3i d) {
-            if (d == null || !tag.contains(key + "x")) return;
-            tag.putDouble(key + "x", tag.getDouble(key + "x") + d.getX());
-            tag.putDouble(key + "y", tag.getDouble(key + "y") + d.getY());
-            tag.putDouble(key + "z", tag.getDouble(key + "z") + d.getZ());
-        }
     }
 
     private static void link(String modid, String block, String idKey, String... posKeys) {
@@ -382,7 +389,11 @@ public final class ShipGroups {
      */
     public static void remapIds(CompoundTag tag, BlockEntityRegistry.MoveInfo info) {
         if (tag == null || info == null) return;
-        var map = info.oldToNewSubLevelMap();
+        remapIds(tag, info.oldToNewSubLevelMap());
+    }
+
+    static void remapIds(CompoundTag tag, HashMap<UUID, DimensionalSable.Pair<UUID, Vec3i>> map) {
+        if (tag == null) return;
         if (map == null || map.isEmpty()) return;
         try {
             Map<UUID, UUID> ids = new HashMap<>();
@@ -431,5 +442,129 @@ public final class ShipGroups {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    // ---------------------------------------------------------------- patas sueltas de Let It Walk
+
+    /*
+     * Cuando un caminante de Let It Walk pierde su núcleo (o se arma solo con patas), sus patas quedan "sueltas": las
+     * piezas se mantienen unidas con articulaciones físicas que Let It Walk guarda aparte, en los datos de la dimensión
+     * ("let_it_walk_remnants": por nave que las lleva, el núcleo y las patas, con el mismo formato que en el núcleo). Al
+     * cambiar de dimensión, esos datos se quedaban en la dimensión de antes y en la nueva nadie volvía a unir las
+     * piezas: llegaban separadas. Ahora viajan con la nave (y sus piezas viajan en el grupo).
+     */
+
+    private static java.lang.ref.WeakReference<net.minecraft.server.level.ServerLevel> lastSource;
+    private static java.lang.ref.WeakReference<Object> remnantsMoved;
+    private static boolean remnantsFailed;
+    private static java.lang.reflect.Method remnantsGet, remnantsRelease;
+    private static Field remnantsEntries;
+
+    /** Al guardar una nave para el viaje: de qué dimensión sale. */
+    public static void noteSource(dev.ryanhcode.sable.sublevel.plot.ServerLevelPlot plot) {
+        try {
+            if (plot.getSubLevel().getLevel() instanceof net.minecraft.server.level.ServerLevel l)
+                lastSource = new java.lang.ref.WeakReference<>(l);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<UUID, CompoundTag> remnants(net.minecraft.server.level.ServerLevel level) throws ReflectiveOperationException {
+        if (remnantsGet == null) {
+            Class<?> r = Class.forName("dev.letitwalk.walker.WalkerRemnants");
+            remnantsGet = r.getDeclaredMethod("get", net.minecraft.server.level.ServerLevel.class);
+            remnantsGet.setAccessible(true);
+            remnantsEntries = r.getDeclaredField("entries");
+            remnantsEntries.setAccessible(true);
+            try {
+                remnantsRelease = r.getDeclaredMethod("releaseRagdoll", UUID.class);
+                remnantsRelease.setAccessible(true);
+            } catch (NoSuchMethodException ignored) {
+            }
+        }
+        Object data = remnantsGet.invoke(null, level);
+        return data == null ? null : (Map<UUID, CompoundTag>) remnantsEntries.get(data);
+    }
+
+    private static void dirty(net.minecraft.server.level.ServerLevel level) throws ReflectiveOperationException {
+        Object data = remnantsGet.invoke(null, level);
+        if (data instanceof net.minecraft.world.level.saveddata.SavedData sd) sd.setDirty();
+    }
+
+    /** Al cargar la primera nave del viaje en la dimensión nueva: pasa allí las patas sueltas de las naves del viaje. */
+    public static void moveRemnants(dev.ryanhcode.sable.sublevel.plot.ServerLevelPlot plot, BlockEntityRegistry.MoveInfo info) {
+        if (remnantsFailed || info == null) return;
+        var map = info.oldToNewSubLevelMap();
+        if (map == null || map.isEmpty() || (remnantsMoved != null && remnantsMoved.get() == map)) return;
+        remnantsMoved = new java.lang.ref.WeakReference<>(map);
+        try {
+            if (!net.neoforged.fml.ModList.get().isLoaded("let_it_walk")) {
+                remnantsFailed = true;
+                return;
+            }
+            var src = lastSource == null ? null : lastSource.get();
+            if (src == null || !(plot.getSubLevel().getLevel() instanceof net.minecraft.server.level.ServerLevel dst)) return;
+            Map<UUID, CompoundTag> from = remnants(src), to = remnants(dst);
+            if (from == null || to == null) return;
+            int moved = 0;
+            for (UUID hull : new ArrayList<>(from.keySet())) {
+                var pair = map.get(hull);
+                if (pair == null || pair.first() == null) continue;
+                CompoundTag data = from.remove(hull).copy();
+                if (data.contains("core", Tag.TAG_LONG) && pair.second() != null)
+                    data.putLong("core", BlockPos.of(data.getLong("core")).offset(pair.second()).asLong());
+                moveLegs(data.getList("legs", Tag.TAG_COMPOUND), map);
+                remapIds(data, map);
+                to.put(pair.first(), data);
+                if (remnantsRelease != null) {
+                    try {
+                        remnantsRelease.invoke(null, hull);
+                    } catch (Throwable ignored) {
+                    }
+                }
+                moved++;
+            }
+            if (moved > 0) {
+                dirty(src);
+                dirty(dst);
+                PlanetaryExpansion.LOGGER.info("[Naves] Patas sueltas de Let It Walk que viajan con su nave: {}", moved);
+            }
+        } catch (Throwable t) {
+            remnantsFailed = true;
+            PlanetaryExpansion.LOGGER.warn("[Naves] No se pudieron pasar las patas sueltas de Let It Walk a la nueva dimensión", t);
+        }
+    }
+
+    /** Las piezas de las patas sueltas que lleva esta nave (para que viajen en el grupo). */
+    private static Set<SubLevel> remnantPieces(Level level, SubLevel hull) {
+        Set<SubLevel> out = new LinkedHashSet<>();
+        if (remnantsFailed || !(level instanceof net.minecraft.server.level.ServerLevel sl)) return out;
+        try {
+            if (!net.neoforged.fml.ModList.get().isLoaded("let_it_walk")) return out;
+            Map<UUID, CompoundTag> all = remnants(sl);
+            CompoundTag data = all == null ? null : all.get(hull.getUniqueId());
+            if (data == null) return out;
+            Set<UUID> ids = new LinkedHashSet<>();
+            ListTag legs = data.getList("legs", Tag.TAG_COMPOUND);
+            for (int i = 0; i < legs.size(); i++) {
+                CompoundTag leg = legs.getCompound(i);
+                if (leg.contains("built", Tag.TAG_COMPOUND)) leg = leg.getCompound("built");
+                ListTag segs = leg.getList("segments", Tag.TAG_COMPOUND);
+                for (int j = 0; j < segs.size(); j++) if (segs.getCompound(j).hasUUID("id")) ids.add(segs.getCompound(j).getUUID("id"));
+                ListTag joints = leg.getList("joints", Tag.TAG_COMPOUND);
+                for (int j = 0; j < joints.size(); j++) {
+                    CompoundTag jt = joints.getCompound(j);
+                    if (jt.hasUUID("parent")) ids.add(jt.getUUID("parent"));
+                    if (jt.hasUUID("child")) ids.add(jt.getUUID("child"));
+                }
+            }
+            var container = dev.ryanhcode.sable.api.sublevel.SubLevelContainer.getContainer(level);
+            for (UUID id : ids) {
+                if (container.getSubLevel(id) instanceof SubLevel piece && !piece.isRemoved()) out.add(piece);
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
     }
 }
