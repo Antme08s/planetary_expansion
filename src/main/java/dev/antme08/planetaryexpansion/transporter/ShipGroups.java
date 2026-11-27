@@ -281,7 +281,7 @@ public final class ShipGroups {
     }
 
     /**
-     * Let It Walk: el núcleo del caminante guarda cada pata ("legs"), con sus articulaciones: id de la pieza padre y de
+     * Let It Walk: el núcleo del caminante guarda cada pata ("legs"; la construcción de cada una en "built"), con sus articulaciones: id de la pieza padre y de
      * la hija y el punto de la unión en las coordenadas de cada una ("pp" en la padre, "cp" en la hija, como ppx/ppy/ppz),
      * y el punto del pie ("footPlot") en la última pieza. Sin mover esos puntos, al llegar las uniones se rehacen en
      * otro sitio y la pata se rompe en piezas.
@@ -294,7 +294,17 @@ public final class ShipGroups {
                 var map = info.moveInfo().oldToNewSubLevelMap();
                 ListTag legs = tag.getList("legs", Tag.TAG_COMPOUND);
                 for (int i = 0; i < legs.size(); i++) {
-                    CompoundTag leg = legs.getCompound(i);
+                    CompoundTag runtime = legs.getCompound(i);
+                    // v53: cada pata guarda su estado de marcha y, dentro, en "built", cómo está construida
+                    CompoundTag leg = runtime.contains("built", Tag.TAG_COMPOUND) ? runtime.getCompound("built") : runtime;
+                    // los puntos de apoyo del pie son del mundo de antes (otra dimensión, otro sitio): se olvidan y
+                    // el caminante vuelve a buscar apoyo al llegar, como recién armado (sin ellos quedan en 0,0,0)
+                    if (leg != runtime) {
+                        for (String k : new String[]{"a", "f", "t"})
+                            for (String c : new String[]{"x", "y", "z"}) runtime.remove(k + c);
+                        runtime.putBoolean("grounded", false);
+                        runtime.putBoolean("swing", false);
+                    }
                     ListTag joints = leg.getList("joints", Tag.TAG_COMPOUND);
                     for (int j = 0; j < joints.size(); j++) {
                         CompoundTag joint = joints.getCompound(j);

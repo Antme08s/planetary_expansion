@@ -298,6 +298,15 @@ def point(biome_id, temperature=FULL, humidity=FULL, continentalness=WIDE, erosi
 
 def noise_settings(planet, router, *, default_block, default_fluid, sea_level, aquifers,
                    surface_rule, spawn_target, min_y=-64, height=384):
+    # 1.0.5: las cuevas de ruido copiadas de la Tierra (espagueti, fideos, queso) están hechas para un mundo que empieza
+    # en -64 y allí se cierran antes del fondo; en planetas que empiezan en 0 llegaban hasta abajo y dejaban agujeros
+    # en la capa de bedrock (el aire de la cueva no se convierte en bedrock). Donde hay suelo de bedrock, los 5 bloques
+    # de abajo son siempre macizos; por encima no cambia nada (lo que era aire sigue siendo aire).
+    if "minecraft:bedrock_floor" in json.dumps(surface_rule):
+        router = dict(router)
+        router["final_density"] = {"type": "minecraft:max", "argument1": router["final_density"],
+                                   "argument2": {"type": "minecraft:y_clamped_gradient", "from_y": min_y,
+                                                 "to_y": min_y + 10, "from_value": 2.0, "to_value": -2.0}}
     data(f"worldgen/noise_settings/{planet}", {
         "sea_level": sea_level,
         "disable_mob_generation": False,
